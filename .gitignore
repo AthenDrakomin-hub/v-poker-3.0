@@ -1,0 +1,70 @@
+# dependencies
+node_modules/
+package-lock.json
+
+# next.js
+.next/
+out/
+build/
+dist/
+
+# production
+*.prod.zip
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# ts
+tsconfig.tsbuildinfo
+tsc_output.txt
+
+# codegraph
+.codegraph/
+
+# ide
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# hbuilder (app packaging - local only, not committed)
+hbuilder/
+HBuilderX-V-Poker/
+
+# signing certs & app packages
+*.p12
+*.keystore
+*.mobileprovision
+*.apk
+*.aab
+*.wgt
+public/download/
+
+# env
+.env
+api-server/.ratelimit_cache.json
+
+# database backups (sensitive data)
+database_full_backup_*.sql
+*.sql.bak
+# sql/ 目录下仅 schema.sql 提交，真实数据备份不提交
+sql/database_full_backup_*.sql
+sql/*_backup_*.sql
+
+screenshot*.png
+hbuilder_screenshot*.png
+
+# unpackage (HBuilderX packaging output - local only)
+unpackage/
+

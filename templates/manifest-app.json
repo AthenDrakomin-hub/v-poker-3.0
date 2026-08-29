@@ -1,0 +1,56 @@
+{
+  "@platforms": ["android", "iPhone", "iPad"],
+  "id": "H5E7AD69B",
+  "name": "V-Poker",
+  "version": {
+    "name": "1.0",
+    "code": "101"
+  },
+  "description": "V-Poker尊享棋牌竞技平台",
+  "icons": {
+    "72": "unpackage/res/icons/72x72.png",
+    "144": "unpackage/res/icons/144x144.png"
+  },
+  "launch_path": "out/index.html",
+  "developer": {
+    "name": "V-Poker",
+    "email": "",
+    "url": ""
+  },
+  "plus": {
+    "screenOrientation": ["portrait-primary"],
+    "statusbar": {
+      "immersed": true,
+      "style": "dark"
+    },
+    "splashscreen": {
+      "autoclose": true,
+      "waiting": true,
+      "delay": 3
+    },
+    "distribute": {
+      "icons": {
+        "android": {
+          "hdpi": "unpackage/res/icons/72x72.png",
+          "xhdpi": "unpackage/res/icons/96x96.png",
+          "xxhdpi": "unpackage/res/icons/144x144.png",
+          "xxxhdpi": "unpackage/res/icons/192x192.png"
+        },
+        "ios": {
+          "app@2x": "unpackage/res/icons/120x120.png",
+          "app@3x": "unpackage/res/icons/180x180.png",
+          "spotlight@2x": "unpackage/res/icons/120x120.png",
+          "spotlight@3x": "unpackage/res/icons/180x180.png",
+          "settings@2x": "unpackage/res/icons/58x58.png",
+          "settings@3x": "unpackage/res/icons/87x87.png"
+        }
+      },
+      "splashscreen": {
+        "android": {
+          "hdpi": "unpackage/res/splash/splash-720x1280.png",
+          "xhdpi": "unpackage/res/splash/splash-1080x1920.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,754 @@
+﻿
+/** * V-Poker 全局横屏适配规范 * 目标设备：iPhone 11（横屏 1792×828）及以上 iOS 设备 * 设计原则：关键尺寸用 vh/vw，辅助尺寸用 rpx，安全区域用 env() */
+
+/* ===== CSS 变量定义 ===== */
+:root {
+  
+/* 安全区域（iOS刘海屏） */
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  
+/* 横屏标准尺寸（基于 iPhone 11 横屏 1792×828） */
+  --header-height: max(7vh, 52px);
+  --footer-height: max(8vh, 64px);
+  --content-padding-h: 3vw;
+      
+/* 内容水平内边距 ≈54px */
+  --content-padding-v: 2vh;
+      
+/* 内容垂直内边距 ≈17px */
+  
+/* 标准组件尺寸 */
+  --btn-height: 6.5vh;
+            
+/* 按钮高度 ≈54px */
+  --btn-height-sm: 5vh;
+           
+/* 小按钮高度 ≈41px */
+  --input-height: 6vh;
+            
+/* 输入框高度 ≈50px */
+  --card-padding: 2.5vh;
+          
+/* 卡片内边距 ≈21px */
+  --card-radius: 1.5vh;
+           
+/* 卡片圆角 ≈12px */
+  
+/* 字体缩放比例（设置页面控制，默认1.0） */
+  --font-scale: 1;
+  
+/* 字体大小（基于视口高度，横屏下高度是限制因素，受 --font-scale 控制） */
+  --text-xs: calc(1.6vh * var(--font-scale, 1));
+   
+/* 极小文字 ≈13px */
+  --text-sm: calc(1.9vh * var(--font-scale, 1));
+   
+/* 小文字 ≈16px */
+  --text-base: calc(2.2vh * var(--font-scale, 1));
+ 
+/* 正文 ≈18px */
+  --text-lg: calc(2.6vh * var(--font-scale, 1));
+   
+/* 大文字 ≈22px */
+  --text-xl: calc(3.2vh * var(--font-scale, 1));
+   
+/* 标题 ≈26px */
+  --text-2xl: calc(4vh * var(--font-scale, 1));
+     
+/* 大标题 ≈33px */
+  --text-3xl: calc(5.5vh * var(--font-scale, 1));
+   
+/* 超大标题 ≈46px */
+  
+/* 间距规范 */
+  --gap-xs: 1vh;
+  --gap-sm: 1.5vh;
+  --gap-md: 2vh;
+  --gap-lg: 3vh;
+  --gap-xl: 4vh;
+  
+/* 颜色变量（与项目现有风格一致） */
+  --color-bg: var(--color-bg);
+  --color-bg-card: rgba(255, 255, 255, 0.04);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-text: var(--color-text);
+  --color-text-muted: rgba(255, 255, 255, 0.5);
+  --color-text-faint: rgba(255, 255, 255, 0.3);
+  --color-gold: var(--color-gold);
+  --color-gold-dark: var(--color-gold-dark);
+  --color-success: var(--color-success);
+  --color-danger: var(--color-danger);
+  --color-warning: var(--color-gold);
+  --color-info: var(--color-info);
+  
+/* ===== 卡牌设计 Token ===== */
+  --card-w: 10vh;
+            
+/* 卡牌宽度 = 视口高度10%，横屏高度是限制因素 */
+  --card-h: 13.33vh;
+         
+/* 3:4 比例 */
+  --card-radius: 1vh;
+  --card-border: rgba(255,255,255,0.15);
+  --card-shadow: 0 4rpx 16rpx rgba(0,0,0,0.4);
+  --card-back-primary: #1a237e;
+  --card-back-secondary: #0d1442;
+  
+/* ===== 筹码设计 Token ===== */
+  --chip-size: 4vh;
+  --chip-radius: 50%;
+  --chip-shadow: 0 2rpx 8rpx rgba(0,0,0,0.5);
+  
+/* ===== 主题变量（由5套主题覆盖） ===== */
+  --theme-primary: var(--color-gold);
+  --theme-secondary: var(--color-gold-dark);
+  --theme-bg: var(--color-bg);
+  --theme-table: #1a4a2a;
+  --theme-table-border: #8B4513;
+  --theme-text: var(--color-text);
+  --theme-accent: rgba(255,215,0,0.15);
+}
+
+/* ===== 基础重置 ===== */
+page {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+/* iOS 横屏优化：禁止文字自动调整大小 */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+view, text, image, scroll-view, button {
+  box-sizing: border-box;
+}
+
+/* 去除 iOS 按钮默认样式 */
+button {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  line-height: normal;
+  min-height: 6vh;
+  
+/* 全局按钮最低触控热区 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+button::after {
+  border: none;
+}
+
+/* ===== 触控热区工具类 ===== */
+
+/* 所有可点击元素最低触控热区 48dp ≈ 6vh */
+.touch-target {
+  min-height: 6vh;
+  min-width: 6vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 小图标按钮：视觉尺寸小，但热区足够 */
+.icon-btn {
+  width: 6vh;
+  height: 6vh;
+  min-width: 6vh;
+  min-height: 6vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+.icon-btn:active {
+  transform: scale(0.9);
+  background: rgba(255, 215, 0, 0.15);
+}
+.icon-btn .icon {
+  width: 3vh;
+  height: 3vh;
+}
+
+/* 列表行/菜单项：保证足够触控高度 */
+.list-item,.menu-item,.table-row {
+  min-height: 7vh;
+  display: flex;
+  align-items: center;
+  padding: 1vh 2vh;
+  transition: background 0.2s ease;
+}
+.list-item:active,.menu-item:active,.table-row:active {
+  background: rgba(255, 215, 0, 0.1);
+}
+
+/* ===== 安全区域工具类 ===== */
+.safe-area {
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+.safe-area-h {
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+.safe-area-l {
+  padding-left: var(--safe-left);
+}
+.safe-area-r {
+  padding-right: var(--safe-right);
+}
+
+/* ===== 横屏布局工具类 ===== */
+
+/* 全屏页面基础布局 */
+.page-landscape {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 顶部导航栏（固定高度） */
+.nav-bar {
+  height: var(--header-height);
+  min-height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--content-padding-h);
+  padding-left: calc(var(--content-padding-h) + var(--safe-left));
+  padding-right: calc(var(--content-padding-h) + var(--safe-right));
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+/* 内容区域（自适应剩余高度，可滚动） */
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--content-padding-v) var(--content-padding-h);
+  padding-left: calc(var(--content-padding-h) + var(--safe-left));
+  padding-right: calc(var(--content-padding-h) + var(--safe-right));
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 底部操作栏（固定高度） */
+.footer-bar {
+  height: var(--footer-height);
+  min-height: var(--footer-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--content-padding-h);
+  padding-left: calc(var(--content-padding-h) + var(--safe-left));
+  padding-right: calc(var(--content-padding-h) + var(--safe-right));
+  padding-bottom: calc(1vh + var(--safe-bottom));
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+/* ===== 工作台分栏布局（横屏宽屏优化） ===== */
+.workbench-layout {
+  display: flex;
+  gap: 3vh;
+  padding: 2vh 4vh;
+  padding-left: calc(4vh + var(--safe-left));
+  padding-right: calc(4vh + var(--safe-right));
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 左侧导航（20-25%宽度） */
+.workbench-sidebar {
+  width: 22%;
+  min-width: 20vh;
+  max-width: 30vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+/* 右侧内容（自适应剩余宽度） */
+.workbench-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
+}
+
+/* ===== 数据表格优化（横屏宽屏） ===== */
+.data-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.data-table {
+  width: 100%;
+  min-width: 60vh;
+  border-collapse: collapse;
+}
+.data-table th,.data-table td {
+  padding: 1.5vh 2vh;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 25vh;
+  border-bottom: 1px solid var(--color-border);
+}
+.data-table th {
+  font-weight: 600;
+  color: var(--color-gold);
+  background: rgba(255, 215, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.data-table tr {
+  min-height: 7vh;
+  transition: background 0.2s ease;
+}
+.data-table tr:active {
+  background: rgba(255, 215, 0, 0.1);
+}
+
+/* ===== 文字行宽可读性优化 ===== */
+.prose-text,.long-text {
+  max-width: 70vh;
+  line-height: 1.6;
+  margin: 0 auto;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ===== 弹窗响应式优化 ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2vh;
+  padding-left: calc(2vh + var(--safe-left));
+  padding-right: calc(2vh + var(--safe-right));
+}
+.modal-content {
+  width: 100%;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--color-bg-card);
+  border-radius: 2vh;
+  border: 1px solid var(--color-border);
+}
+
+/* 左右分栏布局（登录页、设置页等） */
+.split-layout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-lg);
+  padding: var(--content-padding-v) var(--content-padding-h);
+  padding-left: calc(var(--content-padding-h) + var(--safe-left));
+  padding-right: calc(var(--content-padding-h) + var(--safe-right));
+}
+.split-left {
+  flex: 1;
+  max-width: 45%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.split-right {
+  flex: 1;
+  max-width: 45%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== 组件尺寸规范 ===== */
+
+/* 标准按钮 */
+.btn {
+  height: var(--btn-height);
+  line-height: var(--btn-height);
+  font-size: var(--text-base);
+  padding: 0 4vw;
+  border-radius: 1vh;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.btn-sm {
+  height: var(--btn-height-sm);
+  line-height: var(--btn-height-sm);
+  font-size: var(--text-sm);
+  padding: 0 3vw;
+  border-radius: 0.8vh;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-dark) 100%);
+  color: var(--color-bg-card);
+  font-weight: 700;
+}
+.btn-primary:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+.btn-ghost:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+.btn-block {
+  width: 100%;
+}
+
+/* 输入框 */
+.input-field {
+  height: var(--input-height);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-border);
+  border-radius: 1vh;
+  padding: 0 2vw;
+  width: 100%;
+}
+.input-field:focus {
+  border-color: var(--color-gold);
+  background: rgba(255, 215, 0, 0.05);
+}
+
+/* 卡片 */
+.card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+}
+.card-glass {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--card-radius);
+}
+
+/* ===== 文字工具类 ===== */
+.text-xs {
+ font-size: var(--text-xs);
+ }
+.text-sm {
+ font-size: var(--text-sm);
+ }
+.text-base {
+ font-size: var(--text-base);
+ }
+.text-lg {
+ font-size: var(--text-lg);
+ }
+.text-xl {
+ font-size: var(--text-xl);
+ }
+.text-2xl {
+ font-size: var(--text-2xl);
+ }
+.text-3xl {
+ font-size: var(--text-3xl);
+ }
+.text-muted {
+ color: var(--color-text-muted);
+ }
+.text-faint {
+ color: var(--color-text-faint);
+ }
+.text-gold {
+ color: var(--color-gold);
+ }
+.text-success {
+ color: var(--color-success);
+ }
+.text-danger {
+ color: var(--color-danger);
+ }
+.font-bold {
+ font-weight: 700;
+ }
+.font-medium {
+ font-weight: 500;
+ }
+
+/* ===== 间距工具类 ===== */
+.gap-xs {
+ gap: var(--gap-xs);
+ }
+.gap-sm {
+ gap: var(--gap-sm);
+ }
+.gap-md {
+ gap: var(--gap-md);
+ }
+.gap-lg {
+ gap: var(--gap-lg);
+ }
+.gap-xl {
+ gap: var(--gap-xl);
+ }
+.mt-xs {
+ margin-top: var(--gap-xs);
+ }
+.mt-sm {
+ margin-top: var(--gap-sm);
+ }
+.mt-md {
+ margin-top: var(--gap-md);
+ }
+.mt-lg {
+ margin-top: var(--gap-lg);
+ }
+.mb-xs {
+ margin-bottom: var(--gap-xs);
+ }
+.mb-sm {
+ margin-bottom: var(--gap-sm);
+ }
+.mb-md {
+ margin-bottom: var(--gap-md);
+ }
+.mb-lg {
+ margin-bottom: var(--gap-lg);
+ }
+
+/* ===== Flex 工具类 ===== */
+.flex {
+ display: flex;
+ }
+.flex-col {
+ display: flex;
+ flex-direction: column;
+ }
+.flex-center {
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ }
+.flex-between {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ }
+.flex-start {
+ display: flex;
+ align-items: center;
+ justify-content: flex-start;
+ }
+.flex-end {
+ display: flex;
+ align-items: center;
+ justify-content: flex-end;
+ }
+.flex-wrap {
+ flex-wrap: wrap;
+ }
+.flex-1 {
+ flex: 1;
+ min-width: 0;
+ }
+.items-center {
+ align-items: center;
+ }
+.justify-center {
+ justify-content: center;
+ }
+.justify-between {
+ justify-content: space-between;
+ }
+.text-center {
+ text-align: center;
+ }
+
+/* ===== 滚动条隐藏（iOS风格） ===== */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ===== 毛玻璃效果 ===== */
+.glass {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ===== 金色渐变文字 ===== */
+.gold-text {
+  background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-dark) 50%, #FF8C00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== 横屏专用：限制最大高度（避免元素超出屏幕） ===== */
+.max-h-full {
+ max-height: 100%;
+ }
+.max-h-90 {
+ max-height: 90vh;
+ }
+.max-h-80 {
+ max-height: 80vh;
+ }
+.max-h-70 {
+ max-height: 70vh;
+ }
+
+/* 图片自适应 */
+.img-contain {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.img-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ===== iOS 无障碍：减少动画偏好 ===== */
+
+/* 用户在系统设置中开启"减少动态效果"时触发 */
+@media (prefers-reduced-motion: reduce) {
+  *,  *::before,  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+/* 禁用脉冲动画（在线状态点等） */
+  @keyframes pulse {
+    0%, 100% {
+ opacity: 1;
+ }
+  }
+  
+/* 禁用毛玻璃的模糊动画 */
+  .glass,  .card-glass {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  
+/* 禁用 transform 缩放动画（按钮点击等） */
+  .btn-primary:active,  .btn-ghost:active,  .action-card:active,  .menu-card:active,  .player-card:active,  .logout-btn:active,  .btn-confirm:active {
+    transform: none;
+  }
+  
+/* 禁用柱状图高度过渡 */
+  .chart-bar {
+    transition: none !important;
+  }
+  
+/* 禁用弹窗背景模糊 */
+  .modal-overlay {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* ===== iOS 深色模式适配（可选） ===== */
+@media (prefers-color-scheme: dark) {
+  
+/* 项目本身就是深色主题，无需额外调整 */
+}
+
+/* ===== iOS 安全区域：横屏刘海屏额外适配 ===== */
+@supports (padding: max(0px)) {
+  .safe-area {
+    padding-left: max(var(--safe-left), 12px);
+    padding-right: max(var(--safe-right), 12px);
+  }
+}
+
+/* ===== 全局触控热区兜底（P0修复） ===== */
+/* 所有可点击view元素最低44dp，防止vh单位在小屏上热区不足 */
+view[class*="-btn"]:not([class*="btn-"]):not([class*="float-btn"]):not([class*="top-btn"]):not([class*="tab-btn"]):not([class*="level-btn"]):not([class*="quality-btn"]):not([class*="font-btn"]):not([class*="host-btn"]):not([class*="kick-btn"]):not([class*="retry-btn"]):not([class*="chip-btn"]),
+view[class*="close-btn"],
+view[class*="back-btn"],
+view[class*="settings-btn"],
+view[class*="toggle-btn"],
+view[class*="action-btn"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* 弹窗遮罩统一安全区（上下左右） */
+.modal-overlay {
+  padding-top: var(--safe-top, 0px);
+  padding-bottom: var(--safe-bottom, 0px);
+}
+
+/* ===== 横屏设备分级断点（P2修复） ===== */
+/* 小屏横屏（<700px宽，如iPhone SE/小型安卓机） */
+@media (max-width: 700px) {
+  :root {
+    --content-padding-h: 2vw;
+  }
+  .workbench-layout,
+  .split-layout {
+    gap: 2vh;
+    padding: 1vh 2vh;
+  }
+}
+
+/* 平板/折叠屏展开（≥1024px宽） */
+@media (min-width: 1024px) {
+  :root {
+    --content-padding-h: 4vw;
+  }
+  /* 弹窗在宽屏上限制最大宽度，避免过宽 */
+  .modal-content {
+    max-width: 560px !important;
+  }
+  /* 工作台侧边栏在平板上稍宽 */
+  .workbench-sidebar {
+    width: 20%;
+    max-width: 260px;
+  }
+}

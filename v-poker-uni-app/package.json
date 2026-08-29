@@ -1,0 +1,7 @@
+{
+  "name": "v-poker-uni-app",
+  "private": true,
+  "dependencies": {
+    "vu-icons": "1.5.4"
+  }
+}

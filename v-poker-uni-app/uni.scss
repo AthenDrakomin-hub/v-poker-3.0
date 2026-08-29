@@ -1,0 +1,87 @@
+﻿/**
+ * V-Poker UNI-APP 全局样式变量
+ * 四大意识流设计系统
+ */
+
+/* ===== 主题色 ===== */
+$vp-gold: var(--color-gold);
+$vp-amber: var(--color-gold);
+$vp-orange: #FF8C00;
+$vp-purple: var(--theme-primary);
+$vp-blue-gray: var(--color-text-muted);
+$vp-iron-gray: var(--color-bg-card);
+$vp-cyan: var(--color-info);
+$vp-red: var(--color-danger);
+$vp-green: var(--color-success);
+
+/* ===== 背景色 ===== */
+$vp-bg-dark: var(--color-bg);
+$vp-bg-card: rgba(255, 255, 255, 0.06);
+$vp-bg-glass: rgba(255, 255, 255, 0.08);
+
+/* ===== 文字色 ===== */
+$vp-text-primary: var(--color-text);
+$vp-text-secondary: rgba(255, 255, 255, 0.7);
+$vp-text-muted: rgba(255, 255, 255, 0.5);
+$vp-text-disabled: rgba(255, 255, 255, 0.3);
+
+/* ===== 边框色 ===== */
+$vp-border-light: rgba(255, 255, 255, 0.1);
+$vp-border-medium: rgba(255, 255, 255, 0.2);
+$vp-border-gold: rgba(255, 215, 0, 0.4);
+
+/* ===== 圆角 ===== */
+$vp-radius-sm: 8rpx;
+$vp-radius-md: 12rpx;
+$vp-radius-lg: 16rpx;
+$vp-radius-xl: 24rpx;
+$vp-radius-full: 9999rpx;
+
+/* ===== 间距 ===== */
+$vp-space-xs: 8rpx;
+$vp-space-sm: 16rpx;
+$vp-space-md: 24rpx;
+$vp-space-lg: 32rpx;
+$vp-space-xl: 48rpx;
+
+/* ===== 字号 ===== */
+$vp-font-xs: 20rpx;
+$vp-font-sm: 24rpx;
+$vp-font-md: 28rpx;
+$vp-font-lg: 32rpx;
+$vp-font-xl: 40rpx;
+$vp-font-2xl: 56rpx;
+$vp-font-3xl: 72rpx;
+
+/* ===== 阴影 ===== */
+$vp-shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+$vp-shadow-md: 0 4rpx 16rpx rgba(0, 0, 0, 0.4);
+$vp-shadow-lg: 0 8rpx 32rpx rgba(0, 0, 0, 0.5);
+$vp-shadow-gold: 0 0 20rpx rgba(255, 215, 0, 0.4);
+
+/* ===== 动画时长 ===== */
+$vp-duration-fast: 0.15s;
+$vp-duration-normal: 0.3s;
+$vp-duration-slow: 0.6s;
+
+/* ===== 缓动曲线 ===== */
+$vp-ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+$vp-ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
+$vp-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+/* ===== uni-app 默认变量覆盖 ===== */
+$uni-color-primary: $vp-gold;
+$uni-color-success: $vp-green;
+$uni-color-warning: $vp-amber;
+$uni-color-error: $vp-red;
+
+$uni-text-color: $vp-text-primary;
+$uni-text-color-inverse: $vp-bg-dark;
+$uni-text-color-grey: $vp-text-muted;
+$uni-text-color-placeholder: $vp-text-disabled;
+$uni-text-color-disable: $vp-text-disabled;
+
+$uni-bg-color: $vp-bg-dark;
+$uni-bg-color-grey: rgba(255, 255, 255, 0.05);
+$uni-bg-color-hover: rgba(255, 255, 255, 0.1);
+$uni-bg-color-mask: rgba(0, 0, 0, 0.6);

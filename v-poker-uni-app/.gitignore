@@ -1,0 +1,56 @@
+# ========== uni-app 构建产物 ==========
+unpackage/*
+!unpackage/res/
+unpackage/res/*
+!unpackage/res/icons/
+.hbuilderx/
+.DS_Store
+
+# ========== 依赖 ==========
+node_modules/
+scripts/node_modules/
+
+# ========== 敏感凭证（切勿提交） ==========
+# Cloudflare R2 配置（含 Access Key）
+scripts/r2-config.json
+# iOS 签名证书
+*.p12
+*.mobileprovision
+*.cer
+*.pem
+
+# ========== 临时/开发文件 ==========
+_public_extract/
+_video_frames/
+_backup/
+*.log
+npm-debug.log*
+*.tmp
+*.bak
+
+# ========== 开发截图（非应用资源） ==========
+lobby_screenshot.png
+screenshot_ios.png
+*_screenshot.png
+login-screenshot.png
+screenshots/
+
+# ========== 源码快照备份 ==========
+*_full.txt
+
+# ========== 字体源文件（已子集化到 static/fonts/subset/） ==========
+fonts-source/
+
+# ========== 源文件（已拆分到 static/） ==========
+svg-cards.svg
+
+# ========== 环境变量 ==========
+.env
+.env.local
+.env.*.local
+
+# ========== 编辑器 ==========
+.vscode/
+.idea/
+*.swp
+*.swo

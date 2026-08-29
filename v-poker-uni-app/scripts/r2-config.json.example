@@ -1,0 +1,17 @@
+{
+  "_comment": "Cloudflare R2 配置文件 - 复制为 r2-config.json 并填入真实凭证",
+  "_warning": "r2-config.json 已加入 .gitignore，切勿提交真实密钥到仓库",
+
+  "accountId": "1f6ac259e674c8327282b3b97b427b5b",
+  "bucketName": "tesla",
+  "accessKeyId": "YOUR_ACCESS_KEY_ID",
+  "secretAccessKey": "YOUR_SECRET_ACCESS_KEY",
+
+  "_uploadConfig": {
+    "sourceDir": "../static",
+    "keyPrefix": "static/",
+    "cdnBaseUrl": "https://static.yefeng.us.cc",
+    "concurrentUploads": 5,
+    "cacheControl": "public, max-age=31536000, immutable"
+  }
+}

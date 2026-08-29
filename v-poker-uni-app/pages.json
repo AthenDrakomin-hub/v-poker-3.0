@@ -1,0 +1,112 @@
+﻿{
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^(SVGCard)$": "@/components/poker/$1.vue",
+			"^(TopBar|BottomTabBar|GameCard|GameCardSwiper|RightFloatButtons|WalletPanel|ProfilePanel|JoinRoomModal|MyRoomsPanel)$": "@/components/lobby/$1.vue",
+			"^(PlayerSeat)$": "@/components/seat/$1.vue",
+			"^(ChipStack|PotDisplay)$": "@/components/chips/$1.vue",
+			"^(VIcon|ChatBox|ImmersivePage|OpenCardEffect|ParticleSystem|ThemeBackground)$": "@/components/ui/$1.vue",
+			"^(DynamicActions)$": "@/components/actions/$1.vue",
+			"^(PyramidDistribution|SettlementPanel)$": "@/components/settlement/$1.vue"
+		}
+	},
+	"pages": [
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationStyle": "custom",
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/register/register",
+			"style": {
+				"navigationStyle": "custom",
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/lobby/lobby",
+			"style": {
+				"navigationStyle": "custom",
+				"disableScroll": true,
+				"popGesture": "none"
+			}
+		},
+		{
+			"path": "pages/join/join",
+			"style": {
+				"navigationStyle": "custom",
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/room/room",
+			"style": {
+				"navigationStyle": "custom",
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/workbench/workbench",
+			"style": {
+				"navigationStyle": "custom",
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/customer-service/customer-service",
+			"style": {
+				"navigationStyle": "custom",
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/promotion/promotion",
+			"style": {
+				"navigationStyle": "custom",
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/admin/admin",
+			"style": {
+				"navigationStyle": "custom",
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/economy/economy",
+			"style": {
+				"navigationStyle": "custom",
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/profile/profile",
+			"style": {
+				"navigationStyle": "custom",
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/settings/settings",
+			"style": {
+				"navigationStyle": "custom",
+				"disableScroll": true
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "white",
+		"navigationBarTitleText": "V-Poker",
+		"navigationBarBackgroundColor": "#0a0a0a",
+		"backgroundColor": "#0a0a0a",
+		"app-plus": {
+			"animationType": "fade-in",
+			"animationDuration": 200
+		}
+	},
+	"uniIdRouter": {}
+}

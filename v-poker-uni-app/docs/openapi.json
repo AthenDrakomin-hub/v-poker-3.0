@@ -1,0 +1,1387 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "V-Poker 2.0 API",
+    "description": "V-Poker 扑克游戏全栈项目后端API文档。V3经济模型：单一货币（筹码），多级代理返佣，抽水3%。",
+    "version": "3.0.0",
+    "contact": {
+      "name": "V-Poker Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "开发环境"
+    },
+    {
+      "url": "https://api.yourdomain.com",
+      "description": "生产环境"
+    }
+  ],
+  "tags": [
+    { "name": "认证", "description": "用户登录、注册、登出、当前用户信息" },
+    { "name": "房间", "description": "房间创建、加入、游戏操作、聊天" },
+    { "name": "管理后台", "description": "管理员用户管理、统计、配置、客服操作" },
+    { "name": "代理", "description": "代理玩家管理、推广、筹码调整、层级返佣" },
+    { "name": "个人资料", "description": "用户资料修改、设备管理、密码修改" },
+    { "name": "经济模型", "description": "游戏经济配置V2、模板管理、抽水配置" },
+    { "name": "游戏规则", "description": "各游戏规则查询" },
+    { "name": "素材", "description": "素材下载、资源管理" },
+    { "name": "应用", "description": "版本信息、错误上报、经济费率" },
+    { "name": "杂项", "description": "健康检查、APP下载、数据种子、历史清理" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "session",
+        "description": "基于Cookie的会话认证，登录后自动设置"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "description": "错误信息" }
+        },
+        "required": ["error"]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "account": { "type": "string" },
+          "nickname": { "type": "string" },
+          "role": { "type": "string", "enum": ["player", "agent", "top_agent", "admin", "customer_service"] },
+          "points": { "type": "integer", "description": "筹码余额（V3单一货币）" },
+          "invitedById": { "type": "integer", "description": "邀请人ID" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "lastLoginAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Room": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "gameType": { "type": "string", "enum": ["niuniu", "sangong", "tbnn", "jinhua", "texas"] },
+          "name": { "type": "string" },
+          "maxSeats": { "type": "integer" },
+          "baseBet": { "type": "integer" },
+          "level": { "type": "string", "enum": ["basic", "advanced", "premium"] },
+          "pointsReq": { "type": "integer", "description": "开房筹码门槛（只校验不扣费）" },
+          "currentRound": { "type": "integer" },
+          "totalRounds": { "type": "integer" },
+          "status": { "type": "string", "enum": ["waiting", "playing", "finished"] },
+          "createdById": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Hand": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "roomId": { "type": "integer" },
+          "roundNo": { "type": "integer" },
+          "phase": { "type": "string" },
+          "turnUserId": { "type": "integer" },
+          "pot": { "type": "integer" },
+          "finished": { "type": "boolean" },
+          "seats": { "type": "array", "items": { "$ref": "#/components/schemas/HandSeat" } },
+          "result": { "$ref": "#/components/schemas/HandResult" }
+        }
+      },
+      "HandSeat": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "integer" },
+          "seat": { "type": "integer" },
+          "cards": { "type": "array", "items": { "type": "string" } },
+          "totalBet": { "type": "integer" },
+          "folded": { "type": "boolean" },
+          "allIn": { "type": "boolean" },
+          "acted": { "type": "boolean" },
+          "autoPlay": { "type": "boolean" }
+        }
+      },
+      "HandResult": {
+        "type": "object",
+        "properties": {
+          "winnerUserId": { "type": "integer" },
+          "winnerSeat": { "type": "integer" },
+          "handName": { "type": "string" },
+          "payouts": { "type": "array", "items": { "type": "object" } },
+          "rake": { "type": "integer", "description": "抽水总额（3%）" },
+          "agentRebates": { "type": "object", "description": "各级代理返佣分配" }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "roomId": { "type": "integer" },
+          "userId": { "type": "integer" },
+          "account": { "type": "string" },
+          "content": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "LedgerEntry": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "userId": { "type": "integer" },
+          "type": { "type": "string", "enum": ["bet", "win", "rake", "adjust", "gift", "join", "leave"] },
+          "amount": { "type": "integer" },
+          "balanceAfter": { "type": "integer" },
+          "referenceId": { "type": "string" },
+          "remark": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  },
+  "security": [{ "cookieAuth": [] }],
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "tags": ["认证"],
+        "summary": "用户登录",
+        "description": "账号密码登录，支持账号或昵称登录。登录成功后设置Session Cookie。",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["account", "password"],
+                "properties": {
+                  "account": { "type": "string", "description": "账号或昵称" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登录成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer" },
+                    "account": { "type": "string" },
+                    "role": { "type": "string" },
+                    "mustChangePassword": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "参数错误", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "401": { "description": "账号或密码错误", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": ["认证"],
+        "summary": "用户注册",
+        "description": "新用户注册，支持邀请码关联代理。",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["account", "password"],
+                "properties": {
+                  "account": { "type": "string" },
+                  "password": { "type": "string" },
+                  "nickname": { "type": "string" },
+                  "inviteCode": { "type": "string", "description": "邀请码（代理账号）" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "注册成功" },
+          "400": { "description": "参数错误", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "409": { "description": "账号已存在", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["认证"],
+        "summary": "用户登出",
+        "description": "清除Session Cookie，退出登录。",
+        "responses": {
+          "200": { "description": "登出成功" }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": ["认证"],
+        "summary": "获取当前用户信息",
+        "description": "返回当前登录用户的完整信息，包括角色、筹码、代理层级等。",
+        "responses": {
+          "200": {
+            "description": "用户信息",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "401": { "description": "未登录", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/rooms/templates/{gameType}": {
+      "get": {
+        "tags": ["房间"],
+        "summary": "获取房间模板",
+        "description": "获取指定游戏类型的房间配置模板（底注、座位数、局数等）。",
+        "security": [],
+        "parameters": [
+          { "name": "gameType", "in": "path", "required": true, "schema": { "type": "string", "enum": ["niuniu", "sangong", "tbnn", "jinhua", "texas"] } }
+        ],
+        "responses": {
+          "200": { "description": "模板列表" }
+        }
+      }
+    },
+    "/api/rooms/create": {
+      "post": {
+        "tags": ["房间"],
+        "summary": "创建房间",
+        "description": "创建新游戏房间。需要代理或管理员权限，开房需满足筹码门槛（只校验不扣费）。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["gameType", "name", "maxSeats", "baseBet", "totalRounds"],
+                "properties": {
+                  "gameType": { "type": "string" },
+                  "name": { "type": "string" },
+                  "maxSeats": { "type": "integer" },
+                  "baseBet": { "type": "integer" },
+                  "totalRounds": { "type": "integer" },
+                  "level": { "type": "string", "enum": ["basic", "advanced", "premium"] },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "房间创建成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Room" } } } },
+          "400": { "description": "参数错误" },
+          "403": { "description": "无权限创建房间" },
+          "402": { "description": "筹码不足，未达到开房门槛" }
+        }
+      }
+    },
+    "/api/rooms/join": {
+      "post": {
+        "tags": ["房间"],
+        "summary": "加入房间",
+        "description": "加入指定房间，可选择入座或观战。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["roomId"],
+                "properties": {
+                  "roomId": { "type": "integer" },
+                  "password": { "type": "string" },
+                  "seat": { "type": "integer", "description": "指定座位号，不传则自动分配" },
+                  "spectate": { "type": "boolean", "description": "是否仅观战" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "加入成功" },
+          "400": { "description": "参数错误" },
+          "404": { "description": "房间不存在" },
+          "409": { "description": "房间已满或已在房间中" }
+        }
+      }
+    },
+    "/api/rooms/mine": {
+      "get": {
+        "tags": ["房间"],
+        "summary": "我创建的房间",
+        "description": "获取当前用户创建的房间列表。",
+        "responses": {
+          "200": { "description": "房间列表", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Room" } } } } }
+        }
+      }
+    },
+    "/api/rooms/joined": {
+      "get": {
+        "tags": ["房间"],
+        "summary": "我加入的房间",
+        "description": "获取当前用户加入过的房间列表。",
+        "responses": {
+          "200": { "description": "房间列表" }
+        }
+      }
+    },
+    "/api/rooms/history": {
+      "get": {
+        "tags": ["房间"],
+        "summary": "房间历史记录",
+        "description": "获取已结束的房间历史记录，支持分页。",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "gameType", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "历史记录列表" }
+        }
+      }
+    },
+    "/api/rooms/{id}": {
+      "get": {
+        "tags": ["房间"],
+        "summary": "获取房间详情",
+        "description": "获取房间完整信息，包括当前牌局、座位状态、玩家列表。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "房间详情", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Room" } } } },
+          "404": { "description": "房间不存在" }
+        }
+      }
+    },
+    "/api/rooms/{id}/ready": {
+      "post": {
+        "tags": ["房间"],
+        "summary": "准备",
+        "description": "玩家准备开始游戏。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "准备成功" },
+          "400": { "description": "当前阶段无法准备" }
+        }
+      },
+      "delete": {
+        "tags": ["房间"],
+        "summary": "取消准备",
+        "description": "玩家取消准备。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "取消准备成功" }
+        }
+      }
+    },
+    "/api/rooms/{id}/auto-play": {
+      "post": {
+        "tags": ["房间"],
+        "summary": "切换自动挂机",
+        "description": "开启或关闭自动挂机模式。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "autoPlay": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "切换成功" }
+        }
+      }
+    },
+    "/api/rooms/{id}/spectate": {
+      "post": {
+        "tags": ["房间"],
+        "summary": "切换观战/入座",
+        "description": "在观战和入座之间切换。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "切换成功" }
+        }
+      }
+    },
+    "/api/rooms/{id}/chat": {
+      "get": {
+        "tags": ["房间"],
+        "summary": "获取聊天记录",
+        "description": "获取房间聊天消息列表，支持轮询。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "since", "in": "query", "schema": { "type": "integer", "description": "返回此ID之后的消息" } }
+        ],
+        "responses": {
+          "200": { "description": "聊天消息列表", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ChatMessage" } } } } }
+        }
+      },
+      "post": {
+        "tags": ["房间"],
+        "summary": "发送聊天消息",
+        "description": "在房间中发送聊天消息。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["content"],
+                "properties": {
+                  "content": { "type": "string", "maxLength": 200 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "发送成功" },
+          "400": { "description": "消息内容为空或过长" }
+        }
+      }
+    },
+    "/api/rooms/{id}/hand": {
+      "get": {
+        "tags": ["房间"],
+        "summary": "获取当前牌局",
+        "description": "获取当前牌局的完整状态，包括阶段、轮到谁、底池、各座位手牌（自己的可见）。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "牌局状态", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Hand" } } } }
+        }
+      },
+      "post": {
+        "tags": ["房间"],
+        "summary": "开始新一局",
+        "description": "房主开始新一局游戏。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "开始成功" },
+          "403": { "description": "无权限（非房主）" },
+          "400": { "description": "玩家未全部准备" }
+        }
+      },
+      "put": {
+        "tags": ["房间"],
+        "summary": "执行游戏操作",
+        "description": "在当前牌局中执行操作（跟注、加注、弃牌、比牌、看牌等）。所有核心算法在服务端执行。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action"],
+                "properties": {
+                  "action": { "type": "string", "enum": ["call", "raise", "fold", "check", "bet", "allin", "compare", "look", "confirm", "roll"] },
+                  "amount": { "type": "integer", "description": "加注金额（raise/bet时需要）" },
+                  "targetUserId": { "type": "integer", "description": "比牌目标用户ID（compare时需要）" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "操作成功" },
+          "400": { "description": "无效操作或参数错误" },
+          "403": { "description": "不是轮到你操作" }
+        }
+      }
+    },
+    "/api/rooms/{id}/ready_next": {
+      "post": {
+        "tags": ["房间"],
+        "summary": "准备下一局",
+        "description": "一局结束后准备下一局。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "准备成功" }
+        }
+      }
+    },
+    "/api/rooms/{id}/gift": {
+      "post": {
+        "tags": ["房间"],
+        "summary": "赠送礼物",
+        "description": "向其他玩家赠送礼物（消耗筹码）。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["targetUserId", "giftType"],
+                "properties": {
+                  "targetUserId": { "type": "integer" },
+                  "giftType": { "type": "string" },
+                  "amount": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "赠送成功" }
+        }
+      }
+    },
+    "/api/rooms/{id}/chip-transactions": {
+      "get": {
+        "tags": ["房间"],
+        "summary": "房间筹码流水",
+        "description": "获取房间内的筹码变动记录。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "流水列表", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/LedgerEntry" } } } } }
+        }
+      }
+    },
+    "/api/rooms/{id}/early-settle": {
+      "post": {
+        "tags": ["房间"],
+        "summary": "提前结算",
+        "description": "房主提前结束当前牌局并结算。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "结算成功" },
+          "403": { "description": "无权限" }
+        }
+      }
+    },
+    "/api/rooms/{id}/kick": {
+      "post": {
+        "tags": ["房间"],
+        "summary": "踢出玩家",
+        "description": "房主将玩家踢出房间，退还剩余筹码。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["targetUserId"],
+                "properties": {
+                  "targetUserId": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "踢出成功" },
+          "403": { "description": "无权限" }
+        }
+      }
+    },
+    "/api/rooms/{id}/continue": {
+      "post": {
+        "tags": ["房间"],
+        "summary": "继续游戏",
+        "description": "暂停后继续游戏。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "继续成功" }
+        }
+      }
+    },
+    "/api/rooms/{id}/pause": {
+      "post": {
+        "tags": ["房间"],
+        "summary": "暂停游戏",
+        "description": "房主暂停当前游戏。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "暂停成功" }
+        }
+      }
+    },
+    "/api/rooms/{id}/resume": {
+      "post": {
+        "tags": ["房间"],
+        "summary": "恢复游戏",
+        "description": "房主恢复暂停的游戏。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "恢复成功" }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "tags": ["管理后台"],
+        "summary": "用户列表",
+        "description": "管理员获取所有用户列表，支持搜索和分页。",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "role", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "用户列表" }
+        }
+      },
+      "post": {
+        "tags": ["管理后台"],
+        "summary": "创建用户",
+        "description": "管理员创建新用户。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["account", "password", "role"],
+                "properties": {
+                  "account": { "type": "string" },
+                  "password": { "type": "string" },
+                  "nickname": { "type": "string" },
+                  "role": { "type": "string" },
+                  "points": { "type": "integer" },
+                  "invitedById": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "创建成功" }
+        }
+      },
+      "patch": {
+        "tags": ["管理后台"],
+        "summary": "更新用户",
+        "description": "管理员更新用户信息。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["userId"],
+                "properties": {
+                  "userId": { "type": "integer" },
+                  "nickname": { "type": "string" },
+                  "role": { "type": "string" },
+                  "points": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "更新成功" }
+        }
+      },
+      "delete": {
+        "tags": ["管理后台"],
+        "summary": "删除用户",
+        "description": "管理员删除用户（软删除）。",
+        "parameters": [
+          { "name": "userId", "in": "query", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "删除成功" }
+        }
+      }
+    },
+    "/api/admin/adjust-points": {
+      "post": {
+        "tags": ["管理后台"],
+        "summary": "调整筹码",
+        "description": "管理员调整用户筹码余额（V3单一货币，已移除信用分）。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["userId", "amount", "reason"],
+                "properties": {
+                  "userId": { "type": "integer" },
+                  "amount": { "type": "integer", "description": "正数增加，负数扣除" },
+                  "reason": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "调整成功" }
+        }
+      }
+    },
+    "/api/admin/ledger": {
+      "get": {
+        "tags": ["管理后台"],
+        "summary": "全平台流水",
+        "description": "管理员查看全平台筹码流水记录。",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } },
+          { "name": "userId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "type", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "流水列表" }
+        }
+      }
+    },
+    "/api/admin/stats": {
+      "get": {
+        "tags": ["管理后台"],
+        "summary": "平台统计",
+        "description": "获取平台运营统计数据（V3适配：筹码为核心，已移除信用分/返佣字段）。",
+        "responses": {
+          "200": {
+            "description": "统计数据",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalUsers": { "type": "integer" },
+                    "totalRooms": { "type": "integer" },
+                    "totalHands": { "type": "integer" },
+                    "totalRake": { "type": "integer", "description": "累计抽水" },
+                    "totalPoints": { "type": "integer", "description": "平台总筹码" },
+                    "activeUsers": { "type": "integer" },
+                    "onlineUsers": { "type": "integer" },
+                    "platformRevenue": { "type": "integer", "description": "平台收入（抽水的1/3）" },
+                    "agentRebates": { "type": "integer", "description": "代理返佣总额（抽水的2/3）" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/set-role": {
+      "post": {
+        "tags": ["管理后台"],
+        "summary": "设置用户角色",
+        "description": "管理员设置用户角色（玩家/代理/总代理/客服/管理员）。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["userId", "role"],
+                "properties": {
+                  "userId": { "type": "integer" },
+                  "role": { "type": "string", "enum": ["player", "agent", "top_agent", "admin", "customer_service"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "设置成功" }
+        }
+      }
+    },
+    "/api/admin/config": {
+      "get": {
+        "tags": ["管理后台"],
+        "summary": "获取系统配置",
+        "responses": { "200": { "description": "配置信息" } }
+      },
+      "put": {
+        "tags": ["管理后台"],
+        "summary": "更新系统配置",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } },
+        "responses": { "200": { "description": "更新成功" } }
+      }
+    },
+    "/api/admin/rooms": {
+      "get": {
+        "tags": ["管理后台"],
+        "summary": "所有房间列表",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "status", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "房间列表" } }
+      }
+    },
+    "/api/admin/rooms/{id}/force-end": {
+      "post": {
+        "tags": ["管理后台"],
+        "summary": "强制结束房间",
+        "description": "管理员强制结束房间并结算。",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "结束成功" } }
+      }
+    },
+    "/api/admin/cs-operations": {
+      "get": {
+        "tags": ["管理后台"],
+        "summary": "客服操作记录",
+        "description": "查看客服人员的操作日志。",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "staffId", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "操作记录列表" } }
+      }
+    },
+    "/api/admin/cs-report": {
+      "get": {
+        "tags": ["管理后台"],
+        "summary": "客服工作报告",
+        "description": "获取客服人员的工作统计报告。",
+        "parameters": [
+          { "name": "startDate", "in": "query", "schema": { "type": "string" } },
+          { "name": "endDate", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "工作报告" } }
+      }
+    },
+    "/api/admin/cs-staff": {
+      "get": {
+        "tags": ["管理后台"],
+        "summary": "客服人员列表",
+        "responses": { "200": { "description": "客服列表" } }
+      }
+    },
+    "/api/agent/history": {
+      "get": {
+        "tags": ["代理"],
+        "summary": "代理游戏历史",
+        "description": "获取代理创建的房间历史记录。",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "历史列表" } }
+      }
+    },
+    "/api/agent/ledger": {
+      "get": {
+        "tags": ["代理"],
+        "summary": "代理流水",
+        "description": "获取代理的筹码流水记录（V3：返佣直接进入筹码账户）。",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "type", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "流水列表" } }
+      }
+    },
+    "/api/agent/players": {
+      "get": {
+        "tags": ["代理"],
+        "summary": "下级玩家列表",
+        "description": "获取代理邀请的玩家列表（含一级、二级下级）。",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "玩家列表" } }
+      },
+      "post": {
+        "tags": ["代理"],
+        "summary": "邀请玩家",
+        "description": "代理创建邀请链接或直接添加玩家。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "account": { "type": "string" },
+                  "nickname": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "邀请成功" } }
+      }
+    },
+    "/api/agent/chip-transactions": {
+      "get": {
+        "tags": ["代理"],
+        "summary": "筹码调整记录",
+        "description": "获取代理对玩家的筹码调整记录。",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "playerId", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "记录列表" } }
+      }
+    },
+    "/api/agent/credit-transactions": {
+      "get": {
+        "tags": ["代理"],
+        "summary": "信用分记录（已废弃）",
+        "description": "V3已移除信用分，此接口仅返回历史数据兼容。",
+        "deprecated": true,
+        "responses": { "200": { "description": "历史记录" } }
+      }
+    },
+    "/api/agent/promotion": {
+      "get": {
+        "tags": ["代理"],
+        "summary": "推广数据",
+        "description": "获取代理的推广统计数据（V3：返佣已合并到筹码流水）。",
+        "responses": {
+          "200": {
+            "description": "推广数据",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "inviteCode": { "type": "string" },
+                    "totalPlayers": { "type": "integer" },
+                    "activePlayers": { "type": "integer" },
+                    "totalRake": { "type": "integer" },
+                    "myRebate": { "type": "integer", "description": "我的返佣累计" },
+                    "level": { "type": "string", "description": "代理层级 L0/L1/L2" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/promote": {
+      "post": {
+        "tags": ["代理"],
+        "summary": "升级玩家为代理",
+        "description": "总代理可将玩家升级为一级代理，一级代理可将玩家升级为二级代理。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["userId"],
+                "properties": {
+                  "userId": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "升级成功" } }
+      }
+    },
+    "/api/profile": {
+      "get": {
+        "tags": ["个人资料"],
+        "summary": "获取个人资料",
+        "responses": { "200": { "description": "用户资料" } }
+      },
+      "patch": {
+        "tags": ["个人资料"],
+        "summary": "更新个人资料",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nickname": { "type": "string" },
+                  "avatar": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "更新成功" } }
+      }
+    },
+    "/api/profile/devices": {
+      "post": {
+        "tags": ["个人资料"],
+        "summary": "绑定设备",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "deviceId": { "type": "string" },
+                  "deviceName": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "绑定成功" } }
+      },
+      "delete": {
+        "tags": ["个人资料"],
+        "summary": "解绑设备",
+        "parameters": [
+          { "name": "deviceId", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "解绑成功" } }
+      }
+    },
+    "/api/profile/password": {
+      "post": {
+        "tags": ["个人资料"],
+        "summary": "修改密码",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["oldPassword", "newPassword"],
+                "properties": {
+                  "oldPassword": { "type": "string" },
+                  "newPassword": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "修改成功" }, "400": { "description": "原密码错误" } }
+      }
+    },
+    "/api/profile/force-change-password": {
+      "post": {
+        "tags": ["个人资料"],
+        "summary": "强制修改密码（首次登录）",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["newPassword"],
+                "properties": {
+                  "newPassword": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "修改成功" } }
+      }
+    },
+    "/api/admin/economy-v2/games": {
+      "get": {
+        "tags": ["经济模型"],
+        "summary": "获取所有游戏经济配置",
+        "responses": { "200": { "description": "配置列表" } }
+      }
+    },
+    "/api/admin/economy-v2/games/{gameType}": {
+      "get": {
+        "tags": ["经济模型"],
+        "summary": "获取指定游戏经济配置",
+        "parameters": [
+          { "name": "gameType", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "配置信息" } }
+      },
+      "put": {
+        "tags": ["经济模型"],
+        "summary": "更新指定游戏经济配置",
+        "parameters": [
+          { "name": "gameType", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } },
+        "responses": { "200": { "description": "更新成功" } }
+      }
+    },
+    "/api/admin/economy-v2/templates": {
+      "get": {
+        "tags": ["经济模型"],
+        "summary": "获取经济配置模板列表",
+        "responses": { "200": { "description": "模板列表" } }
+      }
+    },
+    "/api/admin/economy-v2/templates/{templateCode}": {
+      "get": {
+        "tags": ["经济模型"],
+        "summary": "获取指定模板",
+        "parameters": [
+          { "name": "templateCode", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "模板信息" } }
+      },
+      "put": {
+        "tags": ["经济模型"],
+        "summary": "更新指定模板",
+        "parameters": [
+          { "name": "templateCode", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } },
+        "responses": { "200": { "description": "更新成功" } }
+      }
+    },
+    "/api/admin/economy-v2/reload": {
+      "post": {
+        "tags": ["经济模型"],
+        "summary": "重新加载经济配置缓存",
+        "responses": { "200": { "description": "重载成功" } }
+      }
+    },
+    "/api/admin/economy-v2/history": {
+      "get": {
+        "tags": ["经济模型"],
+        "summary": "经济配置修改历史",
+        "responses": { "200": { "description": "历史记录" } }
+      }
+    },
+    "/api/games/rules": {
+      "get": {
+        "tags": ["游戏规则"],
+        "summary": "获取所有游戏规则",
+        "security": [],
+        "responses": { "200": { "description": "规则列表" } }
+      }
+    },
+    "/api/games/rules/{gameType}": {
+      "get": {
+        "tags": ["游戏规则"],
+        "summary": "获取指定游戏规则",
+        "security": [],
+        "parameters": [
+          { "name": "gameType", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "规则信息" } }
+      }
+    },
+    "/api/assets": {
+      "get": {
+        "tags": ["素材"],
+        "summary": "获取素材列表",
+        "security": [],
+        "responses": { "200": { "description": "素材列表" } }
+      }
+    },
+    "/api/assets/download": {
+      "get": {
+        "tags": ["素材"],
+        "summary": "下载素材",
+        "security": [],
+        "parameters": [
+          { "name": "path", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "文件流" } }
+      }
+    },
+    "/api/app/version": {
+      "get": {
+        "tags": ["应用"],
+        "summary": "获取应用版本信息",
+        "security": [],
+        "responses": { "200": { "description": "版本信息" } }
+      }
+    },
+    "/api/app/error": {
+      "post": {
+        "tags": ["应用"],
+        "summary": "上报前端错误",
+        "security": [],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } },
+        "responses": { "200": { "description": "上报成功" } }
+      }
+    },
+    "/api/app/econ-rates": {
+      "get": {
+        "tags": ["应用"],
+        "summary": "获取经济费率（公开）",
+        "description": "V3经济模型费率：抽水3%，代理层级返佣比例。",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "费率信息",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rakeRate": { "type": "number", "description": "抽水比例 0.03 (3%)" },
+                    "agentLevels": {
+                      "type": "object",
+                      "description": "各级代理返佣比例（占抽水比例）",
+                      "properties": {
+                        "L2_top_agent": { "type": "number", "description": "总代理 0.5/3 ≈ 16.67%" },
+                        "L1_agent": { "type": "number", "description": "一级代理 0.5/3 ≈ 16.67%" },
+                        "L0_room_agent": { "type": "number", "description": "开房代理 1/3 ≈ 33.33%" },
+                        "platform": { "type": "number", "description": "平台剩余 1/3 ≈ 33.33%" }
+                      }
+                    },
+                    "skipRule": { "type": "string", "description": "跳过层份额归上层" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": ["杂项"],
+        "summary": "健康检查",
+        "security": [],
+        "responses": { "200": { "description": "服务正常" } }
+      }
+    },
+    "/api/app-download": {
+      "get": {
+        "tags": ["杂项"],
+        "summary": "APP下载链接",
+        "security": [],
+        "responses": { "200": { "description": "下载信息" } }
+      }
+    },
+    "/api/app-version": {
+      "get": {
+        "tags": ["杂项"],
+        "summary": "APP版本检查",
+        "security": [],
+        "responses": { "200": { "description": "版本信息" } }
+      }
+    },
+    "/api/seed": {
+      "get": {
+        "tags": ["杂项"],
+        "summary": "查看种子数据状态",
+        "security": [],
+        "responses": { "200": { "description": "种子状态" } }
+      },
+      "post": {
+        "tags": ["杂项"],
+        "summary": "执行种子数据初始化",
+        "security": [],
+        "responses": { "200": { "description": "执行成功" } }
+      }
+    },
+    "/api/history/cleanup": {
+      "get": {
+        "tags": ["杂项"],
+        "summary": "查看历史清理状态",
+        "responses": { "200": { "description": "清理状态" } }
+      },
+      "post": {
+        "tags": ["杂项"],
+        "summary": "执行历史数据清理",
+        "responses": { "200": { "description": "清理成功" } }
+      }
+    }
+  },
+  "x-v3-economy": {
+    "description": "V3经济模型说明",
+    "currency": "单一货币：筹码（points）",
+    "removed": ["信用分（credit）", "返佣余额（commission）", "adjust-credit接口", "返佣提现接口"],
+    "rake": {
+      "rate": "3% of total pot",
+      "distribution": {
+        "room_agent_L0": "1/3 of rake ≈ 1% of pot",
+        "level1_agent_L1": "0.5/3 of rake ≈ 0.5% of pot (if exists)",
+        "top_agent_L2": "0.5/3 of rake ≈ 0.5% of pot (if exists)",
+        "platform": "remaining 1/3 of rake ≈ 1% of pot"
+      },
+      "skipRule": "跳过的层级份额归上层所有",
+      "conservation": "平台收入倒挤确保总分配=抽水总额"
+    },
+    "hierarchy": {
+      "traceMethod": "通过 users.invitedById 向上追溯最多2层",
+      "levels": ["L2 总代理 (top_agent)", "L1 一级代理 (agent)", "L0 开房代理 (agent)"],
+      "permissions": {
+        "top_agent": "可创建房间、邀请玩家、升级一级代理、拥有一级代理所有权限",
+        "agent": "可创建房间、邀请玩家、升级二级代理（自己的下级）",
+        "player": "可加入房间、游戏"
+      }
+    },
+    "roomThreshold": {
+      "basic": "≥100 筹码",
+      "advanced": "≥1000 筹码",
+      "premium": "≥5000 筹码",
+      "note": "只校验不扣费"
+    }
+  },
+  "x-websocket": {
+    "endpoint": "/socket.io",
+    "transports": ["websocket"],
+    "description": "房间实时状态同步使用Socket.io WebSocket连接",
+    "events": {
+      "room:update": "房间状态更新",
+      "hand:update": "牌局状态更新",
+      "chat:new": "新聊天消息",
+      "action:required": "轮到玩家行动",
+      "hand:finished": "牌局结束"
+    },
+    "config": {
+      "pingInterval": 25000,
+      "pingTimeout": 60000,
+      "maxHttpBufferSize": 1048576
+    }
+  }
+}

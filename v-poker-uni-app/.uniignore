@@ -1,0 +1,46 @@
+# HBuilderX 编译忽略文件
+# 这些文件不会被编译进 App 包
+
+# ========== 构建产物 ==========
+unpackage/
+.hbuilderx/
+
+# ========== 依赖 ==========
+node_modules/
+scripts/node_modules/
+
+# ========== 敏感凭证 ==========
+scripts/r2-config.json
+*.p12
+*.mobileprovision
+*.cer
+*.pem
+.env
+.env.local
+
+# ========== 开发工具脚本（不需要打包进App） ==========
+scripts/
+
+# ========== 文档 ==========
+docs/
+*.md
+README*
+
+# ========== 临时/备份 ==========
+_backup/
+_public_extract/
+_video_frames/
+*.log
+*.tmp
+*.bak
+
+# ========== 开发截图 ==========
+*_screenshot.png
+screenshot_*.png
+
+# ========== 编辑器 ==========
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
