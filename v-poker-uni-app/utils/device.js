@@ -1,5 +1,5 @@
 /**
- * V-Poker 设备信息工具
+ * V-Poker 设备信息工具（纯 uni-app 实现，零 plus 依赖）
  */
 
 /**
@@ -146,16 +146,10 @@ export function vibrateLong() {
 }
 
 /**
- * 保持屏幕常亮
+ * 保持屏幕常亮（纯uni-app无直接API，预留接口）
  */
 export function keepScreenOn(keepOn = true) {
-  // #ifdef APP-PLUS
-  try {
-    plus.device.setWakelock(keepOn)
-  } catch (e) {
-    // 忽略
-  }
-  // #endif
+  // uni-app 暂无跨平台保持屏幕常亮API，此处预留
 }
 
 export default {

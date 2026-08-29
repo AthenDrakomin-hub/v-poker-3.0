@@ -1,4 +1,4 @@
-﻿<script>
+<script>
 import { initUserState, userState, fetchUserInfo } from './store/user.js'
 import { canAccessPage } from './utils/authGuard.js'
 import { initHaptic, setVibrationEnabled } from './utils/haptic.js'
@@ -23,7 +23,7 @@ export default {
       })
     }
 
-    // iOS 触觉反馈初始化 + 震动设置同步
+    // 触觉反馈初始化 + 震动设置同步
     initHaptic()
     try {
       const savedSettings = uni.getStorageSync('vpoker_settings')
@@ -39,7 +39,8 @@ export default {
 
     // 字体缩放初始化（从本地存储读取并广播）
     const initScale = initFontScale()
-    // 同步到全局 CSS 变量
+    // 同步到全局 CSS 变量（仅H5端，App端由nvue渲染层处理）
+    // #ifdef H5
     try {
       if (typeof document !== 'undefined' && document.documentElement) {
         document.documentElement.style.setProperty('--font-scale', initScale)
@@ -47,6 +48,7 @@ export default {
     } catch (e) {
       console.warn('[App] 字体缩放初始化失败', e)
     }
+    // #endif
 
     // 音效管理器初始化（预加载常用音效）
     try {
@@ -67,56 +69,6 @@ export default {
     } catch (e) {
       console.warn('[App] 音效初始化失败', e)
     }
-
-    // 横屏锁定 + 全屏沉浸。iOS 方向由 Info.plist 决定，运行时 lockOrientation 作为保险。
-    // #ifdef APP-PLUS
-    let landscapeRetryCount = 0
-    const lockLandscape = () => {
-      try {
-        if (typeof plus !== 'undefined' && plus.screen) {
-          // iOS 优先用 landscape-primary，兼容部分版本
-          plus.screen.lockOrientation('landscape-primary')
-          setTimeout(() => {
-            try { plus.screen.lockOrientation('landscape') } catch (e) {}
-          }, 100)
-          plus.navigator.setFullscreen(true)
-        }
-      } catch (e) {
-        console.warn('[App] 横屏锁定失败', e)
-      }
-      // 最多重试 5 次，间隔递增，确保 plus 就绪后能锁定
-      if (landscapeRetryCount < 5) {
-        landscapeRetryCount++
-        setTimeout(lockLandscape, 300 * landscapeRetryCount)
-      }
-    }
-    const initImmersive = () => {
-      try {
-        plus.screen.lockOrientation('landscape-primary')
-        plus.navigator.setFullscreen(true)
-        plus.navigator.setStatusBarBackground('#000000')
-        // iOS 状态栏文字设为白色（深色背景必须，否则黑字不可见）
-        try { plus.navigator.setStatusBarStyle('light') } catch (e) {}
-        // iOS 内存警告监听：plus 就绪后注册，避免 plus 未注入时闪退
-        plus.globalEvent.addEventListener('memorywarning', () => {
-          console.warn('[iOS] 内存警告，触发全局降级')
-          uni.$emit('app:memoryWarning')
-          try {
-            plus.cache.clear(() => {})
-          } catch (e) {
-            console.warn('[App] 清理缓存失败:', e)
-          }
-        })
-      } catch (e) {
-        console.warn('[App] 沉浸式初始化失败', e)
-      }
-    }
-    if (typeof plus !== 'undefined') {
-      initImmersive()
-    }
-    // 原生环境可能稍晚完成初始化，启动多重重试
-    lockLandscape()
-    // #endif
 
     // 全局路由拦截：权限校验
     const interceptMethods = ['navigateTo', 'redirectTo', 'reLaunch', 'switchTab']
@@ -142,19 +94,6 @@ export default {
     })
   },
   onShow: function() {
-    // #ifdef APP-PLUS
-    try {
-      if (typeof plus !== 'undefined' && plus.screen) {
-        plus.screen.lockOrientation('landscape-primary')
-        setTimeout(() => {
-          try { plus.screen.lockOrientation('landscape') } catch (e) {}
-        }, 100)
-        plus.navigator.setFullscreen(true)
-      }
-    } catch(e) {
-      console.warn('[App] 横屏锁定失败:', e)
-    }
-    // #endif
   },
   onHide: function() {
   }

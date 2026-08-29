@@ -1,4 +1,4 @@
-import { GAME_THEMES } from '../themes/themeConfig.js'
+﻿import { GAME_THEMES } from '../themes/themeConfig.js'
 
 export const SETTINGS_KEY = 'vpoker_settings'
 
@@ -44,15 +44,7 @@ export function applyTheme(themeId) {
       style.setProperty('--theme-text', theme.colors.text)
     }
   } catch (e) {}
-  // iOS 状态栏同步：全主题均为深色背景，统一白色文字
-  // #ifdef APP-PLUS
-  try {
-    if (typeof plus !== 'undefined' && plus.navigator) {
-      plus.navigator.setStatusBarBackground('#000000')
-      plus.navigator.setStatusBarStyle('light')
-    }
-  } catch (e) {}
-  // #endif
+  // 状态栏样式由 manifest.json 配置，运行时无需设置
 }
 
 export function saveAppSettings(patch) {

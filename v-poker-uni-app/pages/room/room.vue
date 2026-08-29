@@ -86,17 +86,20 @@
     <!-- 顶部呼出区域（透明，点击显示 HUD） -->
     <view class="hud-trigger-area" @click="toggleHud" v-if="!showHud"></view>
 
-    <view v-if="isHost" class="host-control-bar">
-      <text class="host-label">房主管理</text>
-      <view v-if="isWaitingState" class="host-action primary" @click="hostStartGame">开始游戏</view>
-      <view v-else-if="roomStatus === 'waiting_continue'" class="host-action primary" @click="runHostAction('continue')">续开房间</view>
-      <view class="host-action" @click="runHostAction(roomInfo?.status === 'paused' ? 'resume' : 'pause')">{{ roomInfo?.status === 'paused' ? '恢复房间' : '暂停房间' }}</view>
-      <view class="host-action" @click="showChipAdjust = true">筹码调整</view>
-      <view class="host-action" @click="showKickModal = true">踢出玩家</view>
-      <view class="host-action bot-action" @click="handleAddBot" :class="{ disabled: addingBot }">
+    <view v-if="isHost" class="host-control-bar" :class="{ 'host-collapsed': hostPanelCollapsed }">
+      <view class="host-collapse-btn" @click="hostPanelCollapsed = !hostPanelCollapsed">
+        <text class="host-collapse-icon">{{ hostPanelCollapsed ? '⚙' : '—' }}</text>
+      </view>
+      <text v-if="!hostPanelCollapsed" class="host-label">房主管理</text>
+      <view v-if="!hostPanelCollapsed && isWaitingState" class="host-action primary" @click="hostStartGame">开始游戏</view>
+      <view v-else-if="!hostPanelCollapsed && roomStatus === 'waiting_continue'" class="host-action primary" @click="runHostAction('continue')">续开房间</view>
+      <view v-if="!hostPanelCollapsed" class="host-action" @click="runHostAction(roomInfo?.status === 'paused' ? 'resume' : 'pause')">{{ roomInfo?.status === 'paused' ? '恢复房间' : '暂停房间' }}</view>
+      <view v-if="!hostPanelCollapsed" class="host-action" @click="showChipAdjust = true">筹码调整</view>
+      <view v-if="!hostPanelCollapsed" class="host-action" @click="showKickModal = true">踢出玩家</view>
+      <view v-if="!hostPanelCollapsed" class="host-action bot-action" @click="handleAddBot" :class="{ disabled: addingBot }">
         <text>{{ addingBot ? '添加中...' : '添加机器人' }}</text>
       </view>
-      <view class="host-action danger" @click="confirmEarlySettle"><VIcon name="warning" :size="1.8" color="#fca5a5" /><text>提前结算</text></view>
+      <view v-if="!hostPanelCollapsed" class="host-action danger" @click="confirmEarlySettle"><VIcon name="warning" :size="1.8" color="#fca5a5" /><text>提前结算</text></view>
     </view>
 
     <!-- 玩家准备按钮 -->
@@ -130,6 +133,11 @@
         <view class="table-inner" :style="{ backgroundImage: 'url(' + $cdn('/static/images/ui/poker-table-bg.jpg') + ')' }"></view>
         <view class="table-border"></view>
         <view class="table-highlight"></view>
+        <!-- V-POKER 品牌浮雕 -->
+        <view class="brand-emboss">
+          <text class="brand-text">V-POKER</text>
+          <text class="brand-subtitle">TEXAS HOLD'EM</text>
+        </view>
       </view>
 
       <!-- 底池显示（DOM，位于桌面中央） -->
@@ -195,6 +203,7 @@
         :messages="chatMessages"
         @send="sendChat"
         @quick-voice="onQuickVoice"
+        @close="showChat = false"
       />
     </view>
 
@@ -497,16 +506,7 @@ export default {
       this.ctx.scale(this.dpr, this.dpr)
       this._preloadCardTextures()
 
-      // 监听内存警告
-      if (window.plus) {
-        try {
-          plus.globalEvent.addEventListener('memorywarning', () => {
-            this._handleMemoryWarning()
-          })
-        } catch (e) {
-          console.warn('[Room] 内存警告监听注册失败:', e)
-        }
-      }
+      // 内存警告监听：纯uni-app无跨平台API，预留
     },
 
     // 预渲染 52 张牌到离屏 canvas（iOS 会缓存为 GPU 纹理）
@@ -1239,24 +1239,11 @@ export default {
       }
     },
 
-    // ---------- 触觉反馈（增强版，支持多种震动模式） ----------
+    // ---------- 触觉反馈（纯uni-app，由逻辑层处理） ----------
     _haptic(style) {
       try {
-        if (window.plus && plus.device) {
-          const patterns = {
-            light: [10], medium: [20], heavy: [30],
-            deal: [8], flip: [15, 50, 15], chip: [12, 30, 8],
-            success: [15, 50, 25], warning: [30, 40, 30],
-            error: [20, 30, 20, 30, 40], victory: [20, 50, 30, 80, 50]
-          }
-          const pattern = patterns[style] || [20]
-          let delay = 0
-          pattern.forEach((duration, i) => {
-            setTimeout(() => { plus.device.vibrate(duration) }, delay)
-            delay += duration + 30
-          })
-        }
-      } catch (e) { /* 静默失败 */ }
+        this..callMethod('triggerHaptic', style)
+      } catch (e) {}
     },
 
 // ---------- 工具函数 ----------
@@ -1476,6 +1463,7 @@ export default {
       // 沉浸式游戏模式
       showHud: true,
       showChat: false,
+      hostPanelCollapsed: false,
       hudAutoHideTimer: null,
       // 定时器
       countdownTimer: null,
@@ -1610,10 +1598,12 @@ export default {
   onLoad(options) {
     this.roomId = options.id
     this.prepareRoomInLandscape()
+    // #ifdef H5
     // H5端：延迟初始化Canvas（renderjs在H5端不工作，直接在逻辑层渲染）
     setTimeout(() => {
       this.initCanvas()
     }, 500)
+    // #endif
   },
   onHide() {
     this.sendCmd('pauseAnimations')
@@ -1679,6 +1669,9 @@ export default {
 
     // ---------- H5端Canvas渲染（renderjs在H5端不工作，直接在逻辑层渲染） ----------
     initCanvas() {
+      // #ifndef H5
+      return // App端使用renderjs渲染，跳过逻辑层Canvas
+      // #endif
       if (this.canvasCtx) return
       const uniCanvas = document.getElementById('gameCanvas')
       if (!uniCanvas) return
@@ -1953,16 +1946,7 @@ export default {
     },
 
     prepareRoomInLandscape(attempt = 0) {
-      // #ifdef APP-PLUS
-      try {
-        if (typeof plus !== 'undefined') {
-          plus.screen.lockOrientation('landscape')
-          plus.navigator.setFullscreen(true)
-        }
-      } catch (e) {
-        console.warn('[Room] 横屏锁定失败', e)
-      }
-      // #endif
+      // 横屏和全屏由 manifest.json 配置，运行时无需设置
       const sys = uni.getSystemInfoSync()
       if (sys.windowWidth > sys.windowHeight) {
         this.canvasW = sys.windowWidth
@@ -2033,6 +2017,18 @@ export default {
       if (info && info.type === 'animationComplete') {
         // 动画完成，可触发后续业务逻辑
       }
+    },
+
+    // renderjs 回调：触发触觉反馈（纯uni-app实现）
+    triggerHaptic(style) {
+      try {
+        const typeMap = {
+          light: 'light', deal: 'light', flip: 'light', selection: 'light',
+          medium: 'medium', chip: 'medium', warning: 'medium', success: 'medium',
+          heavy: 'heavy', victory: 'heavy', error: 'heavy',
+        }
+        uni.vibrateShort({ type: typeMap[style] || 'light' })
+      } catch (e) {}
     },
 
     // ---------- 语音播放（方言语音包） ----------
@@ -2777,6 +2773,7 @@ export default {
       })
 
       if (allCards.length > 0) {
+        // #ifdef H5
         // H5端：直接在逻辑层渲染卡牌（renderjs在H5端不工作）
         this.initCanvas()
         this.canvasCards = []
@@ -2798,6 +2795,7 @@ export default {
         this.$nextTick(() => {
           this.renderCanvasCards()
         })
+        // #endif
       }
 
       // 自动看牌
@@ -3544,6 +3542,27 @@ export default {
 .host-action.bot-action { color: #93c5fd; background: rgba(59,130,246,0.14); border: 1px solid rgba(59,130,246,0.4); }
 .host-action.bot-action.disabled { opacity: 0.5; pointer-events: none; }
 
+/* 房主面板折叠 */
+.host-collapsed {
+  padding: 0.5vh;
+  gap: 0;
+}
+.host-collapse-btn {
+  width: max(4vh, 36px);
+  height: max(4vh, 36px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.6vh;
+  background: rgba(255,215,0,0.12);
+  border: 0.1vh solid rgba(255,215,0,0.3);
+}
+.host-collapse-icon {
+  color: var(--color-gold);
+  font-size: 2vh;
+  font-weight: 700;
+}
+
 .player-ready-bar {
   position: absolute;
   z-index: 30;
@@ -3840,10 +3859,42 @@ export default {
   height: 35%;
   background:
     radial-gradient(ellipse at 30% 40%, rgba(255,255,255,0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 60%, rgba(255,215,0,0.05) 0%, transparent 60%);
+    radial-gradient(ellipse at 70% 60%, rgba(255,215,0,0.08) 0%, transparent 60%);
   border-radius: 50%;
   pointer-events: none;
   z-index: 1;
+}
+
+/* V-POKER 品牌浮雕（牌桌中央） */
+.brand-emboss {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.07;
+}
+.brand-text {
+  display: block;
+  font-size: 8vh;
+  font-weight: 900;
+  letter-spacing: 0.5vh;
+  color: #FFD700;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.3),
+    0 -1px 0 rgba(0,0,0,0.5),
+    0 0 30px rgba(255,215,0,0.3);
+  font-family: 'PlayfairDisplay', Georgia, serif;
+}
+.brand-subtitle {
+  display: block;
+  font-size: 1.8vh;
+  letter-spacing: 0.8vh;
+  color: rgba(255,215,0,0.6);
+  margin-top: 0.5vh;
+  font-weight: 300;
 }
 
 /* 底池区域 */

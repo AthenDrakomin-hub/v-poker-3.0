@@ -7,6 +7,7 @@
     "transformPx" : false,
     "app-plus" : {
         "usingComponents" : true,
+        "vueVersion" : "3",
         "nvueStyleCompiler" : "uni-app",
         "compilerVersion" : 3,
         "screenOrientation" : [ "landscape-primary", "landscape-secondary" ],
@@ -132,6 +133,19 @@
     },
     "mp-toutiao" : {
         "usingComponents" : true
+    },
+    "h5" : {
+        "title" : "V-Poker",
+        "router" : {
+            "mode" : "hash",
+            "base" : "./"
+        },
+        "publicPath" : "./",
+        "optimization" : {
+            "treeShaking" : {
+                "enable" : true
+            }
+        }
     },
     "vueVersion" : "3",
     "fallbackLocale" : "zh-Hans",

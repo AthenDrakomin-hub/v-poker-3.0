@@ -1,12 +1,12 @@
-﻿<template>
-  <view class="chat-box" :class="{ 'chat-collapsed': collapsed }">
-    <!-- 折叠/展开按钮 -->
-    <view class="chat-toggle" @click="collapsed = !collapsed">
-      <text class="toggle-icon">{{ collapsed ? '💬' : '✕' }}</text>
+<template>
+  <view class="chat-box">
+    <!-- 关闭按钮 -->
+    <view class="chat-toggle" @click="handleClose">
+      <text class="toggle-icon">✕</text>
     </view>
 
     <!-- 聊天内容 -->
-    <view v-show="!collapsed" class="chat-content">
+    <view class="chat-content">
       <!-- 消息列表 -->
       <scroll-view
         class="chat-messages"
@@ -93,16 +93,11 @@ export default {
     messages: {
       type: Array,
       default: () => []
-    },
-    defaultCollapsed: {
-      type: Boolean,
-      default: false
     }
   },
-  emits: ['send', 'quick-voice'],
+  emits: ['send', 'quick-voice', 'close'],
   data() {
     return {
-      collapsed: this.defaultCollapsed,
       inputText: '',
       scrollToId: '',
       showEmojiPanel: false,
@@ -137,6 +132,9 @@ export default {
     }
   },
   methods: {
+    handleClose() {
+      this.$emit('close')
+    },
     sendMessage() {
       const text = this.inputText.trim()
       if (!text) return
@@ -186,12 +184,6 @@ export default {
   transition: all 0.3s ease;
 }
 
-.chat-collapsed {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 50%;
-}
-
 .chat-toggle {
   position: absolute;
   top: 8rpx;
@@ -208,13 +200,7 @@ export default {
 
 .toggle-icon {
   font-size: var(--text-lg);
-}
-
-.chat-collapsed .chat-toggle {
-  position: static;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
+  color: rgba(255,255,255,0.7);
 }
 
 .chat-content {

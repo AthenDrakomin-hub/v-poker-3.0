@@ -12,6 +12,12 @@
         <view class="header-line"></view>
       </view>
 
+      <!-- 结算警告 -->
+      <view v-if="warning" class="warning-banner">
+        <text class="warning-icon">⚠</text>
+        <text class="warning-text">{{ warning }}</text>
+      </view>
+
       <!-- 总结算：累计数据 -->
       <view v-if="isFinal && summary" class="summary-section">
         <view class="summary-row">
@@ -143,6 +149,11 @@ export default {
     isHost: {
       type: Boolean,
       default: false
+    },
+    // 结算警告信息（庄家赔付不足等）
+    warning: {
+      type: String,
+      default: ''
     },
   },
   data() {
@@ -521,4 +532,18 @@ export default {
   color: rgba(255, 255, 255, 0.5) !important;
   opacity: 0.7;
 }
+
+.warning-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1vh;
+  padding: 1.2vh 2vh;
+  margin-bottom: 1.5vh;
+  background: rgba(245, 158, 11, 0.12);
+  border: 0.1vh solid rgba(245, 158, 11, 0.4);
+  border-radius: 0.8vh;
+}
+.warning-icon { font-size: 2vh; }
+.warning-text { color: #fbbf24; font-size: var(--text-sm, 1.8vh); font-weight: 500; }
 </style>

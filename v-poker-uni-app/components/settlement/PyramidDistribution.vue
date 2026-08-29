@@ -71,6 +71,9 @@
 <script>
 import { calculateRakeDistribution, formatDistributionForDisplay } from '../../utils/economy.js'
 
+// 双端兼容：App端service层无requestAnimationFrame，用setTimeout降级
+const __raf = typeof requestAnimationFrame !== 'undefined' ? requestAnimationFrame : (fn) => setTimeout(fn, 16)
+
 export default {
   name: 'PyramidDistribution',
   props: {
@@ -177,7 +180,7 @@ export default {
         const animate = () => {
           const now = Date.now()
           if (now < startTime) {
-            requestAnimationFrame(animate)
+            __raf(animate)
             return
           }
 
@@ -190,13 +193,13 @@ export default {
           this.$set(this.displayAmounts, item.id, current)
 
           if (progress < 1) {
-            requestAnimationFrame(animate)
+            __raf(animate)
           } else {
             this.$set(this.displayAmounts, item.id, targetAmount)
           }
         }
 
-        requestAnimationFrame(animate)
+        __raf(animate)
       })
     },
 

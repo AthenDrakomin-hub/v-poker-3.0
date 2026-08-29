@@ -9,6 +9,10 @@
 </template>
 
 <script>
+// 双端兼容：App端service层无requestAnimationFrame，用setTimeout降级
+const __raf = typeof requestAnimationFrame !== 'undefined' ? requestAnimationFrame : (fn) => setTimeout(fn, 16)
+const __caf = typeof cancelAnimationFrame !== 'undefined' ? cancelAnimationFrame : (id) => clearTimeout(id)
+
 export default {
   name: 'ParticleSystem',
   props: {
@@ -311,19 +315,19 @@ export default {
         }
       }
 
-      this.animationId = requestAnimationFrame(this.animate)
+      this.animationId = __raf(this.animate)
     },
 
     // 开始动画
     start() {
       if (this.animationId || !this.ctx) return
-      this.animationId = requestAnimationFrame(this.animate)
+      this.animationId = __raf(this.animate)
     },
 
     // 停止动画
     stop() {
       if (this.animationId) {
-        cancelAnimationFrame(this.animationId)
+        __caf(this.animationId)
         this.animationId = null
       }
       this.lastTime = 0
