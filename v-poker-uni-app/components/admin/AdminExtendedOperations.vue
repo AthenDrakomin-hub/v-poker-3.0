@@ -9,7 +9,7 @@
 
     <view v-if="activeTab === 'roomHistory'" class="operation-content">
       <view class="operation-toolbar"><input v-model="roomQuery.roomNo" class="operation-input" placeholder="房间号" @confirm="loadRoomHistory(1)" /><view class="operation-button" @click="loadRoomHistory(1)">查询</view></view>
-      <view v-for="room in roomHistory" :key="room.roomNo" class="operation-row" @click="loadRounds(room)"><view><text class="row-title">房间 #{{ room.roomNo }}</text><text class="row-sub">{{ room.gameType }} · {{ room.level }} · {{ room.rounds || room.totalRounds || 0 }} 局</text></view><view class="row-metrics"><text>流水 {{ room.totalFlow || 0 }}</text><text>抽水 {{ room.totalRake || 0 }}</text></view></view>
+      <view v-for="room in roomHistory" :key="room.roomNo" class="operation-row" @click="loadRounds(room)"><view><text class="row-title">房间 #{{ room.roomNo }}</text><text class="row-sub">{{ formatGameType(room.gameType) }} · {{ room.level }} · {{ room.rounds || room.totalRounds || 0 }} 局</text></view><view class="row-metrics"><text>流水 {{ room.totalFlow || 0 }}</text><text>抽水 {{ room.totalRake || 0 }}</text></view></view>
       <view v-if="selectedRoom" class="rounds-panel"><text class="panel-title">房间 #{{ selectedRoom.roomNo }} 单局审计</text><view v-for="round in roomRounds" :key="round.id" class="round-row"><text>第 {{ round.roundNo }} 局</text><text>{{ round.handName || '-' }}</text><text :class="round.delta >= 0 ? 'positive' : 'negative'">{{ round.delta >= 0 ? '+' : '' }}{{ round.delta || 0 }}</text><text>底池 {{ round.potBeforeRake || 0 }} / 抽水 {{ round.rake || 0 }}</text></view><view v-if="!roomRounds.length" class="empty">暂无单局记录</view></view>
       <view v-if="!roomHistory.length && !loading" class="empty">暂无房间汇总</view>
     </view>
@@ -24,12 +24,12 @@
     </view>
 
     <view v-else-if="activeTab === 'conversations'" class="operation-content">
-      <view v-for="item in conversations" :key="item.id" class="operation-row"><view><text class="row-title">{{ item.csName || item.staffName || '客服会话' }}</text><text class="row-sub">{{ item.userName || item.userId || '-' }} · {{ item.status || '-' }}</text></view><text>{{ formatTime(item.updatedAt || item.createdAt) }}</text></view><view v-if="!conversations.length && !loading" class="empty">暂无客服会话</view>
+      <view v-for="item in conversations" :key="item.id" class="operation-row"><view><text class="row-title">{{ item.csName || item.staffName || '客服会话' }}</text><text class="row-sub">{{ item.userName || item.userId || '-' }} · {{ formatConversationStatus(item.status) }}</text></view><text>{{ formatTime(item.updatedAt || item.createdAt) }}</text></view><view v-if="!conversations.length && !loading" class="empty">暂无客服会话</view>
     </view>
 
     <view v-else-if="activeTab === 'agents'" class="operation-content">
       <view class="operation-toolbar"><input v-model="agentId" class="operation-input" type="number" placeholder="代理 ID（佣金报表）" /><view class="operation-button" @click="loadCommission">查询佣金</view></view>
-      <view v-for="item in agentTree" :key="item.id" class="operation-row"><view><text class="row-title">{{ item.nickname || item.account || '代理 #' + item.id }}</text><text class="row-sub">层级 {{ item.level || '-' }} · 下级 {{ item.childrenCount || item.subCount || 0 }}</text></view><text>{{ item.status || '-' }}</text></view><view v-for="item in commissionReport" :key="item.id" class="round-row"><text>{{ item.gameType || '佣金' }}</text><text>{{ item.period || item.createdAt || '-' }}</text><text class="positive">{{ item.commissionAmount || item.amount || 0 }}</text></view><view v-if="!agentTree.length && !loading" class="empty">暂无代理树数据</view>
+      <view v-for="item in agentTree" :key="item.id" class="operation-row"><view><text class="row-title">{{ item.nickname || item.account || '代理 #' + item.id }}</text><text class="row-sub">层级 {{ item.level || '-' }} · 下级 {{ item.childrenCount || item.subCount || 0 }}</text></view><text>{{ formatConversationStatus(item.status) }}</text></view><view v-for="item in commissionReport" :key="item.id" class="round-row"><text>{{ item.gameType || '佣金' }}</text><text>{{ item.period || item.createdAt || '-' }}</text><text class="positive">{{ item.commissionAmount || item.amount || 0 }}</text></view><view v-if="!agentTree.length && !loading" class="empty">暂无代理树数据</view>
     </view>
 
     <view v-else class="operation-content">
@@ -40,6 +40,7 @@
 </template>
 
 <script>
+import { formatGameType, formatConversationStatus } from '../../utils/format.js'
 import VIcon from '../ui/VIcon.vue'
 import { getAdminRoomHistory, getAdminRoomRounds, getPendingApprovals, approveRequest, rejectRequest, getRoomAnomalies, createRoomAnomaly, getCsConversations, getAgentTree, getAgentCommissionReport, getConfigHistory, createConfigDraft, publishConfigDraft, rollbackConfig } from '../../api/admin.js'
 
@@ -54,6 +55,7 @@ export default {
   },
   mounted() { this.loadRoomHistory(1) },
   methods: {
+    formatConversationStatus,
     normalize(res) { return Array.isArray(res?.data) ? res.data : (res?.list || res?.data?.list || []) },
     async selectTab(tab) { this.activeTab = tab; const loaders = { roomHistory: () => this.loadRoomHistory(1), approvals: this.loadApprovals, conversations: this.loadConversations, agents: this.loadAgentTree, config: this.loadConfigHistory }; if (loaders[tab]) await loaders[tab]() },
     async loadRoomHistory(page) { this.loading = true; try { const res = await getAdminRoomHistory({ page, pageSize: 20, roomNo: this.roomQuery.roomNo || undefined }); this.roomHistory = this.normalize(res) } catch (e) { this.notify(e, '加载房间汇总失败') } finally { this.loading = false } },

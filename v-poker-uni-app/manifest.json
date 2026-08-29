@@ -2,8 +2,8 @@
     "name" : "V-Poker",
     "appid" : "__UNI__81590F8",
     "description" : "V-Poker 2.0 扑克竞技平台",
-    "versionName" : "1.1.0",
-    "versionCode" : 110,
+    "versionName" : "1.2.0",
+    "versionCode" : 120,
     "transformPx" : false,
     "app-plus" : {
         "usingComponents" : true,

@@ -1694,14 +1694,13 @@ export default {
       this.startCanvasLoop()
     },
     startCanvasLoop() {
-      if (this.canvasLoop) return
-      const loop = () => {
-        this.renderCanvasCards()
-        this.canvasLoop = requestAnimationFrame(loop)
-      }
-      this.canvasLoop = requestAnimationFrame(loop)
+      // 优化：卡牌位置是静态的，不需要持续渲染循环
+      // 只在 canvasCards 更新时调用 renderCanvasCards() 重绘一次
+      // 如果未来有卡牌动画，再启用 requestAnimationFrame 循环
+      this.renderCanvasCards()
     },
     stopCanvasLoop() {
+      // 兼容旧代码，不再需要取消动画帧
       if (this.canvasLoop) {
         cancelAnimationFrame(this.canvasLoop)
         this.canvasLoop = null
@@ -2794,6 +2793,10 @@ export default {
             rotation: 0,
             scale: card.seatIndex === 6 ? 1.1 : 0.85
           })
+        })
+        // 卡牌更新后立即重绘（优化：不再使用持续渲染循环）
+        this.$nextTick(() => {
+          this.renderCanvasCards()
         })
       }
 

@@ -1,4 +1,4 @@
-﻿﻿<template>
+﻿<template>
   <ImmersivePage title="设置" :show-header="true" :scrollable="true" :page-style="{ '--font-scale': fontScale }">
     <template #header-left>
       <view class="back-btn" @click="goBack">
@@ -460,7 +460,7 @@ export default {
 
 .group-title {
   display: block;
-  font-size: 1.6vh;
+  font-size: var(--text-xs);
   color: rgba(255,255,255,0.35);
   margin-bottom: 0.8vh;
   padding-left: 0.8vh;
@@ -526,7 +526,7 @@ export default {
 .icon-teal   { background: rgba(45, 212, 191, 0.12); }
 
 .setting-name {
-  font-size: 2vh;
+  font-size: var(--text-sm);
   color: var(--color-text);
   font-weight: 500;
 }
@@ -538,7 +538,7 @@ export default {
 }
 
 .setting-value {
-  font-size: 1.6vh;
+  font-size: var(--text-xs);
   color: rgba(255,255,255,0.4);
 }
 
@@ -563,12 +563,12 @@ export default {
 }
 
 .slider-label {
-  font-size: 1.8vh;
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.6);
 }
 
 .slider-value {
-  font-size: 1.6vh;
+  font-size: var(--text-sm);
   color: var(--color-gold);
   font-weight: 600;
 }
@@ -591,7 +591,7 @@ export default {
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 0.6vh;
-  font-size: 1.6vh;
+  font-size: var(--text-xs);
   color: rgba(255,255,255,0.4);
   transition: all 0.2s;
 }
@@ -667,6 +667,10 @@ export default {
   justify-content: center;
   z-index: 100;
   padding: 2vh;
+  padding-top: calc(2vh + var(--safe-top, 0px));
+  padding-bottom: calc(2vh + var(--safe-bottom, 0px));
+  padding-left: calc(2vh + var(--safe-left, 0px));
+  padding-right: calc(2vh + var(--safe-right, 0px));
   box-sizing: border-box;
 }
 
@@ -691,7 +695,7 @@ export default {
 }
 
 .modal-title {
-  font-size: 2.2vh;
+  font-size: var(--text-base);
   font-weight: 700;
   color: var(--color-text);
 }
@@ -752,14 +756,14 @@ export default {
 
 .theme-name {
   display: block;
-  font-size: 1.8vh;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: 0.2vh;
 }
 
 .theme-desc {
-  font-size: 1.4vh;
+  font-size: var(--text-xs);
   color: rgba(255,255,255,0.35);
 }
 

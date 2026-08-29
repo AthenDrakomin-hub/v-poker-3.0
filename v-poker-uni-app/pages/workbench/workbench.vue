@@ -1,5 +1,5 @@
 ﻿<template>
-  <ImmersivePage title="代理工作台" :show-header="true" :scrollable="true" page-class="theme-agent">
+  <ImmersivePage title="代理工作台" :show-header="true" :scrollable="true" page-class="theme-agent" :page-style="{ '--font-scale': fontScale }">
     <template #header-left>
       <view class="back-btn" @click="goBack">
         <VIcon name="back" :size="3.3" color="var(--color-text)" />
@@ -315,6 +315,7 @@ import {
   generateInviteCode,
 } from '../../api/agent.js'
 import { getMe } from '../../api/auth.js'
+import { getFontScale } from '../../utils/fontScale.js'
 import ImmersivePage from '../../components/ui/ImmersivePage.vue'
 import VIcon from '../../components/ui/VIcon.vue'
 import PaginationBar from '../../components/ui/PaginationBar.vue'
@@ -325,6 +326,7 @@ export default {
   data() {
     return {
       userState,
+      fontScale: 1.0,
       searchKeyword: '',
       activeTrendTab: 'week',
       showInviteCode: false,
@@ -379,11 +381,19 @@ export default {
   },
   onLoad() {
     fetchUserInfo()
+    this.fontScale = getFontScale()
+    uni.$on('fontScaleChange', this.onFontScaleChange)
     this.checkRoleAndLoad()
+  },
+  onUnload() {
+    uni.$off('fontScaleChange', this.onFontScaleChange)
   },
   methods: {
     formatPoints,
     formatDateTime,
+    onFontScaleChange(scale) {
+      this.fontScale = scale
+    },
 
     // 角色校验：agent / top_agent 可访问
     async checkRoleAndLoad() {
@@ -629,21 +639,21 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/* 字体放大：覆盖全局小字体变量 */
-:deep(.section-title) { font-size: max(2.2vh, 18px) !important; }
-:deep(.section-subtitle) { font-size: max(1.6vh, 14px) !important; }
-:deep(.stat-value) { font-size: max(2.4vh, 20px) !important; }
-:deep(.stat-label) { font-size: max(1.5vh, 13px) !important; }
-:deep(.player-name) { font-size: max(1.9vh, 16px) !important; }
-:deep(.player-account) { font-size: max(1.5vh, 13px) !important; }
-:deep(.stat-num) { font-size: max(1.8vh, 15px) !important; }
-:deep(.stat-desc) { font-size: max(1.3vh, 11px) !important; }
-:deep(.action-btn) { font-size: max(1.5vh, 13px) !important; min-height: 36px; }
-:deep(.transaction-item) { font-size: max(1.5vh, 13px) !important; }
-:deep(.modal-title) { font-size: max(2vh, 17px) !important; }
-:deep(.form-label) { font-size: max(1.6vh, 14px) !important; }
-:deep(.points-value) { font-size: max(1.8vh, 15px) !important; }
-:deep(.invite-code) { font-size: max(2.2vh, 18px) !important; }
+/* 字体放大：覆盖全局小字体变量，保证手机上按钮文字清晰可见（对齐大厅规格） */
+:deep(.section-title) { font-size: max(var(--text-base), 16px) !important; }
+:deep(.section-subtitle) { font-size: max(var(--text-sm), 13px) !important; }
+:deep(.stat-value) { font-size: max(var(--text-lg), 18px) !important; }
+:deep(.stat-label) { font-size: max(var(--text-xs), 12px) !important; }
+:deep(.player-name) { font-size: max(var(--text-base), 16px) !important; }
+:deep(.player-account) { font-size: max(var(--text-sm), 13px) !important; }
+:deep(.stat-num) { font-size: max(var(--text-base), 15px) !important; }
+:deep(.stat-desc) { font-size: max(var(--text-xs), 12px) !important; }
+:deep(.action-btn) { font-size: max(var(--text-sm), 14px) !important; min-height: 44px; }
+:deep(.transaction-item) { font-size: max(var(--text-sm), 13px) !important; }
+:deep(.modal-title) { font-size: max(var(--text-base), 17px) !important; }
+:deep(.form-label) { font-size: max(var(--text-sm), 14px) !important; }
+:deep(.points-value) { font-size: max(var(--text-base), 15px) !important; }
+:deep(.invite-code) { font-size: max(var(--text-lg), 18px) !important; }
 
 .theme-agent {
   --primary-color: var(--color-gold);
@@ -769,7 +779,7 @@ export default {
   min-width: 0;
 }
 
-.stat-value { font-size: var(--text-base); font-weight: 700; color: var(--color-text); }
+.stat-value { font-size: var(--text-lg); font-weight: 700; color: var(--color-text); }
 .stat-label { font-size: var(--text-xs); color: rgba(255,255,255,0.5); }
 
 .stat-trend {
@@ -865,7 +875,7 @@ export default {
 
 .search-input {
   width: max(10vw, 140px);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-text);
 }
 
@@ -878,7 +888,7 @@ export default {
   background: rgba(255, 191, 0, 0.15);
   border: 1px solid rgba(255, 191, 0, 0.3);
   border-radius: 0.6vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-gold);
 }
 
@@ -934,8 +944,8 @@ export default {
   min-width: 0;
 }
 
-.player-name { font-size: var(--text-xs); font-weight: 600; color: var(--color-text); }
-.player-account { font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
+.player-name { font-size: var(--text-base); font-weight: 600; color: var(--color-text); }
+.player-account { font-size: var(--text-sm); color: rgba(255,255,255,0.4); }
 
 .player-stats {
   display: flex;
@@ -948,7 +958,7 @@ export default {
   align-items: center;
 }
 
-.stat-num { font-size: var(--text-xs); font-weight: 600; color: var(--color-gold); }
+.stat-num { font-size: var(--text-base); font-weight: 600; color: var(--color-gold); }
 .stat-desc { font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
 
 .player-actions {
@@ -959,12 +969,12 @@ export default {
 
 .action-btn {
   padding: 0 1.2vw;
-  min-height: 36px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 0.4vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   text-align: center;
   white-space: nowrap;
 }
@@ -1037,11 +1047,11 @@ export default {
   min-width: 0;
 }
 
-.tx-title { font-size: var(--text-xs); color: var(--color-text); }
+.tx-title { font-size: var(--text-sm); color: var(--color-text); }
 .tx-time { font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
 
 .tx-amount {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -1129,13 +1139,13 @@ export default {
   padding: 0.6vh 1.5vw;
   background: rgba(255, 191, 0, 0.2);
   border-radius: 0.6vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-gold);
 }
 
 .invite-tip {
   text-align: center;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.5);
   line-height: 1.5;
 }
@@ -1151,14 +1161,14 @@ export default {
   margin-bottom: 2vh;
 }
 
-.adjust-name { font-size: var(--text-sm); font-weight: 600; color: var(--color-text); }
-.adjust-current { font-size: var(--text-xs); color: var(--color-gold); }
+.adjust-name { font-size: var(--text-base); font-weight: 600; color: var(--color-text); }
+.adjust-current { font-size: var(--text-sm); color: var(--color-gold); }
 
 .adjust-form { margin-bottom: 2vh; }
 .form-group { margin-bottom: 1.5vh; }
 .form-label {
   display: block;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.7);
   margin-bottom: 0.8vh;
 }
@@ -1174,8 +1184,12 @@ export default {
   background: rgba(255, 191, 0, 0.15);
   border: 1px solid rgba(255, 191, 0, 0.3);
   border-radius: 0.6vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-gold);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .amount-input {
@@ -1197,7 +1211,7 @@ export default {
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 0.6vh;
   padding: 0 1vw;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-text);
   box-sizing: border-box;
 }
@@ -1210,11 +1224,11 @@ export default {
 .btn-ghost, .btn-primary {
   flex: 1;
   height: 5vh;
-  min-height: 36px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   border-radius: 0.8vh;
   transition: all 0.2s;
 }
@@ -1290,7 +1304,7 @@ export default {
 
 .player-stat-value {
   display: block;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   font-weight: 700;
   color: var(--color-gold);
 }
@@ -1301,7 +1315,7 @@ export default {
 
 .player-detail-section .section-title {
   display: block;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-border);
   margin-bottom: 1.5vh;
@@ -1316,8 +1330,8 @@ export default {
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-.info-label { font-size: var(--text-xs); color: rgba(255,255,255,0.5); }
-.info-value { font-size: var(--text-xs); color: var(--color-border); }
+.info-label { font-size: var(--text-sm); color: rgba(255,255,255,0.5); }
+.info-value { font-size: var(--text-sm); color: var(--color-border); }
 
 .status-active { color: var(--color-success) !important; }
 .status-frozen { color: var(--color-danger) !important; }
@@ -1332,7 +1346,7 @@ export default {
   padding: 1.2vh;
   text-align: center;
   border-radius: 0.8vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   font-weight: 600;
   background: rgba(255,191,0,0.15);
   border: 1px solid rgba(255,191,0,0.3);
@@ -1356,7 +1370,7 @@ export default {
 }
 
 .hist-stat-label { display: block; font-size: var(--text-xs); color: rgba(255,255,255,0.4); margin-bottom: 0.5vh; }
-.hist-stat-value { display: block; font-size: var(--text-sm); font-weight: 700; color: var(--color-border); }
+.hist-stat-value { display: block; font-size: var(--text-base); font-weight: 700; color: var(--color-border); }
 .hist-stat-value.win { color: var(--color-success); }
 .hist-stat-value.lose { color: var(--color-danger); }
 
@@ -1382,10 +1396,10 @@ export default {
 }
 
 .history-info { flex: 1; min-width: 0; }
-.history-room { display: block; font-size: var(--text-xs); color: var(--color-border); margin-bottom: 0.3vh; }
+.history-room { display: block; font-size: var(--text-sm); color: var(--color-border); margin-bottom: 0.3vh; }
 .history-time { display: block; font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
 
-.history-result { font-size: var(--text-xs); font-weight: 700; flex-shrink: 0; }
+.history-result { font-size: var(--text-base); font-weight: 700; flex-shrink: 0; }
 .history-result.win { color: var(--color-success); }
 .history-result.lose { color: var(--color-danger); }
 

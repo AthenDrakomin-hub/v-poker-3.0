@@ -1,5 +1,5 @@
 ﻿<template>
-  <ImmersivePage title="个人中心" :show-header="true" :scrollable="true" page-class="profile-page">
+  <ImmersivePage title="个人中心" :show-header="true" :scrollable="true" page-class="profile-page" :page-style="{ '--font-scale': fontScale }">
     <template #header-left>
       <view class="back-btn" @click="goBack">
         <VIcon name="back" :size="2.2" color="var(--color-text)" />
@@ -327,6 +327,7 @@
 import { userState, fetchUserInfo, logout } from '../../store/user.js'
 import { formatPoints } from '../../utils/format.js'
 import { getAvatarImage, getAvatarConfig, AVATAR_LIST } from '../../utils/avatar.js'
+import { getFontScale } from '../../utils/fontScale.js'
 import VIcon from '../../components/ui/VIcon.vue'
 import ImmersivePage from '../../components/ui/ImmersivePage.vue'
 import {
@@ -343,6 +344,7 @@ export default {
   data() {
     return {
       userState,
+      fontScale: 1.0,
       showRecharge: false,
       showChangePassword: false,
       selectedAmount: 1,
@@ -395,15 +397,23 @@ export default {
   onLoad() {
     fetchUserInfo()
     this.loadUserStats()
+    this.fontScale = getFontScale()
+    uni.$on('fontScaleChange', this.onFontScaleChange)
     try {
       const savedVoice = uni.getStorageSync('vpoker_voice_pack')
       if (savedVoice) this.currentVoicePack = savedVoice
     } catch (e) {}
   },
+  onUnload() {
+    uni.$off('fontScaleChange', this.onFontScaleChange)
+  },
   methods: {
     formatPoints,
     getAvatarImage,
     getAvatarConfig,
+    onFontScaleChange(scale) {
+      this.fontScale = scale
+    },
     async loadUserStats() {
       try {
         const res = await getProfile()
@@ -769,14 +779,14 @@ export default {
 }
 
 .user-name {
-  font-size: 2.6vh;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--color-text);
 }
 
 .user-account {
   display: block;
-  font-size: 1.8vh;
+  font-size: var(--text-sm);
   color: rgba(255, 255, 255, 0.5);
   margin-bottom: 0.5vh;
 }
@@ -792,7 +802,7 @@ export default {
 }
 
 .role-badge text {
-  font-size: 1.5vh;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -833,7 +843,7 @@ export default {
 }
 
 .meta-item {
-  font-size: 1.6vh;
+  font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.35);
 }
 
@@ -846,14 +856,14 @@ export default {
 
 .points-label {
   display: block;
-  font-size: 1.6vh;
+  font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.4);
   margin-bottom: 0.4vh;
 }
 
 .points-value {
   display: block;
-  font-size: 3.6vh;      /* 比原来更大 */
+  font-size: var(--text-2xl);
   font-weight: 700;
   color: var(--color-gold);
   font-family: Georgia, serif;
@@ -886,14 +896,14 @@ export default {
 }
 
 .stat-value {
-  font-size: 3.2vh;      /* 数字放大 */
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--color-text);
   margin-bottom: 0.4vh;
 }
 
 .stat-label {
-  font-size: 1.6vh;
+  font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.4);
 }
 
@@ -904,7 +914,7 @@ export default {
 
 .group-title {
   display: block;
-  font-size: 1.6vh;
+  font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.35);
   margin-bottom: 0.8vh;
   padding-left: 0.8vh;
@@ -956,12 +966,12 @@ export default {
 
 .menu-name {
   flex: 1;
-  font-size: 2vh;
+  font-size: var(--text-sm);
   color: var(--color-text);
 }
 
 .menu-arrow {
-  font-size: 2.4vh;
+  font-size: var(--text-base);
   color: rgba(255, 255, 255, 0.2);
 }
 
@@ -979,7 +989,7 @@ export default {
   background: rgba(245, 101, 101, 0.08);
   border: 1px solid rgba(245, 101, 101, 0.2);
   border-radius: 1.6vh;
-  font-size: 2.2vh;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-danger);
 }
@@ -1003,6 +1013,10 @@ export default {
   justify-content: center;
   z-index: 999;
   padding: 2vh;
+  padding-top: calc(2vh + var(--safe-top, 0px));
+  padding-bottom: calc(2vh + var(--safe-bottom, 0px));
+  padding-left: calc(2vh + var(--safe-left, 0px));
+  padding-right: calc(2vh + var(--safe-right, 0px));
   box-sizing: border-box;
 }
 
@@ -1034,7 +1048,7 @@ export default {
 }
 
 .modal-title {
-  font-size: 2.4vh;
+  font-size: var(--text-base);
   font-weight: 700;
   color: var(--color-gold);
 }
@@ -1065,7 +1079,7 @@ export default {
 }
 
 .tip-text {
-  font-size: 1.8vh;
+  font-size: var(--text-sm);
   color: var(--color-gold);
 }
 
@@ -1093,7 +1107,7 @@ export default {
 }
 
 .amount-value {
-  font-size: 2.4vh;
+  font-size: var(--text-base);
   font-weight: 700;
   color: var(--color-text);
 }
@@ -1103,7 +1117,7 @@ export default {
 }
 
 .amount-unit {
-  font-size: 1.6vh;
+  font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.4);
 }
 
@@ -1117,7 +1131,7 @@ export default {
 
 .form-label {
   display: block;
-  font-size: 1.8vh;
+  font-size: var(--text-sm);
   color: var(--color-border);
   margin-bottom: 1vh;
 }
@@ -1130,7 +1144,7 @@ export default {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1vh;
   padding: 0 1.6vh;
-  font-size: 2vh;
+  font-size: var(--text-base);
   color: var(--color-text);
 }
 
@@ -1148,7 +1162,7 @@ export default {
   height: 6vh;
   min-height: 44px;
   line-height: 6vh;
-  font-size: 2vh;
+  font-size: var(--text-base);
   border-radius: 1vh;
   border: none;
   transition: all 0.2s ease;
@@ -1199,7 +1213,7 @@ export default {
   padding: 6vh 0;
   text-align: center;
   color: rgba(255,255,255,0.4);
-  font-size: 1.6vh;
+  font-size: var(--text-sm);
 }
 .list-item {
   display: flex;
@@ -1214,19 +1228,19 @@ export default {
   gap: 0.5vh;
 }
 .item-title {
-  font-size: 2vh;
+  font-size: var(--text-sm);
   color: var(--color-text);
   font-weight: 600;
 }
 .item-sub {
-  font-size: 1.4vh;
+  font-size: var(--text-xs);
   color: rgba(255,255,255,0.4);
 }
 .item-right {
   text-align: right;
 }
 .item-tag {
-  font-size: 1.4vh;
+  font-size: var(--text-xs);
   padding: 0.4vh 1.2vh;
   border-radius: 1vh;
   background: rgba(255,215,0,0.15);
@@ -1251,11 +1265,11 @@ export default {
   align-items: center;
 }
 .voice-current-label {
-  font-size: 1.6vh;
+  font-size: var(--text-xs);
   color: rgba(255,255,255,0.5);
 }
 .voice-current-name {
-  font-size: 2vh;
+  font-size: var(--text-sm);
   color: var(--color-gold);
   font-weight: 600;
 }
@@ -1281,14 +1295,14 @@ export default {
   flex: 1;
 }
 .voice-name {
-  font-size: 2vh;
+  font-size: var(--text-sm);
   color: #fff;
   font-weight: 500;
   display: block;
   margin-bottom: 0.5vh;
 }
 .voice-desc {
-  font-size: 1.4vh;
+  font-size: var(--text-xs);
   color: rgba(255,255,255,0.4);
 }
 .voice-actions {
@@ -1305,22 +1319,26 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2vh;
+  font-size: var(--text-base);
 }
 .voice-use-btn {
   padding: 1vh 2.5vh;
   background: var(--color-gold);
   color: var(--color-bg-card);
   border-radius: 1vh;
-  font-size: 1.6vh;
+  font-size: var(--text-sm);
   font-weight: 600;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .voice-used-tag {
   padding: 1vh 2.5vh;
   background: rgba(74,222,128,0.15);
   color: var(--color-success);
   border-radius: 1vh;
-  font-size: 1.6vh;
+  font-size: var(--text-sm);
 }
 
 /* 头像弹窗专用 */
@@ -1344,7 +1362,7 @@ export default {
 }
 .preview-name {
   margin-top: 1.5vh;
-  font-size: 2.2vh;
+  font-size: var(--text-base);
   color: var(--color-gold);
   font-weight: 600;
 }
@@ -1392,7 +1410,7 @@ export default {
   justify-content: center;
 }
 .option-check text {
-  font-size: 2vh;
+  font-size: var(--text-sm);
   color: var(--color-bg-card);
   font-weight: 700;
 }

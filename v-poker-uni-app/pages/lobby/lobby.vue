@@ -255,7 +255,7 @@
           <view class="records-list">
             <view v-for="record in gameRecords" :key="record.id" class="record-item">
               <view class="record-game-type">
-                <text>{{ record.gameType || record.game || '-' }}</text>
+                <text>{{ formatGameType(record.gameType || record.game) || '-' }}</text>
               </view>
               <view class="record-info">
                 <text class="record-room">房间#{{ record.roomNo || record.roomId || '-' }} · {{ record.rounds || 0 }}局</text>

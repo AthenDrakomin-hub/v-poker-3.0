@@ -1,5 +1,5 @@
 ﻿<template>
-  <ImmersivePage title="管理后台" :show-header="true" :scrollable="true" page-class="theme-admin">
+  <ImmersivePage title="管理后台" :show-header="true" :scrollable="true" page-class="theme-admin" :page-style="{ '--font-scale': fontScale }">
     <template #header-left>
       <view class="back-btn" @click="goBack">
         <VIcon name="back" :size="3.3" color="var(--color-text)" />
@@ -74,7 +74,7 @@
               </view>
             </view>
             <view class="room-meta">
-              <text class="meta-item">{{ room.gameType }}</text>
+              <text class="meta-item">{{ formatGameType(room.gameType) }}</text>
               <text class="meta-item">{{ room.level || '-' }}级</text>
               <text class="meta-item">{{ room.maxSeats || 0 }}人桌</text>
             </view>
@@ -109,6 +109,7 @@
           <view class="search-bar">
             <input class="search-input" v-model="userSearch" placeholder="搜索用户ID/账号" @confirm="searchUsers" />
             <view class="search-btn" @click="searchUsers">搜索</view>
+            <view class="search-btn btn-primary" @click="openUserEditor()">新增用户</view>
           </view>
           <view class="data-list">
             <view v-for="user in userList" :key="user.id || user.userId" class="data-item">
@@ -120,10 +121,12 @@
                 <text class="data-sub">ID: {{ user.id || user.userId }} | 筹码: {{ user.points || 0 }} | 角色: {{ user.role || '玩家' }} | 邀请码: {{ user.inviteCode || user.invite_code || '-' }}</text>
               </view>
               <view class="data-actions">
+                <view class="mini-btn" @click="openUserEditor(user)">编辑</view>
                 <view class="mini-btn" @click="adjustUserPoints(user)">调整</view>
                 <view class="mini-btn" :class="user.frozen ? 'btn-warn' : 'btn-success'" @click="toggleUserStatus(user)">
                   {{ user.frozen ? '解冻' : '冻结' }}
                 </view>
+                <view class="mini-btn btn-danger" @click="removeUser(user)">删除</view>
               </view>
             </view>
             <view v-if="userList.length === 0 && !modalLoading" class="empty-list">
@@ -152,7 +155,7 @@
               </view>
               <view class="data-info">
                 <text class="data-name">房间#{{ room.roomNo || room.id }}</text>
-                <text class="data-sub">{{ room.gameType }} | {{ room.level || '-' }}级 | {{ room.maxSeats || 0 }}人桌 | 代理: {{ room.agentName || room.agentId || '-' }}</text>
+                <text class="data-sub">{{ formatGameType(room.gameType) }} | {{ room.level || '-' }}级 | {{ room.maxSeats || 0 }}人桌 | 代理: {{ room.agentName || room.agentId || '-' }}</text>
               </view>
               <view class="data-actions">
                 <view class="mini-btn" @click="viewRoomDetail(room)">详情</view>
@@ -177,9 +180,9 @@
         </view>
         <view class="modal-body">
           <view class="detail-grid">
-            <view class="detail-item"><text class="detail-label">游戏</text><text class="detail-value">{{ roomDetail.gameType || '-' }}</text></view>
+            <view class="detail-item"><text class="detail-label">游戏</text><text class="detail-value">{{ formatGameType(roomDetail.gameType) || '-' }}</text></view>
             <view class="detail-item"><text class="detail-label">等级</text><text class="detail-value">{{ roomDetail.level || '-' }}</text></view>
-            <view class="detail-item"><text class="detail-label">状态</text><text class="detail-value">{{ roomDetail.status || '-' }}</text></view>
+            <view class="detail-item"><text class="detail-label">状态</text><text class="detail-value">{{ formatRoomStatus(roomDetail.status) || '-' }}</text></view>
             <view class="detail-item"><text class="detail-label">局数</text><text class="detail-value">{{ roomDetail.currentRound || 0 }}/{{ roomDetail.totalRounds || 25 }}</text></view>
             <view class="detail-item"><text class="detail-label">流水</text><text class="detail-value">{{ roomDetail.totalFlow || 0 }}</text></view>
             <view class="detail-item"><text class="detail-label">抽水</text><text class="detail-value">{{ roomDetail.totalRake || 0 }}</text></view>
@@ -208,15 +211,25 @@
           <view class="modal-close-btn" @click="closeModal('agent')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
         </view>
         <view class="modal-body">
+          <view class="search-bar">
+            <input class="search-input" v-model="agentSearch" placeholder="搜索代理账号/邀请码" @confirm="searchAgents" />
+            <view class="search-btn" @click="searchAgents">搜索</view>
+            <view class="search-btn btn-primary" @click="openAgentEditor()">新增代理</view>
+          </view>
           <view class="data-list">
             <view v-for="agent in agentList" :key="agent.id || agent.userId" class="data-item">
               <view class="data-avatar agent-avatar"><text>{{ (agent.account || agent.nickname || 'A').charAt(0).toUpperCase() }}</text></view>
               <view class="data-info">
                 <text class="data-name">{{ agent.account || agent.nickname || '代理#' + agent.id }}</text>
-                <text class="data-sub">ID: {{ agent.id }} | 下线: {{ agent.subAgentCount || 0 }} | 返佣: {{ agent.commissionRate || 0 }}%</text>
+                <text class="data-sub">ID: {{ agent.id }} | 角色: {{ agent.role === 'top_agent' ? '总代理' : '代理' }} | 邀请码: {{ agent.inviteCode || '-' }} | 筹码: {{ agent.points || 0 }}</text>
               </view>
               <view class="data-actions">
-                <view class="mini-btn" @click="viewAgentDetail(agent)">详情</view>
+                <view class="mini-btn" @click="openAgentEditor(agent)">编辑</view>
+                <view class="mini-btn" @click="adjustAgentPoints(agent)">调筹码</view>
+                <view class="mini-btn" :class="agent.frozen ? 'btn-warn' : 'btn-success'" @click="toggleAgentStatus(agent)">
+                  {{ agent.frozen ? '解冻' : '冻结' }}
+                </view>
+                <view class="mini-btn btn-danger" @click="removeAgent(agent)">删除</view>
               </view>
             </view>
             <view v-if="agentList.length === 0 && !modalLoading" class="empty-list"><text class="empty-text">暂无代理数据</text></view>
@@ -226,6 +239,45 @@
       </view>
     </view>
 
+
+    <!-- ========== 代理编辑弹窗 ========== -->
+    <view v-if="showAgentEditor" class="modal-overlay" @click="closeModal('agentEditor')">
+      <view class="modal-content glass" @click.stop>
+        <view class="modal-header">
+          <text class="modal-title">{{ editingAgent ? '编辑代理' : '新增代理' }}</text>
+          <view class="modal-close-btn" @click="closeModal('agentEditor')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
+        </view>
+        <view class="modal-body">
+          <view class="form-group">
+            <text class="form-label">账号</text>
+            <input class="input-field" v-model="agentForm.account" placeholder="请输入账号" :disabled="!!editingAgent" />
+          </view>
+          <view class="form-group" v-if="!editingAgent">
+            <text class="form-label">密码</text>
+            <input class="input-field" v-model="agentForm.password" type="password" placeholder="请输入密码" />
+          </view>
+          <view class="form-group">
+            <text class="form-label">角色</text>
+            <view class="role-selector">
+              <view class="role-option" :class="{ active: agentForm.role === 'agent' }" @click="agentForm.role = 'agent'">
+                <text>代理</text>
+              </view>
+              <view class="role-option" :class="{ active: agentForm.role === 'top_agent' }" @click="agentForm.role = 'top_agent'">
+                <text>总代理</text>
+              </view>
+            </view>
+          </view>
+          <view class="form-group">
+            <text class="form-label">初始筹码</text>
+            <input class="input-field" v-model="agentForm.points" type="number" placeholder="请输入初始筹码" />
+          </view>
+          <view class="form-actions">
+            <view class="action-btn" @click="closeModal('agentEditor')"><text>取消</text></view>
+            <view class="action-btn action-primary" @click="saveAgent"><text>保存</text></view>
+          </view>
+        </view>
+      </view>
+    </view>
     <!-- ========== 财务中心弹窗 ========== -->
     <view v-if="showFinanceModal" class="modal-overlay" @click="closeModal('finance')">
       <view class="modal-content modal-large glass" @click.stop>
@@ -395,6 +447,7 @@
               <view class="cs-stat-item"><text class="cs-stat-value">{{ csStaffList.filter(s => s.csStatus === 'online').length }}</text><text class="cs-stat-label">接待中</text></view>
               <view class="cs-stat-item"><text class="cs-stat-value">{{ csStaffList.filter(s => s.csStatus === 'offline').length }}</text><text class="cs-stat-label">已关闭</text></view>
               <view class="cs-stat-item"><text class="cs-stat-value">{{ csStaffList.length }}</text><text class="cs-stat-label">总客服</text></view>
+              <view class="cs-stat-item"><view class="mini-btn btn-primary" @click="openUserEditor(null, 'customer_service')">新增客服</view></view>
             </view>
             <view v-if="csStaffLoading" class="cs-loading"><text>加载中...</text></view>
             <view v-else class="cs-staff-list">
@@ -406,7 +459,9 @@
                 </view>
                 <view class="cs-staff-status" :class="staff.csStatus === 'online' ? 'online' : 'offline'"><text>{{ staff.csStatus === 'online' ? '接待中' : '已关闭' }}</text></view>
                 <view class="cs-staff-action">
+                  <view class="mini-btn" @click="openUserEditor(staff)">编辑</view>
                   <view class="cs-toggle-btn" :class="staff.csStatus === 'online' ? 'btn-off' : 'btn-on'" @click="toggleCsStatus(staff)"><text>{{ staff.csStatus === 'online' ? '关闭接待' : '开启接待' }}</text></view>
+                  <view class="mini-btn btn-danger" @click="removeUser(staff)">删除</view>
                 </view>
               </view>
               <view v-if="csStaffList.length === 0" class="cs-empty"><text>暂无客服人员</text></view>
@@ -421,6 +476,45 @@
             </view>
             <view class="cs-stats-refresh"><view class="mini-btn btn-primary" @click="loadCsStats">刷新统计</view></view>
           </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- ========== 用户编辑弹窗 ========== -->
+    <view v-if="showUserEditor" class="modal-overlay" @click="closeUserEditor">
+      <view class="modal-content glass" @click.stop>
+        <view class="modal-header">
+          <text class="modal-title">{{ userEditor.mode === 'create' ? (userEditor.defaultRole === 'customer_service' ? '新增客服' : '新增用户') : '编辑用户' }}</text>
+          <view class="modal-close-btn" @click="closeUserEditor"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
+        </view>
+        <view class="modal-body">
+          <view class="form-group">
+            <text class="form-label">账号</text>
+            <input class="form-input" v-model="userEditor.form.account" :disabled="userEditor.mode === 'edit'" placeholder="请输入账号" />
+          </view>
+          <view class="form-group" v-if="userEditor.mode === 'create'">
+            <text class="form-label">初始密码</text>
+            <input class="form-input" v-model="userEditor.form.password" password placeholder="至少6位" />
+          </view>
+          <view class="form-group" v-else>
+            <text class="form-label">重置密码（留空不修改）</text>
+            <input class="form-input" v-model="userEditor.form.password" password placeholder="输入新密码" />
+          </view>
+          <view class="form-group">
+            <text class="form-label">昵称</text>
+            <input class="form-input" v-model="userEditor.form.nickname" placeholder="请输入昵称" />
+          </view>
+          <view class="form-group" v-if="!userEditor.defaultRole">
+            <text class="form-label">角色</text>
+            <picker :range="roleOptions" range-key="label" @change="onEditorRoleChange">
+              <view class="form-input picker-input">{{ editorRole.label }}</view>
+            </picker>
+          </view>
+        </view>
+        <view class="modal-footer">
+          <view v-if="userEditor.mode === 'edit'" class="modal-btn btn-danger" @click="removeUser(userEditor.target)">删除用户</view>
+          <view class="modal-btn btn-primary" @click="saveUserEditor">保存</view>
+          <view class="modal-btn" @click="closeUserEditor">取消</view>
         </view>
       </view>
     </view>
@@ -441,7 +535,7 @@
           <view v-if="economyTab === 'games'" class="economy-games-list">
             <view v-for="cfg in economyGameConfigs" :key="cfg.gameType" class="economy-game-card">
               <view class="economy-game-header">
-                <text class="economy-game-name">{{ cfg.gameName || cfg.gameType }}</text>
+                <text class="economy-game-name">{{ cfg.gameName || formatGameType(cfg.gameType) }}</text>
                 <view class="mini-btn btn-primary" @click="editEconomyGame(cfg)">编辑</view>
               </view>
               <view class="economy-game-meta">
@@ -479,12 +573,16 @@
 </template>
 
 <script>
+import { formatGameType, formatRoomStatus } from '../../utils/format.js'
 import {
   getAdminStats,
   getAdminRoomList,
   forceEndRoom,
   getAuditLogs,
   getUserList,
+  createUser,
+  updateUser,
+  deleteUser,
   adjustUserPoints,
   setUserRole,
   freezeUser,
@@ -499,6 +597,7 @@ import {
 } from '../../api/admin.js'
 import { getMe } from '../../api/auth.js'
 import { get } from '../../api/request.js'
+import { getFontScale } from '../../utils/fontScale.js'
 import ImmersivePage from '../../components/ui/ImmersivePage.vue'
 import VIcon from '../../components/ui/VIcon.vue'
 import PaginationBar from '../../components/ui/PaginationBar.vue'
@@ -513,6 +612,7 @@ export default {
   data() {
     return {
       currentTime: '',
+      fontScale: 1.0,
       isLoading: false,
       modalLoading: false,
       globalStats: [
@@ -554,6 +654,10 @@ export default {
       economyGameConfigs: [],
       economyTemplates: [],
       economyHistory: [],
+      // 用户编辑器
+      showUserEditor: false,
+      userEditor: { mode: 'create', target: null, defaultRole: '', form: { account: '', password: '', nickname: '', role: 'player' } },
+      roleOptions: [{ label: '玩家', value: 'player' }, { label: '代理', value: 'agent' }, { label: '总代理', value: 'top_agent' }, { label: '客服', value: 'customer_service' }],
       // 客服管理
       csStaffList: [],
       csStaffLoading: false,
@@ -579,6 +683,10 @@ export default {
       // 代理管理
       agentList: [],
       agentPagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 },
+      agentSearch: '',
+      showAgentEditor: false,
+      editingAgent: null,
+      agentForm: { account: '', password: '', role: 'agent', points: '' },
       // 财务中心
       financeStats: {},
       ledgerList: [],
@@ -591,23 +699,30 @@ export default {
     }
   },
   computed: {
+    editorRole() { return this.roleOptions.find(r => r.value === this.userEditor.form.role) || this.roleOptions[0] },
     featuresByCategory() {
       return getFeaturesByCategory()
     },
   },
   onLoad() {
     this.updateTime()
+    this.fontScale = getFontScale()
+    uni.$on('fontScaleChange', this.onFontScaleChange)
     this.timeInterval = setInterval(() => {
       this.updateTime()
     }, 1000)
     this.checkRoleAndLoad()
   },
   onUnload() {
+    uni.$off('fontScaleChange', this.onFontScaleChange)
     if (this.timeInterval) {
       clearInterval(this.timeInterval)
     }
   },
   methods: {
+    onFontScaleChange(scale) {
+      this.fontScale = scale
+    },
     // 角色校验：仅 admin 可访问
     async checkRoleAndLoad() {
       try {
@@ -679,7 +794,7 @@ export default {
     async loadAuditLogs() {
       try {
         const data = await getAuditLogs({ limit: 100 })
-        this.auditLogs = data.list || data.logs || data || []
+        this.auditLogs = Array.isArray(data.data) ? data.data : (data.list || data.logs || [])
       } catch (e) {
         console.warn('[Admin] 审计日志加载失败', e)
         this.auditLogs = []
@@ -711,7 +826,9 @@ export default {
     async loadAgents(page = 1) {
       this.modalLoading = true
       try {
-        const data = await getUserList({ role: 'agent', page, pageSize: this.agentPagination.pageSize })
+        const params = { role: 'agent', page, pageSize: this.agentPagination.pageSize }
+        if (this.agentSearch.trim()) params.q = this.agentSearch.trim()
+        const data = await getUserList(params)
         this.agentList = Array.isArray(data.data) ? data.data : (data.list || data.users || [])
         this.agentPagination = data.pagination || { ...this.agentPagination, page }
       } catch (e) {
@@ -720,6 +837,91 @@ export default {
       } finally {
         this.modalLoading = false
       }
+    },
+    searchAgents() {
+      this.loadAgents(1)
+    },
+    openAgentEditor(agent = null) {
+      this.editingAgent = agent
+      if (agent) {
+        this.agentForm = {
+          account: agent.account || '',
+          password: '',
+          role: agent.role || 'agent',
+          points: agent.points || ''
+        }
+      } else {
+        this.agentForm = { account: '', password: '', role: 'agent', points: '' }
+      }
+      this.showAgentEditor = true
+    },
+    async saveAgent() {
+      if (!this.agentForm.account.trim()) {
+        uni.showToast({ title: '请输入账号', icon: 'none' })
+        return
+      }
+      if (!this.editingAgent && !this.agentForm.password.trim()) {
+        uni.showToast({ title: '请输入密码', icon: 'none' })
+        return
+      }
+      try {
+        if (this.editingAgent) {
+          await updateUser(this.editingAgent.id, {
+            role: this.agentForm.role,
+            points: this.agentForm.points ? Number(this.agentForm.points) : undefined
+          })
+          uni.showToast({ title: '更新成功', icon: 'success' })
+        } else {
+          await createUser({
+            account: this.agentForm.account.trim(),
+            password: this.agentForm.password.trim(),
+            role: this.agentForm.role,
+            points: this.agentForm.points ? Number(this.agentForm.points) : 0
+          })
+          uni.showToast({ title: '创建成功', icon: 'success' })
+        }
+        this.showAgentEditor = false
+        this.loadAgents(1)
+      } catch (e) {
+        console.error('[Admin] 保存代理失败', e)
+        uni.showToast({ title: e.message || '保存失败', icon: 'none' })
+      }
+    },
+    async removeAgent(agent) {
+      uni.showModal({
+        title: '确认删除',
+        content: `确定要删除代理「${agent.account}」吗？此操作不可恢复。`,
+        success: async (res) => {
+          if (res.confirm) {
+            try {
+              await deleteUser(agent.id)
+              uni.showToast({ title: '删除成功', icon: 'success' })
+              this.loadAgents(1)
+            } catch (e) {
+              console.error('[Admin] 删除代理失败', e)
+              uni.showToast({ title: '删除失败', icon: 'none' })
+            }
+          }
+        }
+      })
+    },
+    async toggleAgentStatus(agent) {
+      try {
+        if (agent.frozen) {
+          await unfreezeUser(agent.id)
+          uni.showToast({ title: '已解冻', icon: 'success' })
+        } else {
+          await freezeUser(agent.id)
+          uni.showToast({ title: '已冻结', icon: 'success' })
+        }
+        this.loadAgents(1)
+      } catch (e) {
+        console.error('[Admin] 切换代理状态失败', e)
+        uni.showToast({ title: '操作失败', icon: 'none' })
+      }
+    },
+    adjustAgentPoints(agent) {
+      this.openAdjustModal(agent)
     },
 
     async loadLedger() {
@@ -1057,6 +1259,60 @@ export default {
       }
     },
 
+    async openUserEditor(user, defaultRole = '') {
+      this.userEditor = {
+        mode: user ? 'edit' : 'create',
+        target: user || null,
+        defaultRole: defaultRole,
+        form: user
+          ? { account: user.account || '', password: '', nickname: user.nickname || '', role: user.role || 'player' }
+          : { account: '', password: '', nickname: '', role: defaultRole || 'player' }
+      }
+      this.showUserEditor = true
+    },
+    closeUserEditor() { this.showUserEditor = false },
+    onEditorRoleChange(e) { this.userEditor.form.role = this.roleOptions[e.detail.value].value },
+    async saveUserEditor() {
+      const form = this.userEditor.form
+      if (!form.account || (this.userEditor.mode === 'create' && !form.password)) {
+        return uni.showToast({ title: '请填写账号和密码', icon: 'none' })
+      }
+      try {
+        if (this.userEditor.mode === 'create') {
+          await createUser({ ...form, role: this.userEditor.defaultRole || form.role })
+          uni.showToast({ title: '创建成功', icon: 'success' })
+        } else {
+          const updateData = { nickname: form.nickname }
+          if (form.password) updateData.password = form.password
+          if (!this.userEditor.defaultRole) updateData.role = form.role
+          await updateUser(this.userEditor.target.id || this.userEditor.target.userId, updateData)
+          uni.showToast({ title: '更新成功', icon: 'success' })
+        }
+        this.closeUserEditor()
+        this.loadUsers(1)
+        this.loadCsStaff()
+      } catch (e) {
+        uni.showToast({ title: e.error || e.message || '保存失败', icon: 'none' })
+      }
+    },
+    removeUser(user) {
+      uni.showModal({
+        title: '删除用户',
+        content: `确定要删除 ${user.nickname || user.account} 吗？此操作会写入审计日志。`,
+        success: async (res) => {
+          if (!res.confirm) return
+          try {
+            await deleteUser(user.id || user.userId)
+            uni.showToast({ title: '已删除', icon: 'success' })
+            this.loadUsers(1)
+            this.loadCsStaff()
+            this.closeUserEditor()
+          } catch (e) {
+            uni.showToast({ title: e.error || e.message || '删除失败', icon: 'none' })
+          }
+        }
+      })
+    },
     async toggleCsStatus(staff) {
       const newStatus = staff.csStatus === 'online' ? 'offline' : 'online'
       const actionText = newStatus === 'online' ? '开启接待' : '关闭接待'
@@ -1150,7 +1406,7 @@ export default {
 }
 
 .badge-text {
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
   font-weight: 600;
 }
@@ -1162,10 +1418,10 @@ export default {
   justify-content: space-between;
   margin-bottom: 1.5vh;
 }
-.section-title { font-size: var(--text-sm); font-weight: 700; color: var(--color-border); }
+.section-title { font-size: var(--text-base); font-weight: 700; color: var(--color-border); }
 .section-time { font-size: var(--text-xs); color: rgba(255,255,255,0.4); font-family: monospace; }
-.section-link { font-size: var(--text-xs); color: var(--color-info); }
-.section-subtitle { font-size: var(--text-xs); font-weight: 600; color: var(--color-border); margin: 2vh 0 1vh; }
+.section-link { font-size: var(--text-sm); color: var(--color-info); }
+.section-subtitle { font-size: var(--text-sm); font-weight: 600; color: var(--color-border); margin: 2vh 0 1vh; }
 
 .stats-grid {
   display: grid;
@@ -1197,7 +1453,7 @@ export default {
 }
 
 .stat-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.stat-value { font-size: var(--text-sm); font-weight: 700; color: var(--color-border); }
+.stat-value { font-size: var(--text-base); font-weight: 700; color: var(--color-border); }
 .stat-label { font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
 
 .menu-grid {
@@ -1231,8 +1487,8 @@ export default {
   border-radius: 1.2vh;
 }
 
-.menu-name { font-size: var(--text-xs); font-weight: 600; color: var(--color-border); }
-.menu-desc { font-size: var(--text-xs); color: rgba(255,255,255,0.4); text-align: center; }
+.menu-name { font-size: var(--text-base); font-weight: 600; color: var(--color-border); }
+.menu-desc { font-size: var(--text-sm); color: rgba(255,255,255,0.4); text-align: center; }
 
 .menu-badge {
   position: absolute;
@@ -1267,12 +1523,12 @@ export default {
 
 .room-info { flex: 1; min-width: 0; }
 .room-header { display: flex; align-items: center; gap: 0.8vw; margin-bottom: 0.5vh; }
-.room-name { font-size: var(--text-xs); font-weight: 600; color: var(--color-border); }
-.room-status { padding: 0.2vh 0.8vw; border-radius: 0.4vh; font-size: var(--text-xs); }
+.room-name { font-size: var(--text-base); font-weight: 600; color: var(--color-border); }
+.room-status { padding: 0.2vh 0.8vw; border-radius: 0.4vh; font-size: var(--text-sm); }
 .room-status.playing { background: rgba(72,187,120,0.15); color: var(--color-success); }
 .room-status.waiting { background: rgba(237,137,54,0.15); color: var(--color-gold-dark); }
 .room-meta { display: flex; gap: 1.2vw; }
-.meta-item { font-size: var(--text-xs); color: rgba(255,255,255,0.5); }
+.meta-item { font-size: var(--text-sm); color: rgba(255,255,255,0.5); }
 .room-actions { display: flex; gap: 0.6vw; flex-shrink: 0; }
 
 .action-btn {
@@ -1280,8 +1536,12 @@ export default {
   background: rgba(99,179,237,0.15);
   border: 1px solid rgba(99,179,237,0.3);
   border-radius: 0.6vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-info);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-btn.action-danger {
@@ -1333,7 +1593,7 @@ export default {
   border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-.modal-title { font-size: var(--text-sm); font-weight: 700; color: var(--color-border); }
+.modal-title { font-size: var(--text-base); font-weight: 700; color: var(--color-border); }
 
 .modal-close-btn {
   width: max(3.5vh, 44px);
@@ -1362,8 +1622,12 @@ export default {
   padding: 1.2vh;
   text-align: center;
   border-radius: 0.8vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   font-weight: 600;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-cancel {
@@ -1389,7 +1653,7 @@ export default {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 0.8vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-border);
 }
 
@@ -1397,9 +1661,13 @@ export default {
   padding: 1vh 1.5vw;
   background: linear-gradient(135deg, #4299E1, var(--color-info));
   border-radius: 0.8vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   color: #fff;
   font-weight: 600;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 数据列表 */
@@ -1438,8 +1706,8 @@ export default {
 .finance-avatar { background: linear-gradient(135deg, var(--color-gold-dark), var(--color-gold-dark)); }
 
 .data-info { flex: 1; min-width: 0; }
-.data-name { display: block; font-size: var(--text-xs); font-weight: 600; color: var(--color-border); margin-bottom: 0.3vh; }
-.data-sub { display: block; font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
+.data-name { display: block; font-size: var(--text-base); font-weight: 600; color: var(--color-border); margin-bottom: 0.3vh; }
+.data-sub { display: block; font-size: var(--text-sm); color: rgba(255,255,255,0.4); }
 
 .data-actions { display: flex; gap: 0.5vw; flex-shrink: 0; }
 
@@ -1448,8 +1716,12 @@ export default {
   background: rgba(99,179,237,0.15);
   border: 1px solid rgba(99,179,237,0.3);
   border-radius: 0.5vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-info);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mini-btn.btn-success { background: rgba(72,187,120,0.15); border-color: rgba(72,187,120,0.3); color: var(--color-success); }
@@ -1457,7 +1729,7 @@ export default {
 .mini-btn.btn-danger { background: rgba(245,101,101,0.15); border-color: rgba(245,101,101,0.3); color: var(--color-danger); }
 
 .data-amount {
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -1482,13 +1754,13 @@ export default {
 }
 
 .finance-label { display: block; font-size: var(--text-xs); color: rgba(255,255,255,0.4); margin-bottom: 0.5vh; }
-.finance-value { display: block; font-size: var(--text-sm); font-weight: 700; color: var(--color-gold); }
+.finance-value { display: block; font-size: var(--text-base); font-weight: 700; color: var(--color-gold); }
 
 /* 日志筛选 */
 .log-filter { display: flex; gap: 0.5vw; margin-bottom: 1.5vh; }
 .filter-item {
   padding: 0.5vh 1vw;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.5);
   border-radius: 0.5vh;
   transition: all 0.2s;
@@ -1524,15 +1796,15 @@ export default {
 
 .log-content { flex: 1; min-width: 0; }
 .log-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.3vh; }
-.log-action { font-size: var(--text-xs); font-weight: 600; color: var(--color-border); }
+.log-action { font-size: var(--text-sm); font-weight: 600; color: var(--color-border); }
 .log-time { font-size: var(--text-xs); color: rgba(255,255,255,0.3); font-family: monospace; }
-.log-detail { display: block; font-size: var(--text-xs); color: rgba(255,255,255,0.6); margin-bottom: 0.5vh; line-height: 1.4; }
+.log-detail { display: block; font-size: var(--text-sm); color: rgba(255,255,255,0.6); margin-bottom: 0.5vh; line-height: 1.4; }
 .log-meta { display: flex; gap: 1.2vw; }
 .log-operator, .log-ip { font-size: var(--text-xs); color: rgba(255,255,255,0.3); }
 
 /* 配置表单 */
 .config-group { margin-bottom: 2.5vh; }
-.config-group-title { display: block; font-size: var(--text-xs); font-weight: 600; color: var(--color-border); margin-bottom: 1.5vh; padding-bottom: 0.8vh; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.config-group-title { display: block; font-size: var(--text-sm); font-weight: 600; color: var(--color-border); margin-bottom: 1.5vh; padding-bottom: 0.8vh; border-bottom: 1px solid rgba(255,255,255,0.1); }
 
 .config-item {
   display: flex;
@@ -1541,7 +1813,7 @@ export default {
   margin-bottom: 1.2vh;
 }
 
-.config-label { font-size: var(--text-xs); color: rgba(255,255,255,0.7); }
+.config-label { font-size: var(--text-base); color: rgba(255,255,255,0.7); }
 
 .config-input {
   width: 15vw;
@@ -1549,7 +1821,7 @@ export default {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 0.6vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-border);
 }
 
@@ -1560,7 +1832,7 @@ export default {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 0.8vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-border);
   box-sizing: border-box;
 }
@@ -1572,10 +1844,14 @@ export default {
   padding: 1.2vh;
   text-align: center;
   border-radius: 0.8vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   font-weight: 600;
   background: rgba(255,255,255,0.06);
   color: rgba(255,255,255,0.6);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .config-btn-primary {
@@ -1594,22 +1870,22 @@ export default {
   margin-bottom: 2vh;
 }
 
-.adjust-user-info text { font-size: var(--text-xs); color: rgba(255,255,255,0.7); }
+.adjust-user-info text { font-size: var(--text-sm); color: rgba(255,255,255,0.7); }
 
 .form-group { margin-bottom: 1.5vh; }
-.form-label { display: block; font-size: var(--text-xs); color: rgba(255,255,255,0.7); margin-bottom: 0.8vh; }
+.form-label { display: block; font-size: var(--text-sm); color: rgba(255,255,255,0.7); margin-bottom: 0.8vh; }
 .form-input {
   width: 100%;
   padding: 1vh 1vw;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 0.6vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-border);
 }
 
 .empty-list { display: flex; align-items: center; justify-content: center; padding: 3vh 0; }
-.empty-text { font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
+.empty-text { font-size: var(--text-sm); color: rgba(255,255,255,0.4); }
 .bottom-spacing { height: 3vh; }
 
 /* ========== 权限管理弹窗 ========== */
@@ -1657,7 +1933,7 @@ export default {
 
 .role-tab-label {
   display: block;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-border);
   margin-bottom: 0.3vh;
@@ -1683,7 +1959,7 @@ export default {
 }
 
 .permission-hint {
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.4);
 }
 
@@ -1710,7 +1986,7 @@ export default {
 }
 
 .category-title {
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-text-muted);
 }
@@ -1764,7 +2040,7 @@ export default {
 
 .perm-label {
   display: block;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--color-border);
   margin-bottom: 0.2vh;
 }
@@ -1811,7 +2087,7 @@ export default {
   flex-shrink: 0;
 
   text {
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     color: rgba(255,255,255,0.3);
   }
 }
@@ -1844,7 +2120,7 @@ export default {
 .cs-tab {
   padding: 0.8vh 2vh;
   border-radius: 0.8vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   color: rgba(255,255,255,0.5);
   cursor: pointer;
   transition: all 0.2s;
@@ -1872,14 +2148,14 @@ export default {
 
 .cs-stat-value {
   display: block;
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--color-info);
 }
 
 .cs-stat-label {
   display: block;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.4);
   margin-top: 0.3vh;
 }
@@ -1924,14 +2200,14 @@ export default {
 
 .cs-staff-name {
   display: block;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   font-weight: 600;
   color: #fff;
 }
 
 .cs-staff-meta {
   display: block;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.4);
   margin-top: 0.3vh;
 }
@@ -1939,7 +2215,7 @@ export default {
 .cs-staff-status {
   padding: 0.4vh 1.2vh;
   border-radius: 2vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: 600;
 
   &.online {
@@ -1956,9 +2232,13 @@ export default {
 .cs-toggle-btn {
   padding: 0.6vh 1.5vh;
   border-radius: 0.6vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &.btn-on {
     background: rgba(72, 187, 120, 0.2);
@@ -1986,7 +2266,7 @@ export default {
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 0.8vh;
   color: #fff;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
 }
 
 .cs-search-btn {
@@ -1994,9 +2274,13 @@ export default {
   background: linear-gradient(135deg, var(--color-info), #319795);
   color: #fff;
   border-radius: 0.8vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cs-messages-list {
@@ -2020,13 +2304,13 @@ export default {
 }
 
 .cs-message-from {
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-info);
 }
 
 .cs-message-to {
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.4);
 }
 
@@ -2037,7 +2321,7 @@ export default {
 }
 
 .cs-message-content {
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.7);
   line-height: 1.5;
 }
@@ -2066,7 +2350,7 @@ export default {
 
 .cs-stat-card-label {
   display: block;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.4);
   margin-top: 0.5vh;
 }

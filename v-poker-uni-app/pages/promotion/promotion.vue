@@ -1,5 +1,5 @@
 ﻿<template>
-  <ImmersivePage title="总代理工作台" :show-header="true" :scrollable="true" page-class="theme-promotion">
+  <ImmersivePage title="总代理工作台" :show-header="true" :scrollable="true" page-class="theme-promotion" :page-style="{ '--font-scale': fontScale }">
     <!-- 自定义头部：返回按钮 + 标题 + 总代理徽章 -->
     <template #header-left>
       <view class="back-btn" @click="goBack">
@@ -322,7 +322,7 @@
             </view>
             <view class="info-row">
               <text class="info-label">代理等级</text>
-              <text class="info-value">{{ selectedAgent?.level || selectedAgent?.role || 'L1' }}</text>
+              <text class="info-value">{{ selectedAgent?.level || formatRole(selectedAgent?.role) || 'L1' }}</text>
             </view>
             <view class="info-row">
               <text class="info-label">注册时间</text>
@@ -420,6 +420,7 @@ import {
 } from '../../api/agent.js'
 import { getSubordinateRooms, dissolveRoom } from '../../api/rooms.js'
 import { getMe } from '../../api/auth.js'
+import { getFontScale } from '../../utils/fontScale.js'
 import ImmersivePage from '../../components/ui/ImmersivePage.vue'
 import VIcon from '../../components/ui/VIcon.vue'
 import PaginationBar from '../../components/ui/PaginationBar.vue'
@@ -430,6 +431,7 @@ export default {
   data() {
     return {
       userState,
+      fontScale: 1.0,
       activeView: 'tree',
       isLoading: false,
       isGenerating: false,
@@ -482,10 +484,19 @@ export default {
     }
   },
   onLoad() {
+    this.fontScale = getFontScale()
+    uni.$on('fontScaleChange', this.onFontScaleChange)
     this.checkRoleAndLoad()
   },
+  onUnload() {
+    uni.$off('fontScaleChange', this.onFontScaleChange)
+  },
   methods: {
+    formatRole,
     formatPoints,
+    onFontScaleChange(scale) {
+      this.fontScale = scale
+    },
 
     // 角色校验：仅 top_agent 可访问
     async checkRoleAndLoad() {
@@ -841,7 +852,7 @@ export default {
 }
 
 .badge-text {
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: #D6BCFA;
   font-weight: 600;
 }
@@ -865,18 +876,18 @@ export default {
 }
 
 .section-title {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   font-weight: 700;
   color: var(--color-text);
 }
 
 .section-subtitle {
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.4);
 }
 
 .section-link {
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--theme-primary);
 }
 
@@ -917,7 +928,7 @@ export default {
 }
 
 .stat-value {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   font-weight: 700;
   color: var(--color-text);
 }
@@ -950,7 +961,7 @@ export default {
 
 .toggle-item {
   padding: 0.8vh 1.2vw;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.5);
   border-radius: 0.6vh;
   transition: all 0.2s;
@@ -1013,9 +1024,9 @@ export default {
 
 .node-avatar.small { width: 3.5vh; height: 3.5vh; }
 
-.avatar-text { font-size: var(--text-xs); font-weight: 700; color: #fff; }
-.node-name { font-size: var(--text-xs); color: var(--color-text); font-weight: 600; }
-.node-points { font-size: var(--text-xs); color: var(--theme-primary); }
+.avatar-text { font-size: var(--text-base); font-weight: 700; color: #fff; }
+.node-name { font-size: var(--text-sm); color: var(--color-text); font-weight: 600; }
+.node-points { font-size: var(--text-sm); color: var(--theme-primary); }
 .node-count { font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
 
 .tree-children { display: flex; gap: 2vw; width: 100%; justify-content: center; flex-wrap: wrap; }
@@ -1032,9 +1043,9 @@ export default {
 .force-node.level-2 .force-avatar { width: 3vh; height: 3vh; background: linear-gradient(135deg, var(--theme-primary), #44337A); font-size: var(--text-xs); }
 .force-node.level-2 .force-name { font-size: var(--text-xs); }
 .force-avatar { border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; }
-.force-name { font-size: var(--text-xs); color: var(--color-text); white-space: nowrap; }
+.force-name { font-size: var(--text-sm); color: var(--color-text); white-space: nowrap; }
 .force-legend { display: flex; justify-content: center; gap: 2vw; margin-top: 1.5vh; }
-.legend-item { display: flex; align-items: center; gap: 0.5vw; font-size: var(--text-xs); color: rgba(255,255,255,0.5); }
+.legend-item { display: flex; align-items: center; gap: 0.5vw; font-size: var(--text-sm); color: rgba(255,255,255,0.5); }
 .legend-dot { width: 1.2vh; height: 1.2vh; border-radius: 50%; }
 .legend-dot.level-root { background: var(--color-gold); }
 .legend-dot.level-1 { background: var(--theme-primary); }
@@ -1055,14 +1066,14 @@ export default {
 .level-general { background: rgba(159,122,234,0.2); border: 1px solid rgba(159,122,234,0.4); width: 70%; }
 .level-first { background: rgba(107,70,193,0.2); border: 1px solid rgba(107,70,193,0.4); width: 80%; }
 .level-room { background: rgba(85,60,154,0.2); border: 1px solid rgba(85,60,154,0.4); width: 90%; }
-.level-name { font-size: var(--text-xs); color: var(--color-text); }
-.level-amount { font-size: var(--text-xs); font-weight: 700; color: var(--theme-primary); }
+.level-name { font-size: var(--text-sm); color: var(--color-text); }
+.level-amount { font-size: var(--text-sm); font-weight: 700; color: var(--theme-primary); }
 .pyramid-base { margin-top: 0.8vh; padding: 0.8vh 2vw; background: linear-gradient(135deg, rgba(107,70,193,0.3), rgba(85,60,154,0.3)); border-radius: 0.5vh; }
-.base-text { font-size: var(--text-xs); font-weight: 700; color: #D6BCFA; }
+.base-text { font-size: var(--text-sm); font-weight: 700; color: #D6BCFA; }
 .pyramid-info { width: 18vw; display: flex; flex-direction: column; justify-content: center; gap: 1.5vh; }
 .info-item { display: flex; flex-direction: column; gap: 0.3vh; }
 .info-label { font-size: var(--text-xs); color: rgba(255,255,255,0.5); }
-.info-value { font-size: var(--text-sm); font-weight: 700; color: var(--color-text); }
+.info-value { font-size: var(--text-base); font-weight: 700; color: var(--color-text); }
 .info-value.highlight { color: var(--theme-primary); font-size: var(--text-lg); }
 
 /* 代理管理 */
@@ -1074,7 +1085,7 @@ export default {
   padding: 0.8vh 1.2vw;
   background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary));
   border-radius: 0.8vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: #fff;
 }
 
@@ -1093,20 +1104,20 @@ export default {
 .agent-avatar { width: 5vh; height: 5vh; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .agent-info { flex: 1; min-width: 0; }
 .agent-name-row { display: flex; align-items: center; gap: 0.6vw; margin-bottom: 0.3vh; }
-.agent-name { font-size: var(--text-xs); font-weight: 600; color: var(--color-text); }
-.agent-level { padding: 0.2vh 0.6vw; border-radius: 0.3vh; font-size: var(--text-xs); }
+.agent-name { font-size: var(--text-base); font-weight: 600; color: var(--color-text); }
+.agent-level { padding: 0.2vh 0.6vw; border-radius: 0.3vh; font-size: var(--text-sm); }
 .agent-level.level-1 { background: rgba(159,122,234,0.2); color: var(--theme-primary); }
 .agent-level.level-2 { background: rgba(107,70,193,0.2); color: var(--theme-primary); }
-.agent-account { font-size: var(--text-xs); color: rgba(255,255,255,0.4); margin-bottom: 0.3vh; }
+.agent-account { font-size: var(--text-sm); color: rgba(255,255,255,0.4); margin-bottom: 0.3vh; }
 .agent-meta { display: flex; gap: 1.2vw; }
-.meta-item { font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
+.meta-item { font-size: var(--text-sm); color: rgba(255,255,255,0.4); }
 .agent-stats { text-align: right; flex-shrink: 0; }
 .agent-stats .stat-label { display: block; font-size: var(--text-xs); color: rgba(255,255,255,0.4); margin-bottom: 0.3vh; }
-.agent-stats .stat-value { font-size: var(--text-xs); font-weight: 700; color: var(--theme-primary); }
+.agent-stats .stat-value { font-size: var(--text-base); font-weight: 700; color: var(--theme-primary); }
 
 .bottom-spacing { height: 3vh; }
 .empty-list { display: flex; align-items: center; justify-content: center; padding: 3vh 0; width: 100%; }
-.empty-text { font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
+.empty-text { font-size: var(--text-sm); color: rgba(255,255,255,0.4); }
 
 /* 弹窗 */
 .modal-overlay {
@@ -1146,20 +1157,20 @@ export default {
 
 .invite-form { margin-bottom: 1.5vh; }
 .form-group { margin-bottom: 1.8vh; }
-.form-label { display: block; font-size: var(--text-xs); color: var(--color-border); margin-bottom: 0.8vh; }
+.form-label { display: block; font-size: var(--text-sm); color: var(--color-border); margin-bottom: 0.8vh; }
 .level-group { display: flex; gap: 0.8vw; }
-.level-btn { flex: 1; padding: 0 1vh; min-height: 40px; display: flex; align-items: center; justify-content: center; text-align: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8vh; font-size: var(--text-xs); color: rgba(255,255,255,0.6); transition: all 0.2s; }
+.level-btn { flex: 1; padding: 0 1vh; min-height: 40px; display: flex; align-items: center; justify-content: center; text-align: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8vh; font-size: var(--text-sm); color: rgba(255,255,255,0.6); transition: all 0.2s; }
 .level-btn.active { background: rgba(107,70,193,0.2); border-color: var(--theme-primary); color: var(--theme-primary); }
-.form-input { width: 100%; height: 5.5vh; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8vh; padding: 0 1vw; font-size: var(--text-xs); color: var(--color-text); }
+.form-input { width: 100%; height: 5.5vh; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8vh; padding: 0 1vw; font-size: var(--text-base); color: var(--color-text); }
 .input-placeholder { color: rgba(255,255,255,0.25); }
 
 .invite-result { display: flex; align-items: center; gap: 1vw; padding: 1.2vh 1.2vw; background: rgba(107,70,193,0.1); border: 1px dashed rgba(159,122,234,0.4); border-radius: 0.8vh; margin-bottom: 1.5vh; }
-.result-label { font-size: var(--text-xs); color: rgba(255,255,255,0.5); }
-.result-code { flex: 1; font-size: var(--text-base); font-weight: 700; color: var(--theme-primary); letter-spacing: 0.3vw; }
-.copy-btn { padding: 0.6vh 1.2vw; background: rgba(107,70,193,0.2); border-radius: 0.5vh; font-size: var(--text-xs); color: var(--theme-primary); }
+.result-label { font-size: var(--text-sm); color: rgba(255,255,255,0.5); }
+.result-code { flex: 1; font-size: var(--text-lg); font-weight: 700; color: var(--theme-primary); letter-spacing: 0.3vw; }
+.copy-btn { padding: 0.6vh 1.2vw; background: rgba(107,70,193,0.2); border-radius: 0.5vh; font-size: var(--text-sm); color: var(--theme-primary); }
 
 .modal-footer { display: flex; gap: 1vw; }
-.btn-cancel, .btn-confirm { flex: 1; height: 5.5vh; display: flex; align-items: center; justify-content: center; font-size: var(--text-xs); border-radius: 0.8vh; }
+.btn-cancel, .btn-confirm { flex: 1; height: 5.5vh; display: flex; align-items: center; justify-content: center; font-size: var(--text-base); border-radius: 0.8vh; }
 .btn-cancel { background: rgba(255,255,255,0.08); color: var(--color-border); }
 .btn-confirm { background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary)); color: #fff; font-weight: 600; }
 .btn-confirm.disabled { opacity: 0.5; pointer-events: none; }
@@ -1181,7 +1192,7 @@ export default {
 }
 
 .dist-label { display: block; font-size: var(--text-xs); color: rgba(255,255,255,0.4); margin-bottom: 0.5vh; }
-.dist-value { display: block; font-size: var(--text-sm); font-weight: 700; color: var(--theme-primary); }
+.dist-value { display: block; font-size: var(--text-base); font-weight: 700; color: var(--theme-primary); }
 
 .rule-list { display: flex; flex-direction: column; gap: 1vh; margin-bottom: 2vh; }
 
@@ -1195,8 +1206,8 @@ export default {
   border: 1px solid rgba(255,255,255,0.06);
 }
 
-.rule-level { font-size: var(--text-xs); color: var(--color-border); font-weight: 600; }
-.rule-rate { font-size: var(--text-xs); color: rgba(255,255,255,0.5); }
+.rule-level { font-size: var(--text-sm); color: var(--color-border); font-weight: 600; }
+.rule-rate { font-size: var(--text-sm); color: rgba(255,255,255,0.5); }
 
 .dist-record-list { display: flex; flex-direction: column; gap: 1vh; }
 
@@ -1211,10 +1222,10 @@ export default {
 }
 
 .dist-record-info { flex: 1; }
-.dist-record-room { display: block; font-size: var(--text-xs); color: var(--color-border); margin-bottom: 0.3vh; }
+.dist-record-room { display: block; font-size: var(--text-sm); color: var(--color-border); margin-bottom: 0.3vh; }
 .dist-record-time { display: block; font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
 
-.dist-record-amount { font-size: var(--text-xs); font-weight: 700; color: var(--color-success); }
+.dist-record-amount { font-size: var(--text-base); font-weight: 700; color: var(--color-success); }
 
 /* 代理详情弹窗样式 */
 .agent-detail-header {
@@ -1240,8 +1251,8 @@ export default {
 .agent-detail-avatar text { font-size: var(--text-lg); color: #fff; font-weight: 700; }
 
 .agent-detail-info { flex: 1; }
-.agent-detail-name { display: block; font-size: var(--text-sm); font-weight: 700; color: var(--color-border); margin-bottom: 0.3vh; }
-.agent-detail-id { display: block; font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
+.agent-detail-name { display: block; font-size: var(--text-base); font-weight: 700; color: var(--color-border); margin-bottom: 0.3vh; }
+.agent-detail-id { display: block; font-size: var(--text-sm); color: rgba(255,255,255,0.4); }
 
 .agent-detail-stats {
   display: grid;
@@ -1259,12 +1270,12 @@ export default {
 }
 
 .agent-stat-label { display: block; font-size: var(--text-xs); color: rgba(255,255,255,0.4); margin-bottom: 0.5vh; }
-.agent-stat-value { display: block; font-size: var(--text-sm); font-weight: 700; color: var(--theme-primary); }
+.agent-stat-value { display: block; font-size: var(--text-base); font-weight: 700; color: var(--theme-primary); }
 
 .agent-detail-section { margin-bottom: 1vh; }
 .agent-detail-section .section-title {
   display: block;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-border);
   margin-bottom: 1.5vh;
@@ -1279,12 +1290,12 @@ export default {
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-.info-label { font-size: var(--text-xs); color: rgba(255,255,255,0.5); }
-.info-value { font-size: var(--text-xs); color: var(--color-border); }
+.info-label { font-size: var(--text-sm); color: rgba(255,255,255,0.5); }
+.info-value { font-size: var(--text-sm); color: var(--color-border); }
 
-.section-subtitle { font-size: var(--text-xs); font-weight: 600; color: var(--color-border); margin: 2vh 0 1vh; }
+.section-subtitle { font-size: var(--text-sm); font-weight: 600; color: var(--color-border); margin: 2vh 0 1vh; }
 .empty-list { display: flex; align-items: center; justify-content: center; padding: 3vh 0; }
-.empty-text { font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
+.empty-text { font-size: var(--text-sm); color: rgba(255,255,255,0.4); }
 
 /* 代理详情操作按钮 */
 .agent-detail-actions {
@@ -1303,9 +1314,10 @@ export default {
   gap: 0.8vh;
   padding: 1.2vh;
   border-radius: 0.8vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   font-weight: 600;
   color: #fff;
+  min-height: 44px;
 }
 
 .agent-detail-actions .action-primary {
@@ -1330,7 +1342,7 @@ export default {
 
 .agent-balance-hint .hint-text {
   display: block;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.6);
   line-height: 1.6;
 }
@@ -1345,12 +1357,12 @@ export default {
 }
 
 .adjust-label {
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.5);
 }
 
 .adjust-value {
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   color: var(--color-gold);
   font-weight: 600;
 }
@@ -1361,7 +1373,7 @@ export default {
 
 .form-label {
   display: block;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: rgba(255,255,255,0.7);
   margin-bottom: 0.8vh;
   font-weight: 600;
@@ -1375,7 +1387,7 @@ export default {
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 0.6vh;
   color: #fff;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   box-sizing: border-box;
 }
 
@@ -1403,7 +1415,7 @@ export default {
   flex: 1;
   padding: 1.2vh;
   border-radius: 0.6vh;
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   font-weight: 600;
   text-align: center;
 }

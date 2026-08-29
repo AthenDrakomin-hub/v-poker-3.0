@@ -1,5 +1,5 @@
 <template>
-  <ImmersivePage title="经济配置" :show-header="true" :scrollable="true" page-class="theme-economy">
+  <ImmersivePage title="经济配置" :show-header="true" :scrollable="true" page-class="theme-economy" :page-style="{ '--font-scale': fontScale }">
     <template #header-left>
       <view class="back-btn" @click="goBack">
         <VIcon name="back" :size="3.3" color="var(--color-text)" />
@@ -43,7 +43,7 @@
             </view>
             <view class="game-info">
               <text class="game-name">{{ game.gameName }}</text>
-              <text class="game-type">{{ game.gameType }}</text>
+              <text class="game-type">{{ formatGameType(game.gameType) }}</text>
             </view>
             <view class="game-arrow">
               <VIcon name="back" :size="2.5" color="var(--color-text-muted)" />
@@ -310,6 +310,8 @@
 </template>
 
 <script>
+import { formatGameType } from '../../utils/format.js'
+import { getFontScale } from '../../utils/fontScale.js'
 import ImmersivePage from '../../components/ui/ImmersivePage.vue'
 import VIcon from '../../components/ui/VIcon.vue'
 import {
@@ -335,6 +337,7 @@ export default {
   data() {
     return {
       activeTab: 'games',
+      fontScale: 1.0,
       tabs: [
         { key: 'games', label: '游戏配置' },
         { key: 'templates', label: '房间模板' },
@@ -377,9 +380,18 @@ export default {
     }
   },
   onLoad() {
+    this.fontScale = getFontScale()
+    uni.$on('fontScaleChange', this.onFontScaleChange)
     this.loadGames()
   },
+  onUnload() {
+    uni.$off('fontScaleChange', this.onFontScaleChange)
+  },
   methods: {
+    formatGameType,
+    onFontScaleChange(scale) {
+      this.fontScale = scale
+    },
     goBack() {
       uni.navigateBack()
     },
@@ -599,7 +611,7 @@ export default {
   border-radius: 30rpx;
 }
 .reload-text {
-  font-size: 24rpx;
+  font-size: var(--text-sm);
   color: var(--color-gold);
 }
 
@@ -611,6 +623,10 @@ export default {
 }
 .tab-item {
   flex: 1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 20rpx 0;
   border-radius: 16rpx;
@@ -621,7 +637,7 @@ export default {
   background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-dark));
 }
 .tab-label {
-  font-size: 28rpx;
+  font-size: var(--text-base);
   color: var(--color-text-muted);
 }
 .tab-item.active .tab-label {
@@ -637,7 +653,7 @@ export default {
   text-align: center;
   padding: 80rpx 0;
   color: var(--color-text-muted);
-  font-size: 28rpx;
+  font-size: var(--text-base);
 }
 
 /* 游戏卡片 */
@@ -665,19 +681,19 @@ export default {
   margin-right: 20rpx;
 }
 .game-icon-text {
-  font-size: 40rpx;
+  font-size: var(--text-2xl);
 }
 .game-info {
   flex: 1;
 }
 .game-name {
-  font-size: 32rpx;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-text);
   display: block;
 }
 .game-type {
-  font-size: 22rpx;
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
 .game-arrow {
@@ -695,13 +711,13 @@ export default {
   padding: 16rpx;
 }
 .stat-label {
-  font-size: 22rpx;
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
   display: block;
   margin-bottom: 6rpx;
 }
 .stat-value {
-  font-size: 28rpx;
+  font-size: var(--text-base);
   color: var(--color-text);
   font-weight: 600;
 }
@@ -721,12 +737,12 @@ export default {
   padding: 0 8rpx;
 }
 .group-title {
-  font-size: 30rpx;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-text);
 }
 .group-count {
-  font-size: 24rpx;
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
 .template-list {
@@ -745,14 +761,14 @@ export default {
   margin-bottom: 16rpx;
 }
 .template-name {
-  font-size: 28rpx;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-text);
 }
 .template-level {
   padding: 6rpx 16rpx;
   border-radius: 20rpx;
-  font-size: 20rpx;
+  font-size: var(--text-sm);
 }
 .template-level.junior { background: rgba(72,187,120,0.2); color: #48BB78; }
 .template-level.senior { background: rgba(237,137,54,0.2); color: #ED8936; }
@@ -765,7 +781,7 @@ export default {
 .stat-row {
   display: flex;
   justify-content: space-between;
-  font-size: 24rpx;
+  font-size: var(--text-sm);
 }
 .stat-row .stat-label {
   color: var(--color-text-muted);
@@ -795,12 +811,12 @@ export default {
 .history-type {
   padding: 6rpx 16rpx;
   border-radius: 20rpx;
-  font-size: 22rpx;
+  font-size: var(--text-sm);
 }
 .history-type.game_economy { background: rgba(66,153,225,0.2); color: #4299E1; }
 .history-type.room_template { background: rgba(159,122,234,0.2); color: #9F7AEA; }
 .history-time {
-  font-size: 22rpx;
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
 .history-body {
@@ -809,11 +825,11 @@ export default {
   gap: 6rpx;
 }
 .history-reason {
-  font-size: 26rpx;
+  font-size: var(--text-base);
   color: var(--color-text);
 }
 .history-operator {
-  font-size: 22rpx;
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
 
@@ -826,7 +842,8 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40rpx;
+  padding: calc(20rpx + var(--safe-top, 0px)) calc(20rpx + var(--safe-right, 0px)) calc(20rpx + var(--safe-bottom, 0px)) calc(20rpx + var(--safe-left, 0px));
+  box-sizing: border-box;
 }
 .modal-content {
   width: 100%;
@@ -847,13 +864,13 @@ export default {
   border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 .modal-title {
-  font-size: 32rpx;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-text);
 }
 .modal-close-btn {
-  width: 56rpx;
-  height: 56rpx;
+  width: max(56rpx, 44px);
+  height: max(56rpx, 44px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -882,7 +899,7 @@ export default {
   gap: 20rpx;
 }
 .form-label {
-  font-size: 26rpx;
+  font-size: var(--text-sm);
   color: var(--color-text);
   margin-bottom: 12rpx;
   display: block;
@@ -890,17 +907,17 @@ export default {
 }
 .form-input {
   width: 100%;
-  height: 80rpx;
+  min-height: max(4.5vh, 44px);
+  height: max(80rpx, 44px);
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 12rpx;
   padding: 0 24rpx;
-  font-size: 28rpx;
+  font-size: var(--text-base);
   color: var(--color-text);
-  box-sizing: border-box;
 }
 .form-hint {
-  font-size: 22rpx;
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
   margin-top: 8rpx;
   display: block;
@@ -914,12 +931,16 @@ export default {
 }
 .form-radio {
   flex: 1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 20rpx;
   border-radius: 12rpx;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
-  font-size: 26rpx;
+  font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
 .form-radio.active {
@@ -931,10 +952,14 @@ export default {
 /* 按钮 */
 .btn {
   flex: 1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 22rpx 0;
   border-radius: 12rpx;
-  font-size: 28rpx;
+  font-size: var(--text-base);
   font-weight: 600;
 }
 .btn-ghost {

@@ -178,9 +178,15 @@ export function getAllRoomTemplates(): RoomTemplate[] {
 
 /**
  * 获取全部游戏经济配置
+ * 如果缓存为空，返回所有游戏类型的默认配置（避免前端显示空列表）
  */
 export function getAllGameEconomies(): GameEconomy[] {
-  return Array.from(gameEconomyCache.values());
+  const cached = Array.from(gameEconomyCache.values());
+  if (cached.length > 0) return cached;
+
+  // 缓存为空时，返回所有游戏类型的默认配置
+  console.warn('[economy_v2] 缓存为空，返回默认配置列表');
+  return GAME_TYPES_V2.map(gameType => getGameEconomy(gameType));
 }
 
 /**

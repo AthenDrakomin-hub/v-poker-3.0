@@ -157,10 +157,19 @@ class SoundManager {
       const audio = uni.createInnerAudioContext()
       audio.volume = this.volume
       audio.src = this.getSoundPath(type)
+      // 忽略非致命的缓存错误（如 ERR_CACHE_OPERATION_NOT_SUPPORTED），不影响播放
+      audio.onError((err) => {
+        const errMsg = err?.errMsg || err?.message || ''
+        if (errMsg.includes('CACHE_OPERATION_NOT_SUPPORTED') || errMsg.includes('cache')) {
+          console.warn('[Sound] 缓存错误（可忽略）:', type, errMsg)
+        } else {
+          console.error('[Sound] 音频错误:', type, err)
+        }
+      })
       this.soundCache[key] = audio
       return audio
     } catch (e) {
-      console.error('[Sound] 创建音�?失败', e)
+      console.error('[Sound] 创建音频失败', e)
       return null
     }
   }
@@ -175,6 +184,13 @@ class SoundManager {
           const audio = uni.createInnerAudioContext()
           audio.volume = this.volume
           audio.src = this.getSoundPath(type)
+          // 忽略非致命的缓存错误
+          audio.onError((err) => {
+            const errMsg = err?.errMsg || err?.message || ''
+            if (!errMsg.includes('CACHE_OPERATION_NOT_SUPPORTED') && !errMsg.includes('cache')) {
+              console.error('[Sound] 音频池错误:', type, err)
+            }
+          })
           return audio
         })
         this.poolIndexes[type] = 0

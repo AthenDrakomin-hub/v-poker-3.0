@@ -3,7 +3,7 @@
     <!-- 背景装饰 -->
     <template #background>
       <view class="bg-decoration">
-        <view class="bg-image" :style="{ backgroundImage: 'url(/static/login-background.jpg)' }"></view>
+        <view class="bg-image" :style="{ backgroundImage: 'url(' + cdnUrl('/static/login-background.jpg') + ')' }"></view>
         <view class="bg-gradient"></view>
         <view class="bg-vignette"></view>
         <view class="bg-particles">
@@ -16,7 +16,7 @@
     <view class="auth-content">
       <!-- 左侧：只放 Logo -->
       <view class="brand-area">
-        <image class="brand-logo" src="/static/logo.png" mode="aspectFit"></image>
+        <image class="brand-logo" :src="cdnUrl('/static/logo.png')" mode="aspectFit"></image>
       </view>
 
       <!-- 右侧表单卡 -->
@@ -124,6 +124,7 @@
 <script>
 import { login, initUserState, fetchUserInfo, userState } from '../../store/user.js'
 import { USER_AGREEMENT, PRIVACY_POLICY } from '../../utils/agreements.js'
+import { cdnUrl } from '../../utils/cdn.js'
 
 export default {
   data() {
@@ -157,6 +158,7 @@ export default {
     if (token) this.autoLogin()
   },
   methods: {
+    cdnUrl,
     async autoLogin() {
       if (this.isAutoLogining) return
       this.isAutoLogining = true

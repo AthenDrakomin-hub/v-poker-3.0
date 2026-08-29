@@ -67,7 +67,7 @@
 
       <!-- 庄家标识 -->
       <view v-if="isDealer" class="dealer-button">
-        <text>D</text>
+        <text>庄</text>
       </view>
 
       <!-- 挂机标识（通比牛牛） -->

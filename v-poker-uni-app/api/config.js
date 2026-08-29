@@ -1,4 +1,4 @@
-/**
+﻿/**
  * V-Poker API 配置
  */
 
@@ -6,7 +6,7 @@
 // 注意：接口文件中的路径已自带 /api 前缀（如 /api/auth/login），此处只填域名
 // 开发环境：http://localhost:3001
 // 生产环境：https://goodspage.cn
-const BASE_URL = 'http://localhost:3001'
+const BASE_URL = 'https://goodspage.cn'
 
 export const API_CONFIG = {
   baseUrl: BASE_URL,

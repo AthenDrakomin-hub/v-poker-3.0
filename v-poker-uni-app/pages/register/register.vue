@@ -2,7 +2,7 @@
   <ImmersivePage :show-header="false" page-class="register-page">
     <template #background>
       <view class="bg-decoration">
-        <view class="bg-image" :style="{ backgroundImage: 'url(/static/login-background.jpg)' }"></view>
+        <view class="bg-image" :style="{ backgroundImage: 'url(' + cdnUrl('/static/login-background.jpg') + ')' }"></view>
         <view class="bg-gradient"></view>
         <view class="bg-vignette"></view>
         <view class="bg-particles">
@@ -14,7 +14,7 @@
     <view class="auth-content">
       <!-- 左侧：只放 Logo -->
       <view class="brand-area">
-        <image class="brand-logo" src="/static/logo.png" mode="aspectFit"></image>
+        <image class="brand-logo" :src="cdnUrl('/static/logo.png')" mode="aspectFit"></image>
       </view>
 
       <!-- 右侧表单卡 -->
@@ -158,6 +158,7 @@
 </template>
 
 <script>
+import { cdnUrl } from '../../utils/cdn.js'
 import { register } from '../../api/auth.js'
 import { initUserState, updateUserInfo } from '../../store/user.js'
 
@@ -191,6 +192,7 @@ export default {
     }
   },
   methods: {
+    cdnUrl,
     validateForm() {
       const account = this.form.account.trim()
       const inviteCode = this.form.inviteCode.trim()

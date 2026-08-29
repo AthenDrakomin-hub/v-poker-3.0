@@ -48,16 +48,11 @@ export function getAvatarConfig(avatar) {
 
 /**
  * 获取头像图片路径
- * 内置头像直接返回本地路径（不走CDN，确保离线可用）
- * 自定义URL头像保持原样
+ * 所有头像路径都走 CDN 适配（本地 static 目录为空，资源全部托管在 CDN）
  */
 export function getAvatarImage(avatar) {
   const config = getAvatarConfig(avatar)
-  // 自定义http头像走CDN适配，内置头像直接返回本地路径
-  if (typeof config.image === 'string' && config.image.startsWith('http')) {
-    return cdnUrl(config.image)
-  }
-  return config.image
+  return cdnUrl(config.image)
 }
 
 /**

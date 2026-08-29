@@ -1,4 +1,4 @@
-﻿/**
+/**
  * V-Poker 格式化工具
  */
 
@@ -114,6 +114,60 @@ export function formatRole(role) {
 }
 
 /**
+ * 格式化房间状态
+ */
+export function formatRoomStatus(status) {
+  const map = {
+    waiting: '等待中',
+    playing: '游戏中',
+    paused: '已暂停',
+    ended: '已结束',
+    active: '进行中',
+    inactive: '未开始',
+  }
+  return map[status] || status || '-'
+}
+
+/**
+ * 格式化用户状态
+ */
+export function formatUserStatus(status) {
+  const map = {
+    active: '正常',
+    frozen: '已冻结',
+    banned: '已封禁',
+    online: '在线',
+    offline: '离线',
+  }
+  return map[status] || status || '-'
+}
+
+/**
+ * 格式化客服状态
+ */
+export function formatCsStatus(status) {
+  const map = {
+    online: '接待中',
+    offline: '已关闭',
+    busy: '忙碌中',
+  }
+  return map[status] || status || '-'
+}
+
+/**
+ * 格式化会话状态
+ */
+export function formatConversationStatus(status) {
+  const map = {
+    open: '进行中',
+    closed: '已结束',
+    pending: '待处理',
+    resolved: '已解决',
+  }
+  return map[status] || status || '-'
+}
+
+/**
  * 隐藏手机号中间四位
  */
 export function maskPhone(phone) {
@@ -137,6 +191,10 @@ export default {
   formatRelativeTime,
   formatGameType,
   formatRole,
+  formatRoomStatus,
+  formatUserStatus,
+  formatCsStatus,
+  formatConversationStatus,
   maskPhone,
   generateId,
 }
