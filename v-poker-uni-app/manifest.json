@@ -17,6 +17,11 @@
             "autoclose" : true,
             "delay" : 0
         },
+        "statusbar" : {
+            "immersed" : "supportedDevice",
+            "style" : "light",
+            "background" : "#0a0a0a"
+        },
         "modules" : {},
         "distribute" : {
             "android" : {
