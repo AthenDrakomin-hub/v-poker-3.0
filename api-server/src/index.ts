@@ -18,6 +18,7 @@ import economyV2Routes from "./routes/economyV2.routes";
 import walletRoutes from "./routes/wallet.routes";
 import messagesRoutes from "./routes/messages.routes";
 import { loadGameEconomyConfig } from "./lib/gameEconomy";
+import { ensureEconomySeed } from "./lib/ensureSeed";
 import { appRouter } from "./routes/app.routes";
 import { setupRoomSockets } from "./socket/roomSocket";
 import { errorHandler } from "./lib/appError";
@@ -148,8 +149,11 @@ server.listen(PORT, () => {
     console.warn("[WARN] 生产环境未设置 CORS_ORIGIN，将允许所有来源。建议设置 CORS_ORIGIN=https://yourdomain.com");
   }
 
-  loadGameEconomyConfig().catch((e) => {
-    console.warn("[economy_v2] 配置加载失败（表可能尚未创建）:", e.message);
+  // 先初始化经济配置默认数据（DB为空时自动写入），再加载到内存缓存
+  ensureEconomySeed().then(() => {
+    loadGameEconomyConfig().catch((e) => {
+      console.warn("[economy_v2] 配置加载失败（表可能尚未创建）:", e.message);
+    });
   });
 
   startTimeoutChecker();
