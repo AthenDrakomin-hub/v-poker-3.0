@@ -533,6 +533,9 @@ export default {
     uni.$off('fontScaleChange', this.onFontScaleChange)
     this.stopMsgPolling()
   },
+  onPullDownRefresh() {
+    this.loadAllData().finally(() => uni.stopPullDownRefresh())
+  },
   methods: {
     formatGameType,
     formatPoints,

@@ -407,6 +407,9 @@ export default {
   onUnload() {
     uni.$off('fontScaleChange', this.onFontScaleChange)
   },
+  onPullDownRefresh() {
+    this.loadUserStats().finally(() => uni.stopPullDownRefresh())
+  },
   methods: {
     formatPoints,
     getAvatarImage,

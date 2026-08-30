@@ -388,6 +388,9 @@ export default {
   onUnload() {
     uni.$off('fontScaleChange', this.onFontScaleChange)
   },
+  onPullDownRefresh() {
+    this.loadAllData().finally(() => uni.stopPullDownRefresh())
+  },
   methods: {
     formatPoints,
     formatDateTime,

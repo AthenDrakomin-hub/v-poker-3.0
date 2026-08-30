@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <ImmersivePage title="经济配置" :show-header="true" :scrollable="true" page-class="theme-economy" :page-style="{ '--font-scale': fontScale }">
     <template #header-left>
       <view class="back-btn" @click="goBack">
@@ -386,6 +386,9 @@ export default {
   },
   onUnload() {
     uni.$off('fontScaleChange', this.onFontScaleChange)
+  },
+  onPullDownRefresh() {
+    this.loadGames().finally(() => uni.stopPullDownRefresh())
   },
   methods: {
     formatGameType,

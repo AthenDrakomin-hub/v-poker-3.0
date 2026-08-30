@@ -611,6 +611,9 @@ export default {
     uni.$off('fontScaleChange', this.onFontScaleChange)
     this.stopCsUnreadPolling()
   },
+  onPullDownRefresh() {
+    this.loadMyRooms().finally(() => uni.stopPullDownRefresh())
+  },
   methods: {
     formatPoints,
     formatGameType,

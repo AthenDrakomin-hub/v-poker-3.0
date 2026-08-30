@@ -6,7 +6,7 @@
       "^(TopBar|BottomTabBar|GameCard|GameCardSwiper|RightFloatButtons|WalletPanel|ProfilePanel|JoinRoomModal|MyRoomsPanel)$": "@/components/lobby/$1.vue",
       "^(PlayerSeat)$": "@/components/seat/$1.vue",
       "^(ChipStack|PotDisplay)$": "@/components/chips/$1.vue",
-      "^(VIcon|ChatBox|ImmersivePage|OpenCardEffect|ParticleSystem|ThemeBackground)$": "@/components/ui/$1.vue",
+      "^(VIcon|ChatBox|ImmersivePage|OpenCardEffect|ParticleSystem|ThemeBackground|SegmentControl|CustomNavBar|SwipeActionItem|CascadePicker|PreviewImage|BottomSheet|ListEmpty|ListFooter)$": "@/components/ui/$1.vue",
       "^(DynamicActions)$": "@/components/actions/$1.vue",
       "^(PyramidDistribution|SettlementPanel)$": "@/components/settlement/$1.vue"
     }
@@ -31,14 +31,18 @@
       "style": {
         "navigationStyle": "custom",
         "disableScroll": true,
-        "popGesture": "none"
+        "popGesture": "none",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "light"
       }
     },
     {
       "path": "pages/join/join",
       "style": {
         "navigationStyle": "custom",
-        "disableScroll": true
+        "disableScroll": true,
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "light"
       }
     },
     {
@@ -52,42 +56,54 @@
       "path": "pages/workbench/workbench",
       "style": {
         "navigationStyle": "custom",
-        "disableScroll": true
+        "disableScroll": true,
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "light"
       }
     },
     {
       "path": "pages/customer-service/customer-service",
       "style": {
         "navigationStyle": "custom",
-        "disableScroll": true
+        "disableScroll": true,
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "light"
       }
     },
     {
       "path": "pages/promotion/promotion",
       "style": {
         "navigationStyle": "custom",
-        "disableScroll": true
+        "disableScroll": true,
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "light"
       }
     },
     {
       "path": "pages/admin/admin",
       "style": {
         "navigationStyle": "custom",
-        "disableScroll": true
+        "disableScroll": true,
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "light"
       }
     },
     {
       "path": "pages/economy/economy",
       "style": {
         "navigationStyle": "custom",
-        "disableScroll": true
+        "disableScroll": true,
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "light"
       }
     },
     {
       "path": "pages/profile/profile",
       "style": {
         "navigationStyle": "custom",
-        "disableScroll": true
+        "disableScroll": true,
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "light"
       }
     },
     {

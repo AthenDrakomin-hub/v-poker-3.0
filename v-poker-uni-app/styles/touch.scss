@@ -1,0 +1,177 @@
+/**
+ * V-Poker 全局触控规范
+ * 针对 App 端拇指触控优化，替代 Web 端 hover/侧边栏/页码分页
+ *
+ * 规范：
+ * 1. 最小触控区域 44×44pt（约 88rpx）
+ * 2. 取消 hover，用 :active 替代
+ * 3. 横屏安全区域适配
+ * 4. 点击反馈（缩放+透明度）
+ */
+
+/* ===== 最小触控区域 ===== */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 可点击文字/图标扩大触控区 */
+.touchable {
+  padding: 8px 12px;
+  margin: -8px -12px;
+}
+
+/* ===== 点击态（替代 hover） ===== */
+.touch-active {
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+.touch-active:active {
+  opacity: 0.7;
+  transform: scale(0.97);
+}
+
+/* 按钮点击态 */
+.btn-touch {
+  transition: all 0.15s ease;
+}
+.btn-touch:active {
+  opacity: 0.8;
+  transform: scale(0.96);
+  filter: brightness(0.9);
+}
+
+/* 卡片点击态 */
+.card-touch {
+  transition: all 0.15s ease;
+}
+.card-touch:active {
+  opacity: 0.85;
+  transform: scale(0.98);
+}
+
+/* ===== 取消 hover（App端无 hover） ===== */
+@media (hover: none) {
+  *:hover {
+    /* 重置所有 hover 效果，避免 App 端 sticky hover */
+    color: inherit !important;
+    background: inherit !important;
+    border-color: inherit !important;
+    opacity: inherit !important;
+  }
+}
+
+/* ===== 横屏安全区域 ===== */
+.safe-left {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+.safe-right {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-horizontal {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* ===== 列表项通用样式 ===== */
+.list-item {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.15s ease;
+}
+.list-item:active {
+  background: rgba(255,255,255,0.05);
+}
+
+/* ===== 表单字段通用样式 ===== */
+.form-field {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.form-field.error {
+  border-bottom-color: var(--color-danger, #FF6B6B);
+}
+.field-label {
+  font-size: 2.6vh;
+  color: var(--color-text-muted, rgba(255,255,255,0.6));
+  min-width: 80px;
+}
+.field-value {
+  flex: 1;
+  font-size: 2.6vh;
+  color: var(--color-text, #E8E8E8);
+  text-align: right;
+}
+.field-error {
+  display: block;
+  font-size: 2vh;
+  color: var(--color-danger, #FF6B6B);
+  margin-top: 4px;
+  padding: 0 16px;
+}
+
+/* ===== 分组列表（iOS 设置风格） ===== */
+.group-list {
+  margin: 16px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-bg-card, #1A1A2E);
+}
+.group-title {
+  font-size: 2.2vh;
+  color: var(--color-text-muted, rgba(255,255,255,0.6));
+  padding: 16px 16px 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ===== 空状态 ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+.empty-icon {
+  font-size: 48px;
+  opacity: 0.2;
+  margin-bottom: 12px;
+}
+.empty-text {
+  font-size: 2.6vh;
+  color: var(--color-text-muted, rgba(255,255,255,0.6));
+}
+
+/* ===== 加载骨架屏 ===== */
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+}
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===== 禁用文本选择（App端） ===== */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}

@@ -1,25 +1,7 @@
 ﻿<template>
   <view class="admin-desk">
-    <view class="desk-sidebar">
-      <view class="brand-block">
-        <text class="brand-title">平台运营</text>
-        <text class="brand-subtitle">管理控制台</text>
-      </view>
-      <scroll-view class="nav-list" scroll-y>
-        <view
-          v-for="item in navigation"
-          :key="item.key"
-          class="nav-item"
-          :class="{ active: activeView === item.key }"
-          @click="switchView(item.key)"
-        >
-          <VIcon :name="item.icon" :size="2.4" :color="activeView === item.key ? 'var(--color-gold)' : 'var(--color-text-muted)'" />
-          <text>{{ item.label }}</text>
-        </view>
-      </scroll-view>
-    </view>
-
     <view class="desk-main">
+      <SegmentControl :tabs="navTabs" :active="activeView" @change="switchView" />
       <view class="desk-header">
         <view>
           <text class="view-title">{{ activeNavigation.label }}</text>
@@ -31,7 +13,7 @@
         </view>
       </view>
 
-      <scroll-view class="desk-content" scroll-y>
+      <scroll-view class="desk-content" scroll-y @scrolltolower="onLoadMore">
         <view v-if="activeView === 'overview'" class="overview-view">
           <view class="metric-grid">
             <view v-for="stat in globalStats" :key="stat.key" class="metric-card glass">
@@ -69,19 +51,19 @@
             </view>
             <view v-if="!users.length && !loading.users" class="empty-state">暂无用户数据</view>
           </view>
-          <PaginationBar :pagination="userPagination" @change="loadUsers" />
+          <ListFooter :loading="loadingMore.users" :no-more="noMore.users" :has-data="users.length > 0" />
         </view>
 
         <view v-else-if="activeView === 'rooms'" class="data-view">
           <view class="toolbar glass"><picker :range="roomStatusOptions" range-key="label" @change="onRoomStatusChange"><view class="select-control">{{ selectedRoomStatus.label }}</view></picker><view class="command-btn" @click="loadRooms(1)">查询</view></view>
           <view class="data-table glass"><view class="table-head room-row"><text>房间</text><text>游戏</text><text>人数</text><text>状态</text><text>操作</text></view><view v-for="room in rooms" :key="room.id" class="table-row room-row"><view><text class="primary-text">#{{ room.roomNo || room.id }}</text><text class="secondary-text">房主 {{ room.agentName || room.agentId || '-' }}</text></view><text>{{ formatGameType(room.gameType) || '-' }}</text><text>{{ room.playerCount || room.currentPlayers || 0 }}/{{ room.maxSeats || 0 }}</text><text>{{ formatRoomStatus(room.status) }}</text><view class="row-actions"><text @click="showRoomDetail(room)">详情</text><text class="danger-action" @click="forceEnd(room)">强制结束</text></view></view><view v-if="!rooms.length && !loading.rooms" class="empty-state">暂无房间数据</view></view>
-          <PaginationBar :pagination="roomPagination" @change="loadRooms" />
+          <ListFooter :loading="loadingMore.rooms" :no-more="noMore.rooms" :has-data="rooms.length > 0" />
         </view>
 
         <view v-else-if="activeView === 'agents'" class="data-view">
           <view class="toolbar glass"><picker :range="agentRoleOptions" range-key="label" @change="onAgentRoleChange"><view class="select-control">{{ selectedAgentRole.label }}</view></picker><view class="command-btn" @click="loadAgents(1)">查询</view></view>
           <view class="data-table glass"><view class="table-head agent-row"><text>代理</text><text>层级</text><text>下线</text><text>返佣</text><text>操作</text></view><view v-for="agent in agents" :key="agent.id || agent.userId" class="table-row agent-row"><view><text class="primary-text">{{ agent.nickname || agent.account }}</text><text class="secondary-text">ID {{ agent.id || agent.userId }}</text></view><text>{{ roleLabel(agent.role) }}</text><text>{{ agent.subAgentCount || agent.subCount || 0 }}</text><text>{{ agent.commissionRate || 0 }}%</text><view class="row-actions"><text @click="openUserEditor(agent)">编辑资料</text><text @click="openAdjust(agent)">调账</text></view></view><view v-if="!agents.length && !loading.agents" class="empty-state">暂无代理数据</view></view>
-          <PaginationBar :pagination="agentPagination" @change="loadAgents" />
+          <ListFooter :loading="loadingMore.agents" :no-more="noMore.agents" :has-data="agents.length > 0" />
         </view>
 
         <view v-else-if="activeView === 'finance'" class="data-view">
@@ -147,7 +129,6 @@
 
 <script>
 import VIcon from '../ui/VIcon.vue'
-import PaginationBar from '../ui/PaginationBar.vue'
 import AdminExtendedOperations from './AdminExtendedOperations.vue'
 import { formatGameType, formatRoomStatus } from '../../utils/format.js'
 import { getAdminStats, getUserList, createUser, updateUser, deleteUser, adjustUserPoints, freezeUser, unfreezeUser, getAdminRoomList, forceEndRoom, getAdminLedger, getAuditLogs, getSystemConfig, updateSystemConfig, reloadEconomyV2, getCsStaff, getCsReport, setCsStatus } from '../../api/admin.js'
@@ -156,20 +137,30 @@ import { getInviteCode, generateInviteCode } from '../../api/agent.js'
 const roles = [{ label: '全部角色', value: '' }, { label: '玩家', value: 'player' }, { label: '代理', value: 'agent' }, { label: '总代理', value: 'top_agent' }, { label: '客服', value: 'customer_service' }, { label: '管理员', value: 'admin' }]
 
 export default {
-  name: 'AdminOperationsDesk', components: { VIcon, PaginationBar, AdminExtendedOperations },
-  data() { return { activeView: 'overview', lastUpdated: '--', loading: { users: false, rooms: false, agents: false, ledger: false, service: false, audit: false }, navigation: [{ key: 'overview', label: '运营概览', desc: '关键运营指标与待处理事项', icon: 'more' }, { key: 'users', label: '用户治理', desc: '用户、角色、状态与筹码管理', icon: 'user' }, { key: 'rooms', label: '房间监管', desc: '房间状态与强制干预', icon: 'cards' }, { key: 'agents', label: '代理管理', desc: '代理层级与账户管理', icon: 'user' }, { key: 'finance', label: '资金账本', desc: '平台流水与资金核查', icon: 'coin' }, { key: 'service', label: '客服运营', desc: '客服状态与服务指标', icon: 'headset' }, { key: 'audit', label: '审计中心', desc: '操作记录与安全追溯', icon: 'warning' }, { key: 'invite', label: '邀请码管理', desc: '查看与生成管理员邀请码', icon: 'user' }, { key: 'config', label: '系统配置', desc: '发布配置与经济模型', icon: 'gear' }], globalStats: [{ key: 'users', label: '总用户', value: 0, icon: 'user', color: 'var(--color-info)' }, { key: 'rooms', label: '活跃房间', value: 0, icon: 'cards', color: 'var(--color-success)' }, { key: 'flow', label: '累计流水', value: 0, icon: 'coin', color: 'var(--color-gold)' }, { key: 'rake', label: '累计抽水', value: 0, icon: 'more', color: 'var(--color-danger)' }], quickActions: [{ view: 'users', title: '用户治理', desc: '账号、角色、状态与调账', icon: 'user', color: 'var(--color-info)' }, { view: 'rooms', title: '房间监管', desc: '实时状态与强制结束', icon: 'cards', color: 'var(--color-success)' }, { view: 'finance', title: '资金账本', desc: '流水与异常核查', icon: 'coin', color: 'var(--color-gold)' }, { view: 'audit', title: '审计中心', desc: '操作记录与追踪', icon: 'warning', color: 'var(--color-danger)' }], roleOptions: roles, editableRoles: roles.slice(1), userQuery: { search: '', role: '' }, users: [], userPagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 }, roomStatusOptions: [{ label: '全部状态', value: '' }, { label: '等待中', value: 'waiting' }, { label: '游戏中', value: 'playing' }, { label: '已结束', value: 'ended' }], roomQuery: { status: '' }, rooms: [], roomPagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 }, agentRoleOptions: roles.filter(item => ['', 'agent', 'top_agent'].includes(item.value)), agentQuery: { role: 'agent' }, agents: [], agentPagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 }, financeStats: {}, ledgerQuery: { userId: '', type: '' }, ledger: [], csStaff: [], csReport: {}, auditQuery: { userId: '', type: '' }, auditLogs: [], systemConfig: { app_version: '', app_download_url: '' }, editor: { visible: false, mode: 'create', target: null, form: { account: '', password: '', nickname: '', role: 'player' } }, adjust: { visible: false, target: {}, amount: '', reason: '' }, currentInviteCode: '', inviteCodeInfo: null, csEditor: { visible: false, mode: 'create', target: null, form: { account: '', password: '', nickname: '' } } } },
-  computed: { activeNavigation() { return this.navigation.find(item => item.key === this.activeView) || this.navigation[0] }, selectedRoleFilter() { return this.roleOptions.find(item => item.value === this.userQuery.role) || this.roleOptions[0] }, selectedRoomStatus() { return this.roomStatusOptions.find(item => item.value === this.roomQuery.status) || this.roomStatusOptions[0] }, selectedAgentRole() { return this.agentRoleOptions.find(item => item.value === this.agentQuery.role) || this.agentRoleOptions[0] }, editorRole() { return this.editableRoles.find(item => item.value === this.editor.form.role) || this.editableRoles[0] }, onlineCsCount() { return this.csStaff.filter(item => item.csStatus === 'online').length } },
+  name: 'AdminOperationsDesk', components: { VIcon, AdminExtendedOperations },
+  data() { return { activeView: 'overview', lastUpdated: '--', loading: { users: false, rooms: false, agents: false, ledger: false, service: false, audit: false }, loadingMore: { users: false, rooms: false, agents: false }, noMore: { users: false, rooms: false, agents: false }, navigation: [{ key: 'overview', label: '运营概览', desc: '关键运营指标与待处理事项', icon: 'more' }, { key: 'users', label: '用户治理', desc: '用户、角色、状态与筹码管理', icon: 'user' }, { key: 'rooms', label: '房间监管', desc: '房间状态与强制干预', icon: 'cards' }, { key: 'agents', label: '代理管理', desc: '代理层级与账户管理', icon: 'user' }, { key: 'finance', label: '资金账本', desc: '平台流水与资金核查', icon: 'coin' }, { key: 'service', label: '客服运营', desc: '客服状态与服务指标', icon: 'headset' }, { key: 'audit', label: '审计中心', desc: '操作记录与安全追溯', icon: 'warning' }, { key: 'invite', label: '邀请码管理', desc: '查看与生成管理员邀请码', icon: 'user' }, { key: 'config', label: '系统配置', desc: '发布配置与经济模型', icon: 'gear' }], globalStats: [{ key: 'users', label: '总用户', value: 0, icon: 'user', color: 'var(--color-info)' }, { key: 'rooms', label: '活跃房间', value: 0, icon: 'cards', color: 'var(--color-success)' }, { key: 'flow', label: '累计流水', value: 0, icon: 'coin', color: 'var(--color-gold)' }, { key: 'rake', label: '累计抽水', value: 0, icon: 'more', color: 'var(--color-danger)' }], quickActions: [{ view: 'users', title: '用户治理', desc: '账号、角色、状态与调账', icon: 'user', color: 'var(--color-info)' }, { view: 'rooms', title: '房间监管', desc: '实时状态与强制结束', icon: 'cards', color: 'var(--color-success)' }, { view: 'finance', title: '资金账本', desc: '流水与异常核查', icon: 'coin', color: 'var(--color-gold)' }, { view: 'audit', title: '审计中心', desc: '操作记录与追踪', icon: 'warning', color: 'var(--color-danger)' }], roleOptions: roles, editableRoles: roles.slice(1), userQuery: { search: '', role: '' }, users: [], userPagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 }, roomStatusOptions: [{ label: '全部状态', value: '' }, { label: '等待中', value: 'waiting' }, { label: '游戏中', value: 'playing' }, { label: '已结束', value: 'ended' }], roomQuery: { status: '' }, rooms: [], roomPagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 }, agentRoleOptions: roles.filter(item => ['', 'agent', 'top_agent'].includes(item.value)), agentQuery: { role: 'agent' }, agents: [], agentPagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 }, financeStats: {}, ledgerQuery: { userId: '', type: '' }, ledger: [], csStaff: [], csReport: {}, auditQuery: { userId: '', type: '' }, auditLogs: [], systemConfig: { app_version: '', app_download_url: '' }, editor: { visible: false, mode: 'create', target: null, form: { account: '', password: '', nickname: '', role: 'player' } }, adjust: { visible: false, target: {}, amount: '', reason: '' }, currentInviteCode: '', inviteCodeInfo: null, csEditor: { visible: false, mode: 'create', target: null, form: { account: '', password: '', nickname: '' } } } },
+  computed: { navTabs() { return this.navigation.map(item => ({ key: item.key, label: item.label })) }, activeNavigation() { return this.navigation.find(item => item.key === this.activeView) || this.navigation[0] }, selectedRoleFilter() { return this.roleOptions.find(item => item.value === this.userQuery.role) || this.roleOptions[0] }, selectedRoomStatus() { return this.roomStatusOptions.find(item => item.value === this.roomQuery.status) || this.roomStatusOptions[0] }, selectedAgentRole() { return this.agentRoleOptions.find(item => item.value === this.agentQuery.role) || this.agentRoleOptions[0] }, editorRole() { return this.editableRoles.find(item => item.value === this.editor.form.role) || this.editableRoles[0] }, onlineCsCount() { return this.csStaff.filter(item => item.csStatus === 'online').length } },
   mounted() { this.loadOverview(); this.loadInviteCode() },
   methods: {
     formatGameType,
     formatRoomStatus,
-    async switchView(view) { this.activeView = view; await this.refreshActive() },
+    async onLoadMore() {
+      const loaders = { users: this.loadUsers, rooms: this.loadRooms, agents: this.loadAgents };
+      const loader = loaders[this.activeView];
+      if (!loader || this.loadingMore[this.activeView] || this.noMore[this.activeView]) return;
+      this.loadingMore[this.activeView] = true;
+      try {
+        const nextPage = (this[this.activeView + 'Pagination']?.page || 1) + 1;
+        await loader(nextPage);
+      } catch(e) {} finally { this.loadingMore[this.activeView] = false; }
+    },
+    async switchView(view) { this.activeView = view; this.loadingMore = { users: false, rooms: false, agents: false }; this.noMore = { users: false, rooms: false, agents: false }; await this.refreshActive() },
     async refreshActive() { const loader = { overview: this.loadOverview, users: () => this.loadUsers(1), rooms: () => this.loadRooms(1), agents: () => this.loadAgents(1), finance: () => this.loadFinance(), service: () => this.loadService(), audit: this.loadAudit, config: this.loadConfig, invite: this.loadInviteCode }[this.activeView]; if (loader) await loader(); this.lastUpdated = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) },
     async loadOverview() { try { const data = await getAdminStats(); this.globalStats[0].value = data.totalUsers || 0; this.globalStats[1].value = data.activeRooms || data.onlineRooms || 0; this.globalStats[2].value = data.totalFlow || data.totalPoints || 0; this.globalStats[3].value = data.totalRake || 0; this.financeStats = { todayFlow: data.todayVolume || 0, todayRake: data.todayRake || 0, totalFlow: data.totalFlow || 0, totalRake: data.totalRake || 0 } } catch (e) { this.notify(e, '加载运营概览失败') } },
     normalizeList(data, keys) { if (Array.isArray(data?.data)) return data.data; for (const key of keys) if (Array.isArray(data?.[key])) return data[key]; return [] }, applyPagination(target, data, page) { this[target] = data.pagination || { ...this[target], page } },
-    async loadUsers(page) { this.loading.users = true; try { const params = { page, limit: this.userPagination.pageSize, search: this.userQuery.search.trim(), role: this.userQuery.role }; const data = await getUserList(params); this.users = this.normalizeList(data, ['list', 'users']); this.applyPagination('userPagination', data, page) } catch (e) { this.notify(e, '加载用户失败') } finally { this.loading.users = false } },
-    async loadRooms(page) { this.loading.rooms = true; try { const data = await getAdminRoomList({ page, status: this.roomQuery.status }); this.rooms = this.normalizeList(data, ['list', 'rooms']); this.applyPagination('roomPagination', data, page) } catch (e) { this.notify(e, '加载房间失败') } finally { this.loading.rooms = false } },
-    async loadAgents(page) { this.loading.agents = true; try { const data = await getUserList({ page, limit: this.agentPagination.pageSize, role: this.agentQuery.role }); this.agents = this.normalizeList(data, ['list', 'users']); this.applyPagination('agentPagination', data, page) } catch (e) { this.notify(e, '加载代理失败') } finally { this.loading.agents = false } },
+    async loadUsers(page) { this.loading.users = true; try { const params = { page, limit: this.userPagination.pageSize, search: this.userQuery.search.trim(), role: this.userQuery.role }; const data = await getUserList(params); const _uItems = this.normalizeList(data, ['list', 'users']); this.users = page > 1 ? [...this.users, ..._uItems] : _uItems; if (_uItems.length < this.userPagination.pageSize) this.noMore.users = true; this.applyPagination('userPagination', data, page) } catch (e) { this.notify(e, '加载用户失败') } finally { this.loading.users = false } },
+    async loadRooms(page) { this.loading.rooms = true; try { const data = await getAdminRoomList({ page, status: this.roomQuery.status }); const _rItems = this.normalizeList(data, ['list', 'rooms']); this.rooms = page > 1 ? [...this.rooms, ..._rItems] : _rItems; if (_rItems.length < this.roomPagination.pageSize) this.noMore.rooms = true; this.applyPagination('roomPagination', data, page) } catch (e) { this.notify(e, '加载房间失败') } finally { this.loading.rooms = false } },
+    async loadAgents(page) { this.loading.agents = true; try { const data = await getUserList({ page, limit: this.agentPagination.pageSize, role: this.agentQuery.role }); const _aItems = this.normalizeList(data, ['list', 'users']); this.agents = page > 1 ? [...this.agents, ..._aItems] : _aItems; if (_aItems.length < this.agentPagination.pageSize) this.noMore.agents = true; this.applyPagination('agentPagination', data, page) } catch (e) { this.notify(e, '加载代理失败') } finally { this.loading.agents = false } },
     async loadFinance() { await Promise.all([this.loadLedger(1), this.loadOverview()]) }, async loadLedger(page) { this.loading.ledger = true; try { const data = await getAdminLedger({ page, limit: 50, userId: this.ledgerQuery.userId || undefined, type: this.ledgerQuery.type || undefined }); this.ledger = this.normalizeList(data, ['list', 'records']) } catch (e) { this.notify(e, '加载流水失败') } finally { this.loading.ledger = false } },
     async loadService() { this.loading.service = true; try { const [staff, report] = await Promise.all([getCsStaff(), getCsReport({ period: 'day' })]); this.csStaff = this.normalizeList(staff, ['list', 'staff']).map(item => ({ ...item, csStatus: item.csStatus || item.cs_status || 'offline', activeSessions: item.activeSessions ?? item.active_sessions ?? 0, todaySessions: item.todaySessions ?? item.today_sessions ?? 0 })); this.csReport = report.report || report.data?.report || report.data || report || {} } catch (e) { this.notify(e, '加载客服数据失败') } finally { this.loading.service = false } },
     async loadAudit() { this.loading.audit = true; try { const data = await getAuditLogs({ limit: 100, userId: this.auditQuery.userId || undefined, type: this.auditQuery.type || undefined }); this.auditLogs = this.normalizeList(data, ['list', 'logs']) } catch (e) { this.notify(e, '加载审计日志失败') } finally { this.loading.audit = false } }, async loadConfig() { try { const data = await getSystemConfig(); this.systemConfig = { ...this.systemConfig, ...data } } catch (e) { this.notify(e, '加载系统配置失败') } },

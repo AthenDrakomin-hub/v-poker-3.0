@@ -124,6 +124,8 @@ export default {
 <style>
 /* 全局横屏适配规范（iOS优先，iPhone 11横屏1792×828基准） */
 @import "@/styles/landscape.css";
+/* 全局触控规范（App端拇指友好，替代Web hover/侧边栏/页码分页） */
+@import "@/styles/touch.scss";
 
 /* ===== 自定义字体声明（子集化版本，体积减少87%） ===== */
 @font-face {
