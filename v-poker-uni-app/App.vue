@@ -302,4 +302,18 @@ page {
   border-color: var(--color-gold);
   background: rgba(255,215,0,0.05);
 }
+
+/* ========== iOS 点击高亮修复（黑金主题黑底上的半透黑叠加块） ========== */
+/* #ifndef APP-NVUE */
+page, view, text, image, scroll-view {
+  -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
+}
+/* 原生button组件，关闭原生按压暗色蒙层（项目中无button，防御性添加） */
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+button:after {
+  background-color: transparent !important;
+}
+/* #endif */
 </style>

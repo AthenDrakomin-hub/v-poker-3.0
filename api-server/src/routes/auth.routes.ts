@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+﻿import { Router, Request, Response } from "express";
 import { db } from "@/db";
 import { users, devices, userPermissions } from "@/db/schema";
 import { eq, sql, and, desc } from "drizzle-orm";
@@ -289,6 +289,38 @@ router.get("/me", async (req: Request, res: Response) => {
     userPerms[r.featureKey] = r.enabled;
   }
 
+  // 查上级信息（如果有邀请人）
+  let inviterAccount: string | null = null;
+  let inviterNickname: string | null = null;
+  if (u.invitedById) {
+    const invRows = await db.select({ account: users.account, nickname: users.nickname }).from(users).where(eq(users.id, u.invitedById)).limit(1);
+    if (invRows.length) {
+      inviterAccount = invRows[0].account;
+      inviterNickname = invRows[0].nickname || invRows[0].account;
+    }
+  }
+
+  // 计算真实代理等级：通过 invitedById 向上遍历
+  // 0=总代理(top_agent), 1=一级代理(总代理直招), 2=二级代理(一级代理直招), null=玩家
+  let agentLevel: number | null = null;
+  if (u.role === "top_agent") {
+    agentLevel = 0;
+  } else if (u.role === "agent") {
+    let level = 0;
+    let currentId: number | null = u.invitedById;
+    const visited = new Set<number>();
+    while (currentId && !visited.has(currentId) && level < 5) {
+      visited.add(currentId);
+      const upRows = await db.select({ id: users.id, role: users.role, invitedById: users.invitedById }).from(users).where(eq(users.id, currentId)).limit(1);
+      if (!upRows.length) break;
+      const up = upRows[0];
+      level++;
+      if (up.role === "top_agent") break;
+      currentId = up.invitedById;
+    }
+    agentLevel = level;
+  }
+
   res.json({
     user: {
       id: u.id,
@@ -298,10 +330,12 @@ router.get("/me", async (req: Request, res: Response) => {
       role: u.role,
       points: u.points,
       inviteCode: u.inviteCode,
+      invitedById: u.invitedById ?? null,
       invitedByCode: u.invitedByCode,
+      inviterAccount,
+      inviterNickname,
       mustChangePassword: u.mustChangePassword,
-      // 代理等级：1=一级代理(agent), 2=二级代理/总代理(top_agent)
-      agentLevel: u.role === "agent" ? 1 : u.role === "top_agent" ? 2 : null,
+      agentLevel,
     },
     permissions: userPerms,
   });

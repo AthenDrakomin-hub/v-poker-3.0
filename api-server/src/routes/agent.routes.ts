@@ -1,7 +1,7 @@
-import { Router, Request, Response } from "express";
+﻿import { Router, Request, Response } from "express";
 import { db } from "@/db";
 import { users, chipTransactions, distributionRecords } from "@/db/schema";
-import { and, desc, eq, ilike, inArray, or, gte, lte } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, ne, or, gte, lte } from "drizzle-orm";
 import { getCurrentUser, genInviteCode } from "@/lib/auth";
 import { getGameEconomy } from "@/lib/gameEconomy";
 import { audit } from "@/lib/audit";
@@ -93,6 +93,54 @@ router.get("/players", async (req: Request, res: Response) => {
     page,
     pageSize
   ));
+});
+
+// GET /api/agent/agents — 下线代理列表（总代理/一级代理可见名下代理）
+router.get("/agents", async (req: Request, res: Response) => {
+  const u = await getCurrentUser(req);
+  if (!u) { res.status(401).json({ error: "未登录" }); return; }
+  if (!AGENT_ROLES.includes(u.role)) { res.status(403).json({ error: "无权限" }); return; }
+  const { page, pageSize, offset } = parsePagination(req);
+  const ids = await scopeIds(u);
+  // 查询名下代理（排除自己）
+  const agentConds: any[] = [inArray(users.role, ["agent", "top_agent"])];
+  if (ids) agentConds.push(inArray(users.id, ids));
+  agentConds.push(ne(users.id, u.id));
+  const [agentRows, totalRows] = await Promise.all([
+    db.select().from(users).where(and(...agentConds)).orderBy(desc(users.createdAt)).limit(pageSize).offset(offset),
+    db.select({ count: users.id }).from(users).where(and(...agentConds))
+  ]);
+  // 为每个代理计算等级、直招玩家数、下线总数
+  const agentsWithMeta = await Promise.all(agentRows.map(async (a) => {
+    // 计算代理等级
+    let level = 0;
+    if (a.role === "top_agent") { level = 0; }
+    else {
+      let curId: number | null = a.invitedById;
+      const vis = new Set<number>();
+      while (curId && !vis.has(curId) && level < 5) {
+        vis.add(curId);
+        const up = await db.select({ role: users.role, invitedById: users.invitedById }).from(users).where(eq(users.id, curId)).limit(1);
+        if (!up.length) break;
+        level++;
+        if (up[0].role === "top_agent") break;
+        curId = up[0].invitedById;
+      }
+    }
+    // 直招玩家数
+    const directPlayers = await db.select({ count: users.id }).from(users).where(and(eq(users.invitedById, a.id), eq(users.role, "player")));
+    // 下线总数（递归）
+    const allDowns = await getDownlineIds(a.id);
+    return {
+      id: a.id, account: a.account, nickname: a.nickname || a.account, avatar: a.avatar,
+      role: a.role, agentLevel: level, points: a.points, frozen: a.frozen || false,
+      inviteCode: a.inviteCode, invitedByCode: a.invitedByCode,
+      directPlayerCount: directPlayers[0]?.count ?? 0,
+      totalDownlineCount: allDowns.length - 1,
+      createdAt: a.createdAt, lastLoginAt: a.lastLoginAt,
+    };
+  }));
+  res.json(paginatedResponse(agentsWithMeta, totalRows[0]?.count ?? 0, page, pageSize));
 });
 
 // POST /api/agent/players
