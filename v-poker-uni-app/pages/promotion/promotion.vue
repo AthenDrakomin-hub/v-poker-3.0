@@ -408,7 +408,7 @@
 </template>
 
 <script>
-import { formatPoints } from '../../utils/format.js'
+import { formatPoints, formatRole } from '../../utils/format.js'
 import { userState } from '../../store/user.js'
 import {
   getPromotionData,
