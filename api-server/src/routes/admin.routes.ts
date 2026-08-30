@@ -42,6 +42,24 @@ async function requireStaff(req: Request, res: Response) {
   return u;
 }
 
+/** 计算用户代理等级：0=总代理,1=一级代理,2=二级代理,null=玩家 */
+async function calcAgentLevel(r: typeof users.$inferSelect): Promise<number | null> {
+  if (r.role === "top_agent") return 0;
+  if (r.role !== "agent") return null;
+  let level = 0;
+  let currentId: number | null = r.invitedById;
+  const visited = new Set<number>();
+  while (currentId && !visited.has(currentId) && level < 5) {
+    visited.add(currentId);
+    const up = await db.select({ role: users.role, invitedById: users.invitedById }).from(users).where(eq(users.id, currentId)).limit(1);
+    if (!up.length) break;
+    level++;
+    if (up[0].role === "top_agent") break;
+    currentId = up[0].invitedById;
+  }
+  return level;
+}
+
 function shape(r: typeof users.$inferSelect) {
   return {
     id: r.id,
@@ -94,7 +112,11 @@ router.get("/users", async (req: Request, res: Response) => {
     ? rows.filter((r) => r.role === role).length
     : totalRows[0]?.count ?? 0;
 
-  res.json(paginatedResponse(filteredRows.map(shape), filteredTotal, page, pageSize));
+  const usersWithLevel = await Promise.all(filteredRows.map(async (r) => ({
+    ...shape(r),
+    agentLevel: await calcAgentLevel(r),
+  })));
+  res.json(paginatedResponse(usersWithLevel, filteredTotal, page, pageSize));
 });
 
 // POST /api/admin/users

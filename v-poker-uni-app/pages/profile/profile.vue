@@ -30,7 +30,7 @@
             </view>
             <text class="user-account">账号：{{ userState.account || '未设置' }}</text>
             <view v-if="userState.role" class="role-badge" :class="'role-' + userState.role">
-              <text>{{ getRoleText(userState.role) }}</text>
+              <text>{{ getRoleText(userState.role, userState.agentLevel) }}</text>
             </view>
             <view class="user-meta">
               <text v-if="userState.id" class="meta-item">ID: {{ userState.id }}</text>
@@ -530,7 +530,10 @@ export default {
       }
       return colors[Math.abs(hash) % colors.length]
     },
-    getRoleText(role) {
+    getRoleText(role, agentLevel) {
+      if (role === 'agent' && agentLevel !== null && agentLevel !== undefined) {
+        return agentLevel === 1 ? '一级代理' : agentLevel === 2 ? '二级代理' : '代理'
+      }
       const roleMap = {
         player: '玩家',
         agent: '代理',

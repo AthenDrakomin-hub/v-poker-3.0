@@ -1,4 +1,4 @@
-/**
+﻿/**
  * V-Poker V3 经济模型配置
  * 单一货币筹码，抽水3%，多级代理返佣
  */
@@ -8,7 +8,7 @@ export const ECONOMY_CONFIG = {
   // 抽水比例（3%）
   RAKE_RATE: 0.03,
 
-  // 层级定义
+  // 层级定义（注意：此处L0=最底层开房代理，L2=总代理，从下往上编号）\n  // 与 me 接口 agentLevel 编号方向相反：agentLevel 0=总代理,1=一级,2=二级（从上往下）\n  // 显示代理等级标签请使用 utils/format.js 的 getAgentLevelLabel(agentLevel)\n  // 层级定义
   HIERARCHY: {
     // L0: 开房代理（最底层）
     L0: {

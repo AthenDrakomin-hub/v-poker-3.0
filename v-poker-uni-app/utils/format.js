@@ -1,4 +1,4 @@
-/**
+﻿/**
  * V-Poker 格式化工具
  */
 
@@ -197,4 +197,29 @@ export default {
   formatConversationStatus,
   maskPhone,
   generateId,
+}
+
+/**
+ * 代理等级标签（与后端 me 接口 agentLevel 一致）
+ * 0=总代理, 1=一级代理, 2=二级代理, null=玩家
+ */
+export const AGENT_LEVEL_LABELS = {
+  0: '总代理',
+  1: '一级代理',
+  2: '二级代理',
+}
+
+export function getAgentLevelLabel(agentLevel) {
+  if (agentLevel === null || agentLevel === undefined) return '玩家'
+  return AGENT_LEVEL_LABELS[agentLevel] || `代理L${agentLevel}`
+}
+
+/**
+ * 获取代理等级对应的样式类名
+ */
+export function getAgentLevelClass(agentLevel) {
+  if (agentLevel === 0) return 'role-top_agent'
+  if (agentLevel === 1) return 'role-agent-level1'
+  if (agentLevel === 2) return 'role-agent-level2'
+  return 'role-player'
 }

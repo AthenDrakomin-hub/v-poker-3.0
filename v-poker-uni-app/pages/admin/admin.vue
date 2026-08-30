@@ -213,7 +213,7 @@
               <view class="data-avatar agent-avatar"><text>{{ (agent.account || agent.nickname || 'A').charAt(0).toUpperCase() }}</text></view>
               <view class="data-info">
                 <text class="data-name">{{ agent.account || agent.nickname || '代理#' + agent.id }}</text>
-                <text class="data-sub">ID: {{ agent.id }} | 角色: {{ agent.role === 'top_agent' ? '总代理' : '代理' }} | 邀请码: {{ agent.inviteCode || '-' }} | 筹码: {{ agent.points || 0 }}</text>
+                <text class="data-sub">ID: {{ agent.id }} | 角色: {{ formatAgentLevel(agent) }} | 邀请码: {{ agent.inviteCode || '-' }} | 筹码: {{ agent.points || 0 }}</text>
               </view>
               <view class="data-actions">
                 <view class="mini-btn touch-active" @click="openAgentEditor(agent)">编辑</view>
@@ -711,6 +711,19 @@ export default {
   },
   methods: {
     // 内联formatGameType，避免导入解析失败
+    
+    formatAgentLevel(agent) {
+      if (!agent) return '未知'
+      if (agent.role === 'top_agent') return '总代理'
+      if (agent.role === 'agent') {
+        if (agent.agentLevel === 1) return '一级代理'
+        if (agent.agentLevel === 2) return '二级代理'
+        return '代理'
+      }
+      if (agent.role === 'admin') return '管理员'
+      if (agent.role === 'customer_service') return '客服'
+      return '玩家'
+    },
     formatGameType(gameType) {
       const map = {
         niuniu: '抢庄牛牛',
