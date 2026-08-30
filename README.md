@@ -529,7 +529,7 @@ sudo -u postgres psql          # 进入数据库
 systemctl status postgresql     # 查看状态
 
 # 更新后端代码
-cd /opt/texas-platform/api-server
+cd /path/to/api-server
 git pull origin main
 npm ci
 npm run db:migrate
