@@ -1,4 +1,4 @@
-# V-POKER API Server
+﻿# V-POKER API Server
 
 独立 Express API 服务，为 V-POKER 前端静态站点提供后端接口。
 
@@ -101,6 +101,131 @@ src/lib/games/
 ```
 
 总计：21个测试用例 ✅ 全部通过
+
+
+---
+
+## 新增游戏开发指南（必看）
+
+后续新增游戏时，必须按以下清单提供所有内容，缺一不可。
+
+### 一、后端必须提供
+
+#### 1. 游戏引擎三件套（`src/lib/games/<gameType>/`）
+
+| 文件 | 必须实现 | 说明 |
+|------|----------|------|
+| `engine.ts` | `GameEngine` 接口 | 必须实现 3 个方法：`createHand()` / `optionsFor()` / `applyAction()` |
+| `cards.ts` | 牌型评分函数 | 如 `xxxScore(cards): { score, name, mult? }` |
+| `rules.ts` | 游戏规则常量 | 最大玩家数、牌数、下注规则等 |
+
+**GameEngine 接口签名（必须严格实现）：**
+```typescript
+interface GameEngine {
+  createHand(
+    players: { userId: number; account: string; points: number }[],
+    level: string,           // junior / senior / top
+    roundNo: number,
+    dealer: number,
+    fixedAnte?: number,
+    opts?: { chips?: number[]; cap?: number; baseBet?: number }
+  ): HandState;
+
+  optionsFor(st: HandState, userId: number): ActionOption[];
+
+  applyAction(
+    st: HandState,
+    userId: number,
+    action: string,
+    amount?: number
+  ): ActionResult;  // { ok: boolean, error?: GameError }
+}
+```
+
+#### 2. 注册游戏类型（2 处必须修改）
+
+**文件 1：`src/lib/games/common/types.ts`**
+```typescript
+// GameType 联合类型新增
+export type GameType = "texas" | "jinhua" | "sangong" | "niuniu" | "tbnn" | "你的gameType";
+
+// GAME_META 新增元信息
+export const GAME_META: Record<GameType, { name: string; mode: string; emoji: string }> = {
+  // ... 现有 ...
+  你的gameType: { name: "游戏显示名", mode: "模式说明", emoji: "🎮" },
+};
+```
+
+**文件 2：`src/lib/games/index.ts`**
+```typescript
+export { 你的gameTypeEngine } from "./你的gameType/engine";
+```
+
+#### 3. 房间引擎分发（`src/lib/hand.ts` 或 `rooms.routes.ts`）
+
+在创建牌局时，根据 `gameType` 分发到对应引擎：
+```typescript
+import { 你的gameTypeEngine } from "./games";
+
+const engines: Record<GameType, GameEngine> = {
+  texas: texasEngine,
+  // ... 现有 ...
+  你的gameType: 你的gameTypeEngine,
+};
+```
+
+#### 4. 经济配置（数据库 `econ_config` 表）
+
+新增游戏必须在 `econ_config` 表中插入对应配置：
+- `game_type`: 你的 gameType
+- `chip_rake_rate`: 抽水比例
+- `rake_base_type`: 抽水基数（pot / flow）
+- 房间模板（`room_templates` 表）：每个级别（junior/senior/top）至少 1 个模板
+
+可通过管理后台 API 配置，或执行 SQL 插入。
+
+#### 5. 单元测试（`src/__tests__/<gameType>.test.ts`）
+
+必须提供至少覆盖以下场景的测试：
+- 发牌正确性
+- 牌型评分正确性（至少 10 种牌型）
+- 下注/跟注/加注/弃牌
+- 结算正确性（含抽水计算）
+- 边界情况（all-in、不足筹码、多人平局）
+
+运行测试：`npm test -- <gameType>`
+
+### 二、前端必须提供
+
+| 项目 | 位置 | 说明 |
+|------|------|------|
+| 主题配置 | `themes/themeConfig.js` | 新增主题 ID、配色、粒子效果、开牌动画 |
+| 游戏场景图 | CDN `static/images/game-scenes/game-<gameType>-v2.jpg` | 大厅游戏卡片背景图 |
+| 音效包 | CDN `static/sounds/<theme>/` | 发牌/开牌/筹码等音效 |
+| 房间页适配 | `pages/room/room.vue` | 操作按钮渲染（后端 optionsFor 驱动） |
+| 大厅游戏卡片 | `pages/lobby/lobby.vue` | 游戏入口卡片 |
+| CDN 版本号 | `utils/cdn.js` | 新增资源后递增 version |
+
+### 三、数据库必须提供
+
+| 表 | 操作 | 说明 |
+|----|------|------|
+| `econ_config` | INSERT | 游戏经济配置（抽水比例/基数/模板） |
+| `room_templates` | INSERT | 房间模板（每级别至少 1 个） |
+| `games` 表（如有） | INSERT | 游戏元信息 |
+
+### 四、验证清单（新增游戏后必须逐项验证）
+
+- [ ] 后端 `npm run build` 编译通过
+- [ ] 后端 `npm test` 全部测试通过
+- [ ] `GET /api/games/rules/<gameType>` 返回正确规则
+- [ ] 创建房间 → 加入房间 → 开始牌局 → 执行操作 → 结算 全流程正常
+- [ ] 抽水计算正确（与 econ_config 配置一致）
+- [ ] 前端游戏卡片显示正常
+- [ ] 房间页操作按钮正确渲染
+- [ ] 开牌动画/音效正常
+- [ ] 结算面板显示正确
+- [ ] CDN 资源全部 200（图片/音效/字体）
 
 ### 经济模型（V3：单一货币）
 
@@ -297,3 +422,86 @@ NEXT_PUBLIC_API_URL=https://api.yourdomain.com npm run build
 ```
 
 前端静态文件可部署到任意 CDN / 静态托管，API 请求会自动跨域到本服务。
+
+---
+
+## 部署指南
+
+### 生产环境信息
+
+| 项目 | 值 |
+|------|-----|
+| 服务器路径 | `/opt/texas-platform/api-server` |
+| PM2 进程名 | `v-poker-api` |
+| 服务端口 | `3001` |
+| 域名 | `goodspage.cn` |
+| API 地址 | `https://goodspage.cn/api/` |
+| WebSocket | `wss://goodspage.cn/socket.io/` |
+| 数据库 | PostgreSQL `v_poker_3` |
+
+### 标准部署流程（代码更新后）
+
+```bash
+# 1. 登录服务器
+ssh user@your-server
+
+# 2. 进入项目目录
+cd /opt/texas-platform/api-server
+
+# 3. 拉取最新代码
+git pull origin main
+
+# 4. 安装依赖（如果 package.json 有变更）
+npm ci
+
+# 5. 构建 TypeScript
+npm run build
+
+# 6. 数据库迁移（如果有新迁移）
+npm run db:migrate
+
+# 7. 重启服务
+pm2 reload v-poker-api
+
+# 8. 验证
+curl https://goodspage.cn/api/health
+pm2 status
+pm2 logs v-poker-api --lines 50
+```
+
+### 一键部署脚本
+
+项目根目录提供 `deploy-production.sh`，可直接执行：
+```bash
+bash deploy-production.sh
+```
+
+### 回滚
+
+```bash
+cd /opt/texas-platform/api-server
+git log --oneline -5          # 查看提交历史
+git reset --hard <commit-hash> # 回滚到指定版本
+npm run build
+pm2 reload v-poker-api
+```
+
+### 常用运维命令
+
+| 操作 | 命令 |
+|------|------|
+| 查看服务状态 | `pm2 status` |
+| 查看实时日志 | `pm2 logs v-poker-api` |
+| 查看最近100行日志 | `pm2 logs v-poker-api --lines 100` |
+| 重启服务 | `pm2 reload v-poker-api` |
+| 停止服务 | `pm2 stop v-poker-api` |
+| 监控资源 | `pm2 monit` |
+| 健康检查 | `curl https://goodspage.cn/api/health` |
+
+### 注意事项
+
+1. **`.env` 不提交 Git**：生产环境 `.env` 由服务器维护，部署时不会覆盖
+2. **数据库迁移**：新增迁移后必须执行 `npm run db:migrate`，否则新表/字段不存在
+3. **PM2 配置**：`ecosystem.config.js` 中 `cwd` 必须指向 `/opt/texas-platform/api-server`
+4. **Nginx 反向代理**：`/api/` 和 `/socket.io/` 均代理到 `127.0.0.1:3001`
+5. **构建产物**：`dist/` 目录不提交 Git，部署时必须执行 `npm run build`

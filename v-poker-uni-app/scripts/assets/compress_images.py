@@ -113,12 +113,11 @@ def main():
 
     # 通用启动图和源图
     print(f"  --- 通用启动图/源图 ---")
-    compress_png_quantize("static/splash.png", colors=128)
     compress_png_quantize("static/qidongtu.png", colors=128)
 
     # 应用图标源
     print(f"  --- 应用图标 ---")
-    compress_png_quantize("static/apptubiao.png", colors=256)
+    compress_png_quantize("assets-source/apptubiao.png", colors=256)
 
     # UI 目录下的大 PNG
     ui_dir = "static/images/ui"

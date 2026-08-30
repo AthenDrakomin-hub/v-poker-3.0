@@ -10,7 +10,7 @@ node_modules/
 scripts/node_modules/
 
 # ========== 敏感凭证 ==========
-scripts/r2-config.json
+scripts/cdn/r2-config.json
 *.p12
 *.mobileprovision
 *.cer
@@ -25,6 +25,14 @@ scripts/
 docs/
 *.md
 README*
+
+# ========== 源码快照/开发垃圾 ==========
+*_full.txt
+h5-deploy.zip
+screenshots/
+public/
+fonts-source/
+assets-source/
 
 # ========== 临时/备份 ==========
 _backup/

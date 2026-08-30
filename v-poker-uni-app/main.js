@@ -36,6 +36,16 @@ export function createApp() {
 				duration: 2000
 			})
 		} catch (e) {}
+		// 诊断模式：将错误显示到屏幕上，便于真机定位黑屏
+		try {
+			const msg = (err && (err.stack || err.message)) || String(err)
+			uni.setStorageSync('vpoker_last_error', msg)
+			uni.showModal({
+				title: '[Vue Error] ' + (info || 'render'),
+				content: msg.slice(0, 400),
+				showCancel: false
+			})
+		} catch (e) {}
 	}
 
 	return {

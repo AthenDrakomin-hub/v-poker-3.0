@@ -9,6 +9,22 @@ import { initNetworkMonitor } from './utils/network.js'
 
 export default {
   onLaunch: function() {
+    // 诊断模式：全局 JS 错误/未捕获异常显示到屏幕，定位真机黑屏
+    try {
+      uni.onError && uni.onError((err) => {
+        console.error('[App] onError', err)
+        try {
+          const msg = (err && (err.message || err.stack)) || String(err)
+          uni.setStorageSync('vpoker_last_error', msg)
+          uni.showModal({
+            title: '[JS Error]',
+            content: msg.slice(0, 400),
+            showCancel: false
+          })
+        } catch (e) {}
+      })
+    } catch (e) {}
+
     // 初始化网络状态监听（离线提示/恢复自动刷新）
     initNetworkMonitor()
 

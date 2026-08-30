@@ -120,7 +120,12 @@ export function getDeviceModel() {
  * 获取APP版本
  */
 export function getAppVersion() {
-  return '1.0.0'
+  // 优先从系统信息读取 manifest.json 中的 versionName，兜底为常量
+  try {
+    const info = uni.getSystemInfoSync()
+    if (info && info.appVersion) return info.appVersion
+  } catch (e) {}
+  return '1.2.0'
 }
 
 /**

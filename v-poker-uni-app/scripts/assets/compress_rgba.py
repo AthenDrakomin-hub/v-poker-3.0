@@ -43,12 +43,8 @@ def main():
     print("V-Poker RGBA 图片压缩修复（FASTOCTREE）")
     print("=" * 70)
 
-    # 1. static/splash.png
-    print("\n[1] 通用启动图")
-    compress_rgba_png("static/splash.png", colors=128)
-
-    # 2. static/images/ui/1024x1024.png
-    print("\n[2] UI 大图片")
+    # 1. static/images/ui/1024x1024.png
+    print("\n[1] UI 大图片")
     ui_path = "static/images/ui/1024x1024.png"
     if os.path.exists(ui_path):
         compress_rgba_png(ui_path, colors=256)

@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+﻿import { Router, Request, Response } from "express";
 import { db } from "@/db";
 import { users, chipTransactions, rooms, handStates, roomPlayers, userPermissions, distributionRecords, eventLogs, loginLogs, riskTags, approvalRequests, roomAnomalies, csConversations, configHistory, configDrafts, roomHistory, gameRounds } from "@/db/schema";
 import { desc, eq, ilike, or, inArray, and, gte, lte, sql } from "drizzle-orm";
@@ -1552,6 +1552,106 @@ router.put("/cs-status/:id", async (req: Request, res: Response) => {
   res.json({ ok: true, csStatus: status });
 });
 
+
+// ========== GET /api/admin/messages ==========
+// 管理员查询所有客服聊天记录（支持筛选+分页）
+router.get("/messages", async (req: Request, res: Response) => {
+  const u = await getCurrentUser(req);
+  if (!u || u.role !== "admin") {
+    res.status(403).json({ error: "无权限" });
+    return;
+  }
+  const csId = req.query.csId ? Number(req.query.csId) : null;
+  const keyword = req.query.keyword ? String(req.query.keyword) : null;
+  const startDate = req.query.startDate ? String(req.query.startDate) : null;
+  const endDate = req.query.endDate ? String(req.query.endDate) : null;
+  const type = req.query.type ? String(req.query.type) : null;
+  let page = Number(req.query.page) || 1;
+  let pageSize = Number(req.query.pageSize) || 20;
+  page = Math.max(1, page);
+  pageSize = Math.min(Math.max(1, pageSize), 100);
+  const offset = (page - 1) * pageSize;
+
+  const conditions = [];
+  if (csId) conditions.push(sql`(m.sender_id = ${csId} OR m.receiver_id = ${csId})`);
+  if (keyword) conditions.push(sql`m.content ILIKE ${'%' + keyword + '%'}`);
+  if (startDate) conditions.push(sql`m.created_at >= ${startDate}::timestamp`);
+  if (endDate) conditions.push(sql`m.created_at <= ${endDate}::timestamp`);
+  if (type) conditions.push(sql`m.type = ${type}`);
+
+  const whereClause = conditions.length > 0 ? sql`WHERE ${sql.join(conditions, sql` AND `)}` : sql``;
+
+  const countResult = await db.execute(sql`SELECT COUNT(*) AS total FROM cs_messages m ${whereClause}`);
+  const total = Number(countResult.rows?.[0]?.total || 0);
+
+  const messages = await db.execute(sql`
+    SELECT
+      m.id, m.sender_id, m.receiver_id, m.content, m.type, m.status,
+      m.related_data, m.created_at,
+      su.account AS sender_account, su.nickname AS sender_nickname, su.role AS sender_role,
+      ru.account AS receiver_account, ru.nickname AS receiver_nickname, ru.role AS receiver_role
+    FROM cs_messages m
+    LEFT JOIN users su ON su.id = m.sender_id
+    LEFT JOIN users ru ON ru.id = m.receiver_id
+    ${whereClause}
+    ORDER BY m.id DESC
+    LIMIT ${pageSize} OFFSET ${offset}
+  `);
+
+  res.json({
+    messages: (messages.rows || []).reverse(),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  });
+});
+
+// ========== GET /api/admin/messages/stats ==========
+// 管理员查看客服聊天统计
+router.get("/messages/stats", async (req: Request, res: Response) => {
+  const u = await getCurrentUser(req);
+  if (!u || u.role !== "admin") {
+    res.status(403).json({ error: "无权限" });
+    return;
+  }
+  const days = req.query.days ? Number(req.query.days) : 7;
+
+  const stats = await db.execute(sql`
+    WITH cs_users AS (
+      SELECT id, account, nickname FROM users WHERE role = 'customer_service'
+    )
+    SELECT
+      cu.id, cu.account, cu.nickname,
+      COUNT(DISTINCT CASE WHEN m.created_at > NOW() - INTERVAL '${days} days'
+        THEN CASE WHEN m.sender_id = cu.id THEN m.receiver_id ELSE m.sender_id END
+      END) AS active_sessions,
+      COUNT(CASE WHEN m.sender_id = cu.id AND m.created_at > NOW() - INTERVAL '${days} days' THEN 1 END) AS messages_sent,
+      COUNT(CASE WHEN m.receiver_id = cu.id AND m.created_at > NOW() - INTERVAL '${days} days' THEN 1 END) AS messages_received,
+      COUNT(CASE WHEN m.type = 'chip_request' AND m.receiver_id = cu.id AND m.created_at > NOW() - INTERVAL '${days} days' THEN 1 END) AS chip_requests_received,
+      COUNT(CASE WHEN m.type = 'chip_request' AND m.status = 'processed' AND m.receiver_id = cu.id AND m.created_at > NOW() - INTERVAL '${days} days' THEN 1 END) AS chip_requests_processed,
+      MAX(m.created_at) AS last_active
+    FROM cs_users cu
+    LEFT JOIN cs_messages m ON (m.sender_id = cu.id OR m.receiver_id = cu.id)
+    GROUP BY cu.id, cu.account, cu.nickname
+    ORDER BY active_sessions DESC, messages_sent DESC
+  `);
+
+  res.json({
+    days,
+    stats: (stats.rows || []).map(r => ({
+      id: r.id,
+      account: r.account,
+      nickname: r.nickname,
+      activeSessions: Number(r.active_sessions || 0),
+      messagesSent: Number(r.messages_sent || 0),
+      messagesReceived: Number(r.messages_received || 0),
+      chipRequestsReceived: Number(r.chip_requests_received || 0),
+      chipRequestsProcessed: Number(r.chip_requests_processed || 0),
+      lastActive: r.last_active || null,
+    })),
+  });
+});
 export default router;
 
 // ==================== P3: 房间查询接口 ====================

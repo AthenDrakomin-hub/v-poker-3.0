@@ -1242,7 +1242,7 @@ export default {
     // ---------- 触觉反馈（纯uni-app，由逻辑层处理） ----------
     _haptic(style) {
       try {
-        this..callMethod('triggerHaptic', style)
+        this.$owner.callMethod('triggerHaptic', style)
       } catch (e) {}
     },
 

@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+﻿import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import { db } from "@/db";
 import {
@@ -2033,4 +2033,151 @@ router.post("/join-by-token", async (req: Request, res: Response) => {
   });
 });
 
+
+// POST /api/rooms/leave - 离开房间（前端调用，body: { roomId }）
+router.post("/leave", async (req: Request, res: Response) => {
+  const u = await getCurrentUser(req);
+  if (!u) {
+    res.status(401).json({ error: "未登录" });
+    return;
+  }
+  const roomId = Number(req.body?.roomId);
+  if (!roomId) {
+    res.status(400).json({ error: "缺少 roomId" });
+    return;
+  }
+  const roomRows = await db.select().from(rooms).where(eq(rooms.id, roomId)).limit(1);
+  if (!roomRows.length) {
+    res.status(404).json({ error: "房间不存在" });
+    return;
+  }
+  const room = roomRows[0];
+  const mine = await db
+    .select()
+    .from(roomPlayers)
+    .where(and(eq(roomPlayers.roomId, roomId), eq(roomPlayers.userId, u.id)))
+    .limit(1);
+  if (!mine.length) {
+    res.status(400).json({ error: "你不在房间中" });
+    return;
+  }
+  // 玩家有筹码则退回
+  if (!mine[0].isSpectator && mine[0].points > 0) {
+    const refAmt = mine[0].points;
+    const next = u.points + refAmt;
+    await db.transaction(async (tx) => {
+      await tx.update(users).set({ points: next }).where(eq(users.id, u.id));
+      await tx.insert(chipTransactions).values({
+        userId: u.id, amount: refAmt, balanceAfter: next, type: "cashout",
+        note: `离开房间 ${room.roomNo} 带出筹码`, roomId,
+      });
+    });
+  }
+  // 游戏进行中自动弃牌
+  try {
+    const hs = await loadState(roomId);
+    if (hs && !hs.finished) {
+      const seatIdx = hs.seats.findIndex((s: any) => s.userId === u.id);
+      if (seatIdx >= 0 && !hs.seats[seatIdx].folded) {
+        applyAction(hs, u.id, "fold");
+        await saveState(roomId, hs);
+        if (hs.finished) await commitHand(roomId, hs);
+      }
+    }
+  } catch {}
+  // 从房间移除
+  await db.delete(roomPlayers).where(and(eq(roomPlayers.roomId, roomId), eq(roomPlayers.userId, u.id)));
+  // 检查是否所有玩家都离开了
+  const remaining = await db.select().from(roomPlayers).where(eq(roomPlayers.roomId, roomId));
+  const activePlayers = remaining.filter((r: any) => !r.isSpectator);
+  if (activePlayers.length === 0) {
+    if (room.totalFlow > 0 || room.currentRound > 0) {
+      try {
+        const settlement = await settleRoom(roomId, room.agentId, room.totalRake, room.totalFlow, room.gameType);
+        await archiveRoom(
+          { roomNo: room.roomNo, agentId: room.agentId, gameType: room.gameType, level: room.level, currentRound: room.currentRound, totalRake: room.totalRake, totalFlow: room.totalFlow, createdAt: room.createdAt },
+          "player_left",
+          settlement ? { agentNetCost: settlement.agentNetCost, platformIncome: settlement.platformNetIncome } : undefined
+        );
+      } catch (e) { console.error("[leave] settleRoom failed:", e); }
+    }
+    await db.update(rooms).set({ status: "finished", settled: true, archivedAt: new Date() }).where(eq(rooms.id, roomId));
+    await db.delete(handStates).where(eq(handStates.roomId, roomId));
+  }
+  broadcastStateChanged(roomId);
+  res.json({ ok: true });
+});
+
+// POST /api/rooms/:id/dissolve - 解散房间（仅房主）
+router.post("/:id/dissolve", async (req: Request, res: Response) => {
+  const u = await getCurrentUser(req);
+  if (!u) {
+    res.status(401).json({ error: "未登录" });
+    return;
+  }
+  const roomId = Number(req.params.id);
+  const roomRows = await db.select().from(rooms).where(eq(rooms.id, roomId)).limit(1);
+  if (!roomRows.length) {
+    res.status(404).json({ error: "房间不存在" });
+    return;
+  }
+  const room = roomRows[0];
+  if (room.agentId !== u.id && u.role !== 'admin') {
+    res.status(403).json({ error: "仅房主可解散房间" });
+    return;
+  }
+  if (room.status === "finished") {
+    res.status(400).json({ error: "房间已结束" });
+    return;
+  }
+  try {
+    // 强制结束当前牌局
+    try {
+      const hs = await loadState(roomId);
+      if (hs && !hs.finished) {
+        hs.finished = true;
+        await saveState(roomId, hs);
+      }
+    } catch {}
+    // 所有玩家退回筹码
+    const players = await db.select().from(roomPlayers).where(eq(roomPlayers.roomId, roomId));
+    for (const p of players) {
+      if (!p.isSpectator && p.points > 0) {
+        const userRows = await db.select().from(users).where(eq(users.id, p.userId)).limit(1);
+        if (userRows.length) {
+          const next = userRows[0].points + p.points;
+          await db.transaction(async (tx) => {
+            await tx.update(users).set({ points: next }).where(eq(users.id, p.userId));
+            await tx.insert(chipTransactions).values({
+              userId: p.userId, amount: p.points, balanceAfter: next, type: "cashout",
+              note: `房间 ${room.roomNo} 解散退回筹码`, roomId,
+            });
+          });
+        }
+      }
+    }
+    // 结算房间经济
+    if (room.totalFlow > 0 || room.currentRound > 0) {
+      try {
+        const settlement = await settleRoom(roomId, room.agentId, room.totalRake, room.totalFlow, room.gameType);
+        await archiveRoom(
+          { roomNo: room.roomNo, agentId: room.agentId, gameType: room.gameType, level: room.level, currentRound: room.currentRound, totalRake: room.totalRake, totalFlow: room.totalFlow, createdAt: room.createdAt },
+          "force_end",
+          settlement ? { agentNetCost: settlement.agentNetCost, platformIncome: settlement.platformNetIncome } : undefined
+        );
+      } catch (e) { console.error("[dissolve] settleRoom failed:", e); }
+    }
+    // 清空房间玩家和牌局状态
+    await db.delete(roomPlayers).where(eq(roomPlayers.roomId, roomId));
+    await db.delete(handStates).where(eq(handStates.roomId, roomId));
+    // 标记房间为已结束
+    await db.update(rooms).set({ status: "finished", settled: true, archivedAt: new Date() }).where(eq(rooms.id, roomId));
+    audit.info("room_dissolved", { userId: u.id, targetId: roomId, targetType: "room", detail: `房间 ${room.roomNo} 被房主解散` });
+    broadcastStateChanged(roomId);
+    res.json({ ok: true, message: "房间已解散" });
+  } catch (e) {
+    console.error("[dissolve] failed:", e);
+    res.status(500).json({ error: "解散房间失败" });
+  }
+});
 export default router;

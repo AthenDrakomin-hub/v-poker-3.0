@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 V-Poker 应用图标批量生成工具
-从 static/apptubiao.png (1024x1024) 生成 manifest.json 中引用的全部图标尺寸
+从 assets-source/apptubiao.png (1024x1024) 生成 manifest.json 中引用的全部图标尺寸
 输出到 unpackage/res/icons/
 """
 import os
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, "static", "apptubiao.png")
+SRC = os.path.join(ROOT, "assets-source", "apptubiao.png")
 OUT_DIR = os.path.join(ROOT, "unpackage", "res", "icons")
 
 # manifest.json 中引用的全部图标尺寸 (去重)
