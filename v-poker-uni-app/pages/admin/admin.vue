@@ -121,7 +121,7 @@
               <view class="data-actions">
                 <view class="mini-btn touch-active" @click="openUserEditor(user)">编辑</view>
                 <view class="mini-btn touch-active" @click="adjustUserPoints(user)">调整</view>
-                <view class="mini-btn touch-active" :class="user.frozen ? 'btn-warn' : 'btn-success' touch-active" @click="toggleUserStatus(user)">
+                <view class="mini-btn touch-active" :class="user.frozen ? 'btn-warn' : 'btn-success'" @click="toggleUserStatus(user)">
                   {{ user.frozen ? '解冻' : '冻结' }}
                 </view>
                 <view class="mini-btn btn-danger touch-active" @click="removeUser(user)">删除</view>
@@ -218,7 +218,7 @@
               <view class="data-actions">
                 <view class="mini-btn touch-active" @click="openAgentEditor(agent)">编辑</view>
                 <view class="mini-btn touch-active" @click="adjustAgentPoints(agent)">调筹码</view>
-                <view class="mini-btn touch-active" :class="agent.frozen ? 'btn-warn' : 'btn-success' touch-active" @click="toggleAgentStatus(agent)">
+                <view class="mini-btn touch-active" :class="agent.frozen ? 'btn-warn' : 'btn-success'" @click="toggleAgentStatus(agent)">
                   {{ agent.frozen ? '解冻' : '冻结' }}
                 </view>
                 <view class="mini-btn btn-danger touch-active" @click="removeAgent(agent)">删除</view>
@@ -451,7 +451,7 @@
                 <view class="cs-staff-status" :class="staff.csStatus === 'online' ? 'online' : 'offline'"><text>{{ staff.csStatus === 'online' ? '接待中' : '已关闭' }}</text></view>
                 <view class="cs-staff-action">
                   <view class="mini-btn touch-active" @click="openUserEditor(staff)">编辑</view>
-                  <view class="cs-toggle-btn touch-active" :class="staff.csStatus === 'online' ? 'btn-off' : 'btn-on' touch-active" @click="toggleCsStatus(staff)"><text>{{ staff.csStatus === 'online' ? '关闭接待' : '开启接待' }}</text></view>
+                  <view class="cs-toggle-btn touch-active" :class="staff.csStatus === 'online' ? 'btn-off' : 'btn-on'" @click="toggleCsStatus(staff)"><text>{{ staff.csStatus === 'online' ? '关闭接待' : '开启接待' }}</text></view>
                   <view class="mini-btn btn-danger touch-active" @click="removeUser(staff)">删除</view>
                 </view>
               </view>
