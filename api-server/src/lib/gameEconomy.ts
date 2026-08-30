@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 经济模型配置 V2 - 两层配置体系
  *
  * 第一层：游戏维度配置（game_economy_config）- 抽水 & 分润模型
@@ -252,7 +252,7 @@ export function getRoomTemplate(gameType: string, level: string): RoomTemplate {
 
   return {
     id: 0,
-    templateName: `${gameType}-${level}`,
+    templateName: `${GAME_LABELS_V2[gameType as GameTypeV2] || gameType}·${TEMPLATE_LABELS[level as TemplateCode] || level}`,
     templateCode: level,
     minBuyIn: defaultMin,
     maxBuyIn: defaultMax,
