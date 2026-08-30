@@ -49,8 +49,8 @@ const io = new SocketIOServer(server, {
   maxHttpBufferSize: 1e6,
 });
 
-const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : null;
-const appOrigins = process.env.APP_ORIGINS ? process.env.APP_ORIGINS.split(",") : [];
+const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim()).filter(Boolean) : null;
+const appOrigins = process.env.APP_ORIGINS ? process.env.APP_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean) : [];
 const appSchemes = ["vpoker://", "app://", "myapp://", "http://localhost", "http://127.0.0.1"];
 
 function isAllowedOrigin(origin: string | undefined): boolean {
@@ -69,7 +69,7 @@ app.use(
         callback(null, true);
       } else {
         console.warn(`[CORS] 拒绝来源: ${origin}`);
-        callback(new Error("Not allowed by CORS"));
+        callback(null, false);
       }
     },
     credentials: true,
