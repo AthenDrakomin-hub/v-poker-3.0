@@ -964,16 +964,25 @@ router.post("/:id/chat", async (req: Request, res: Response) => {
   const uRows = await db.select().from(users).where(inArray(users.id, userIds));
   const nameMap = new Map(uRows.map((x) => [x.id, x.nickname || x.account]));
   const avaMap = new Map(uRows.map((x) => [x.id, x.avatar]));
+  const roleMap = new Map(uRows.map((x) => [x.id, x.role]));
+  const roomRow = await db.select({ agentId: rooms.agentId }).from(rooms).where(eq(rooms.id, roomId)).limit(1);
+  const isOwner = roomRow[0]?.agentId === u.id;
+  const senderRole = roleMap.get(u.id) || `player`;
   const msg = {
     id: msgRow.id,
     userId: msgRow.userId,
-    account: nameMap.get(msgRow.userId) || "?",
-    avatar: avaMap.get(msgRow.userId) || "1",
+    senderId: msgRow.userId,
+    account: nameMap.get(msgRow.userId) || `?`,
+    senderName: nameMap.get(msgRow.userId) || `玩家`,
+    avatar: avaMap.get(msgRow.userId) || `1`,
     kind: msgRow.kind,
+    type: msgRow.kind,
     content: msgRow.content,
     targetUserId: msgRow.targetUserId,
     targetName: msgRow.targetUserId ? nameMap.get(msgRow.targetUserId) : null,
     createdAt: msgRow.createdAt,
+    isOwner,
+    role: senderRole,
   };
   broadcastChatMessage(roomId, msg);
   res.json({ ok: true, id: ins[0].id });

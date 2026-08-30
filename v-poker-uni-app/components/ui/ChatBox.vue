@@ -23,7 +23,10 @@
         >
           <text v-if="msg.type === 'system'" class="msg-system-text">{{ msg.content }}</text>
           <template v-else>
-            <text class="msg-sender">{{ msg.senderName }}:</text>
+            <text class="msg-sender">
+              <text v-if="msg.isOwner" class="msg-owner-tag">房主</text>
+              {{ msg.senderName }}:
+            </text>
             <text class="msg-content">{{ msg.content }}</text>
             <text v-if="msg.type === 'voice'" class="msg-voice-icon">🔊</text>
           </template>
@@ -237,6 +240,17 @@ export default {
 .msg-sender {
   color: rgba(255, 215, 0, 0.8);
   margin-right: 4rpx;
+}
+
+.msg-owner-tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #ff6b35, #f7931e);
+  color: #fff;
+  font-size: 18rpx;
+  padding: 2rpx 8rpx;
+  border-radius: 6rpx;
+  margin-right: 6rpx;
+  font-weight: bold;
 }
 
 .msg-self .msg-sender {

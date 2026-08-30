@@ -3095,6 +3095,7 @@ export default {
           senderName: userState.nickname || '我',
           content: message,
           isSelf: true,
+          isOwner: this.isHost,
           type: msgType
         })
         // 添加弹幕
