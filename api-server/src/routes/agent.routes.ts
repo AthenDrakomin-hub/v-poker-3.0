@@ -2,7 +2,7 @@
 import { db } from "@/db";
 import { users, chipTransactions, distributionRecords } from "@/db/schema";
 import { and, desc, eq, ilike, inArray, ne, or, gte, lte } from "drizzle-orm";
-import { getCurrentUser, genInviteCode } from "@/lib/auth";
+import { getCurrentUser, genInviteCode, hashPassword } from "@/lib/auth";
 import { getGameEconomy } from "@/lib/gameEconomy";
 import { audit } from "@/lib/audit";
 
@@ -667,6 +667,183 @@ router.get("/credit-transactions", async (req: Request, res: Response) => {
   if (!u) { res.status(401).json({ error: "未登录" }); return; }
   if (!AGENT_ROLES.includes(u.role)) { res.status(403).json({ error: "无权限" }); return; }
   res.json({ records: [], message: "V3版本已弃用信用分，改为筹码门槛制" });
+});
+
+// POST /api/agent/create-agent — 创建下级代理账号
+// 总代理可创建一级代理，一级代理可创建二级代理
+router.post("/create-agent", async (req: Request, res: Response) => {
+  const u = await getCurrentUser(req);
+  if (!u) { res.status(401).json({ error: "未登录" }); return; }
+  if (!AGENT_ROLES.includes(u.role)) { res.status(403).json({ error: "无权限" }); return; }
+
+  const b = req.body || {};
+  const { account, password, role } = b;
+
+  if (!account || !password) {
+    res.status(400).json({ error: "账号和密码必填" });
+    return;
+  }
+
+  // 角色验证
+  if (!role || !["agent", "top_agent"].includes(role)) {
+    res.status(400).json({ error: "角色必须是 agent 或 top_agent" });
+    return;
+  }
+
+  // 权限验证
+  if (u.role !== "top_agent" && role === "top_agent") {
+    res.status(403).json({ error: "只有管理员可以创建总代理" });
+    return;
+  }
+  if (u.role === "agent" && role === "top_agent") {
+    res.status(403).json({ error: "一级代理不能创建总代理" });
+    return;
+  }
+  if (u.role === "top_agent" && role === "agent") {
+    // 总代可以创建一级代理
+  } else if (u.role === "agent" && role === "agent") {
+    // 一级代理可以创建二级代理
+  } else {
+    res.status(403).json({ error: "无权创建该角色" });
+    return;
+  }
+
+  // 检查账号是否已存在
+  const dup = await db.select().from(users).where(eq(users.account, account)).limit(1);
+  if (dup.length > 0) {
+    res.status(400).json({ error: "账号已存在" });
+    return;
+  }
+
+  // 生成邀请码
+  const inviteCode = genInviteCode();
+
+  // 创建用户
+  const inserted = await db.insert(users).values({
+    account,
+    password: hashPassword(password),
+    securityCode: "0000",
+    role,
+    inviteCode,
+    invitedByCode: u.inviteCode || null,
+    invitedById: u.id,
+    points: 0,
+  }).returning();
+
+  audit.info("agent_create_agent", {
+    userId: u.id,
+    account: u.account,
+    detail: `创建${role === "top_agent" ? "总代理" : "一级代理"}账号: ${account} (ID:${inserted[0].id})`
+  });
+
+  res.json({
+    ok: true,
+    user: {
+      id: inserted[0].id,
+      account: inserted[0].account,
+      role: inserted[0].role,
+      inviteCode: inserted[0].inviteCode,
+    }
+  });
+});
+
+// POST /api/agent/create-player — 创建玩家账号
+router.post("/create-player", async (req: Request, res: Response) => {
+  const u = await getCurrentUser(req);
+  if (!u) { res.status(401).json({ error: "未登录" }); return; }
+  if (!AGENT_ROLES.includes(u.role)) { res.status(403).json({ error: "无权限" }); return; }
+
+  const b = req.body || {};
+  const { account, password, points } = b;
+
+  if (!account || !password) {
+    res.status(400).json({ error: "账号和密码必填" });
+    return;
+  }
+
+  // 检查账号是否已存在
+  const dup = await db.select().from(users).where(eq(users.account, account)).limit(1);
+  if (dup.length > 0) {
+    res.status(400).json({ error: "账号已存在" });
+    return;
+  }
+
+  // 生成邀请码
+  const inviteCode = genInviteCode();
+
+  // 创建用户（默认role=player）
+  const inserted = await db.insert(users).values({
+    account,
+    password: hashPassword(password),
+    securityCode: "0000",
+    role: "player",
+    inviteCode,
+    invitedByCode: u.inviteCode || null,
+    invitedById: u.id,
+    points: points || 0,
+  }).returning();
+
+  audit.info("agent_create_player", {
+    userId: u.id,
+    account: u.account,
+    detail: `创建玩家账号: ${account} (ID:${inserted[0].id})`
+  });
+
+  res.json({
+    ok: true,
+    user: {
+      id: inserted[0].id,
+      account: inserted[0].account,
+      role: inserted[0].role,
+      inviteCode: inserted[0].inviteCode,
+      points: inserted[0].points,
+    }
+  });
+});
+
+// POST /api/agent/generate-invite-code/:userId — 为下级生成邀请码
+router.post("/generate-invite-code/:userId", async (req: Request, res: Response) => {
+  const u = await getCurrentUser(req);
+  if (!u) { res.status(401).json({ error: "未登录" }); return; }
+  if (!AGENT_ROLES.includes(u.role)) { res.status(403).json({ error: "无权限" }); return; }
+
+  const targetId = Number(req.params.userId);
+  if (!targetId) {
+    res.status(400).json({ error: "缺少用户ID" });
+    return;
+  }
+
+  // 验证目标用户在管理范围内
+  const ids = await scopeIds(u);
+  if (ids && !ids.includes(targetId)) {
+    res.status(403).json({ error: "该用户不在你的管理范围内" });
+    return;
+  }
+
+  // 查询目标用户
+  const targetRows = await db.select().from(users).where(eq(users.id, targetId)).limit(1);
+  if (!targetRows.length) {
+    res.status(404).json({ error: "用户不存在" });
+    return;
+  }
+  const target = targetRows[0];
+
+  // 生成新邀请码
+  const newInviteCode = genInviteCode();
+  await db.update(users).set({ inviteCode: newInviteCode }).where(eq(users.id, targetId));
+
+  audit.info("agent_generate_invite_code", {
+    userId: u.id,
+    account: u.account,
+    detail: `为${target.account}(ID:${targetId})生成新邀请码: ${newInviteCode}`
+  });
+
+  res.json({
+    ok: true,
+    userId: target.id,
+    account: target.account,
+    inviteCode: newInviteCode,
+  });
 });
 
 export default router;
