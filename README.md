@@ -231,8 +231,8 @@ GRANT ALL PRIVILEGES ON DATABASE v_poker_3 TO v_poker;
 #### 3. 部署后端
 
 ```bash
-mkdir -p /opt/texas-platform/api-server
-cd /opt/texas-platform/api-server
+mkdir -p /path/to/api-server
+cd /path/to/api-server
 
 # 拉取代码（或上传）
 git clone https://github.com/AthenDrakomin-hub/v-poker-3.0.git /tmp/repo
@@ -260,10 +260,10 @@ pm2 startup
 # 打包产物在：unpackage/dist/build/web/
 
 # 上传到服务器
-scp -r unpackage/dist/build/web/* root@服务器IP:/opt/texas-platform/h5/
+scp -r unpackage/dist/build/web/* root@[YOUR_SERVER_IP]:/path/to/h5/
 
 # 修复权限
-ssh root@服务器IP "chmod -R 755 /opt/texas-platform/h5/ && find /opt/texas-platform/h5/ -type f -exec chmod 644 {} \;"
+ssh root@[YOUR_SERVER_IP] "chmod -R 755 /path/to/h5/ && find /path/to/h5/ -type f -exec chmod 644 {} \;"
 ```
 
 #### 5. 配置 Nginx
@@ -285,7 +285,7 @@ server {
 
     # H5 前端
     location / {
-        root /opt/texas-platform/h5;
+        root /path/to/h5;
         index index.html;
         try_files $uri $uri/ /index.html;
     }
@@ -329,14 +329,14 @@ certbot --nginx -d goodspage.cn -d www.goodspage.cn
 
 | 项目 | 值 |
 |------|-----|
-| 服务器 IP | 45.77.31.155 |
-| 域名 | goodspage.cn |
-| 后端路径 | /opt/texas-platform/api-server/ |
-| H5 路径 | /opt/texas-platform/h5/ |
+| 服务器 IP | [YOUR_SERVER_IP] |
+| 域名 | [YOUR_DOMAIN] |
+| 后端路径 | /path/to/api-server/ |
+| H5 路径 | /path/to/h5/ |
 | 数据库 | v_poker_3 @ localhost:5432 |
 | 后端端口 | 3001（本地，Nginx 反代） |
-| API 地址 | https://goodspage.cn/api/ |
-| WebSocket | wss://goodspage.cn/socket.io/ |
+| API 地址 | https://[YOUR_DOMAIN]/api/ |
+| WebSocket | wss://[YOUR_DOMAIN]/socket.io/ |
 
 ---
 
@@ -429,7 +429,7 @@ git merge feature/xxx
 git push origin main
 
 # 6. 服务器更新
-ssh root@45.77.31.155 "cd /opt/texas-platform/api-server && git pull && npm ci && npm run build && pm2 reload v-poker-api"
+ssh root@[YOUR_SERVER_IP] "cd /path/to/api-server && git pull && npm ci && npm run build && pm2 reload v-poker-api"
 ```
 
 ---
@@ -537,7 +537,7 @@ npm run build
 pm2 reload v-poker-api
 
 # 更新 H5 前端（本地打包后上传）
-scp -r unpackage/dist/build/web/* root@45.77.31.155:/opt/texas-platform/h5/
+scp -r unpackage/dist/build/web/* root@[YOUR_SERVER_IP]:/path/to/h5/
 ```
 
 ---
@@ -574,6 +574,4 @@ scp -r unpackage/dist/build/web/* root@45.77.31.155:/opt/texas-platform/h5/
 
 ## 联系方式
 
-- 服务器：45.77.31.155
-- 域名：goodspage.cn
 - 仓库：https://github.com/AthenDrakomin-hub/v-poker-3.0
