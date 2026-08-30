@@ -1,14 +1,14 @@
-/**
+﻿/**
  * V-Poker 音效管理系统
  * 支持主题音效、发牌声、筹码声、开牌声、背景音乐
  */
 import { cdnUrl } from './cdn.js'
 
-// 音频格式配置：已全部转换为 MP3
-const AUDIO_FORMAT = 'mp3'
+// 音频格式配置：WAV 原始 PCM，所有原生播放器 100% 兼容（App端优先）
+const AUDIO_FORMAT = 'wav'
 
 // 音频资源版本号（CDN缓存刷新用，更新音频文件后递增）
-const AUDIO_VERSION = '1.0.3'
+const AUDIO_VERSION = '1.0.4'
 const SOUND_POOL_SIZES = {
   deal: 3,
   chip: 3,
