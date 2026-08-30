@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <view class="chat-box">
     <!-- 关闭按钮 -->
     <view class="chat-toggle" @click="handleClose">
@@ -66,10 +66,10 @@
 
       <!-- 输入区域 -->
       <view class="chat-input-area">
-        <view class="tool-btn" :class="{ active: showEmojiPanel }" @click="toggleEmojiPanel">
+        <view class="tool-btn touch-active" :class="{ active: showEmojiPanel }" @click="toggleEmojiPanel">
           <text class="tool-icon">😀</text>
         </view>
-        <view class="tool-btn" :class="{ active: showVoicePanel }" @click="toggleVoicePanel">
+        <view class="tool-btn touch-active" :class="{ active: showVoicePanel }" @click="toggleVoicePanel">
           <text class="tool-icon">🎤</text>
         </view>
         <input
@@ -81,7 +81,7 @@
           @confirm="sendMessage"
           @focus="closePanels"
         />
-        <view class="send-btn" :class="{ 'send-active': inputText }" @click="sendMessage">
+        <view class="send-btn touch-active" :class="{ 'send-active': inputText }" @click="sendMessage">
           <text>发送</text>
         </view>
       </view>

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <view class="join-modal-overlay" @click="onOverlayClick">
     <view class="join-modal glass" @click.stop>
       <!-- 顶部装饰条 -->
@@ -71,11 +71,11 @@
 
       <!-- 底部按钮 -->
       <view class="modal-footer">
-        <view class="btn btn-cancel" @click="$emit('close')">
+        <view class="btn btn-cancel touch-active" @click="$emit('close')">
           <text>取消</text>
         </view>
         <view
-          class="btn btn-join"
+          class="btn btn-join touch-active"
           :class="{ disabled: !canJoin || isJoining }"
           @click="onJoin"
         >

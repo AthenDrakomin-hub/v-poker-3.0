@@ -4,7 +4,7 @@
     <view class="chat-header">
       <view class="chat-header-left">
         <view class="chat-avatar" :style="peerAvatarStyle">
-          <image v-if="peerAvatarUrl" class="chat-avatar-img" :src="peerAvatarUrl" mode="aspectFill" />
+          <PreviewImage v-if="peerAvatarUrl" class="chat-avatar-img" :src="peerAvatarUrl" :urls="[peerAvatarUrl]" mode="aspectFill" />
           <text v-else class="chat-avatar-text">{{ peerInitial }}</text>
         </view>
         <view class="chat-header-info">
@@ -13,7 +13,7 @@
         </view>
       </view>
       <view class="chat-header-right">
-        <view v-if="isCs" class="chat-transfer-btn" @click="showTransferModal = true">
+        <view v-if="isCs" class="chat-transfer-btn touch-active" @click="showTransferModal = true">
           <text>转接</text>
         </view>
         <view v-if="!fullscreen" class="chat-close" @click="$emit('close')">
@@ -35,8 +35,8 @@
           <input class="transfer-reason" v-model="transferReason" placeholder="转接原因（可选）" maxlength="50" />
         </view>
         <view class="transfer-footer">
-          <view class="transfer-btn cancel" @click="showTransferModal = false">取消</view>
-          <view class="transfer-btn confirm" :class="{ disabled: !transferTargetId || isTransferring }" @click="confirmTransfer">
+          <view class="transfer-btn cancel touch-active" @click="showTransferModal = false">取消</view>
+          <view class="transfer-btn confirm touch-active" :class="{ disabled: !transferTargetId || isTransferring }" @click="confirmTransfer">
             <text>{{ isTransferring ? '转接中...' : '确认转接' }}</text>
           </view>
         </view>
@@ -71,7 +71,7 @@
       </view>
       <view v-else-if="loadError && messages.length === 0" class="chat-error">
         <text class="error-text">{{ loadError }}</text>
-        <view class="retry-btn" @click="loadMessages">点击重试</view>
+        <view class="retry-btn touch-active" @click="loadMessages">点击重试</view>
       </view>
       <view v-else-if="messages.length === 0" class="chat-empty">
         <text>暂无消息</text>
@@ -103,7 +103,7 @@
               <text class="chip-request-status" :class="msg.status">{{ statusText(msg.status) }}</text>
               <!-- 客服端：处理按钮 -->
               <view v-if="canProcessChipRequest && msg.status === 'unread' && msg.senderId !== myId" class="chip-actions">
-                <view class="chip-action-btn processed" @click="processChipRequest(msg)">已处理</view>
+                <view class="chip-action-btn processed touch-active" @click="processChipRequest(msg)">已处理</view>
               </view>
             </view>
           </view>
@@ -126,7 +126,7 @@
 
     <!-- 快捷操作（代理端） -->
     <view v-if="showQuickActions && !isCs" class="chat-quick-actions">
-      <view class="quick-action-btn" :class="{ active: showChipRequest }" @click="showChipRequest = !showChipRequest">
+      <view class="quick-action-btn touch-active" :class="{ active: showChipRequest }" @click="showChipRequest = !showChipRequest">
         <text>💰 申请筹码</text>
       </view>
     </view>
@@ -145,8 +145,8 @@
         <view class="chip-note-count">{{ chipNote.length }}/50</view>
       </view>
       <view class="chip-request-btns">
-        <view class="chip-btn chip-cancel" @click="showChipRequest = false">取消</view>
-        <view class="chip-btn chip-send" :class="{ disabled: !canSendChipRequest }" @click="sendChipRequest">发送申请</view>
+        <view class="chip-btn chip-cancel touch-active" @click="showChipRequest = false">取消</view>
+        <view class="chip-btn chip-send touch-active" :class="{ disabled: !canSendChipRequest }" @click="sendChipRequest">发送申请</view>
       </view>
     </view>
 
@@ -164,7 +164,7 @@
       />
       <view class="input-counter">{{ inputText.length }}/500</view>
       <view
-        class="chat-send-btn"
+        class="chat-send-btn touch-active"
         :class="{ active: canSend, disabled: !canSend || isSending }"
         @click="sendText"
       >

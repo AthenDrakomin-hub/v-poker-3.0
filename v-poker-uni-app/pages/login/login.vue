@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <ImmersivePage :show-header="false" page-class="login-page">
     <!-- 背景装饰 -->
     <template #background>
@@ -84,12 +84,12 @@
 
         <view class="form-footer">
           <view
-            class="btn-primary"
+            class="btn-primary touch-active"
             :class="{ loading: isLoading || isAutoLogining }"
             @click="handleLogin"
           >
-            <view v-if="isLoading || isAutoLogining" class="btn-spinner"></view>
-            <text v-else class="btn-text">登 录</text>
+            <view v-if="isLoading || isAutoLogining" class="btn-spinner touch-active"></view>
+            <text v-else class="btn-text touch-active">登 录</text>
           </view>
           <view class="form-link-row">
             <text class="form-link-hint">还没有账号？</text>

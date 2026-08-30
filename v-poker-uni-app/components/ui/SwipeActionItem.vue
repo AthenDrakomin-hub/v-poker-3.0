@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <view class="swipe-item" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
     <view class="swipe-content" :style="{ transform: `translateX(${offsetX}px)` }">
       <slot />
@@ -7,11 +7,11 @@
       <view
         v-for="action in actions"
         :key="action.key"
-        class="swipe-btn touch-target"
+        class="swipe-btn touch-target touch-active"
         :style="{ background: action.color || '#ef4444' }"
         @click.stop="onAction(action)"
       >
-        <text class="swipe-btn-text">{{ action.label }}</text>
+        <text class="swipe-btn-text touch-active">{{ action.label }}</text>
       </view>
     </view>
   </view>

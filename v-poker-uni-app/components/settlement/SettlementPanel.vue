@@ -84,16 +84,16 @@
 
       <!-- 底部操作 -->
       <view class="panel-footer">
-        <button v-if="isFinal && isHost" class="btn-continue btn-final" @click="handleContinue">
+        <button v-if="isFinal && isHost" class="btn-continue btn-final touch-active" @click="handleContinue">
           <text>续开房间</text>
         </button>
-        <button v-else-if="isFinal && !isHost" class="btn-continue btn-wait" disabled>
+        <button v-else-if="isFinal && !isHost" class="btn-continue btn-wait touch-active" disabled>
           <text>等待房主续开...</text>
         </button>
-        <button v-else class="btn-continue" @click="handleContinue">
+        <button v-else class="btn-continue touch-active" @click="handleContinue">
           <text>继续游戏</text>
         </button>
-        <button v-if="isFinal" class="btn-exit" @click="handleExit">
+        <button v-if="isFinal" class="btn-exit touch-active" @click="handleExit">
           <text>退出房间</text>
         </button>
       </view>

@@ -12,7 +12,7 @@
       <!-- 头像 -->
       <view class="seat-avatar" :class="{ 'avatar-active': isActive }">
         <view v-if="player" class="avatar-circle">
-          <image class="avatar-image" :src="avatarUrl" mode="aspectFill"></image>
+          <PreviewImage class="avatar-image" :src="avatarUrl" :urls="[avatarUrl]" mode="aspectFill" />
         </view>
         <view v-else class="avatar-empty">
           <text class="empty-icon">+</text>

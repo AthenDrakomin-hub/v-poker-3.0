@@ -16,7 +16,7 @@
       <scroll-view class="desk-content" scroll-y @scrolltolower="onLoadMore">
         <view v-if="activeView === 'overview'" class="overview-view">
           <view class="metric-grid">
-            <view v-for="stat in globalStats" :key="stat.key" class="metric-card glass">
+            <view v-for="stat in globalStats" :key="stat.key" class="metric-card glass touch-active">
               <VIcon :name="stat.icon" :size="3.2" :color="stat.color" />
               <text class="metric-value">{{ stat.value }}</text>
               <text class="metric-label">{{ stat.label }}</text>
@@ -25,7 +25,7 @@
           <view class="overview-section">
             <text class="section-title">待处理事项</text>
             <view class="quick-grid">
-              <view v-for="item in quickActions" :key="item.view" class="quick-card glass" @click="switchView(item.view)">
+              <view v-for="item in quickActions" :key="item.view" class="quick-card glass touch-active" @click="switchView(item.view)">
                 <VIcon :name="item.icon" :size="3" :color="item.color" />
                 <view><text class="quick-title">{{ item.title }}</text><text class="quick-desc">{{ item.desc }}</text></view>
               </view>
@@ -38,8 +38,8 @@
           <view class="toolbar glass">
             <input v-model="userQuery.search" class="filter-input" placeholder="账号、昵称或用户 ID" @confirm="loadUsers(1)" />
             <picker :range="roleOptions" range-key="label" @change="onRoleFilterChange"><view class="select-control">{{ selectedRoleFilter.label }}</view></picker>
-            <view class="command-btn primary" @click="openUserEditor()">新增用户</view>
-            <view class="command-btn" @click="loadUsers(1)">查询</view>
+            <view class="command-btn primary touch-active" @click="openUserEditor()">新增用户</view>
+            <view class="command-btn touch-active" @click="loadUsers(1)">查询</view>
           </view>
           <view class="data-table glass">
             <view class="table-head user-row"><text>用户</text><text>角色</text><text>筹码</text><text>状态</text><text>操作</text></view>
@@ -55,30 +55,30 @@
         </view>
 
         <view v-else-if="activeView === 'rooms'" class="data-view">
-          <view class="toolbar glass"><picker :range="roomStatusOptions" range-key="label" @change="onRoomStatusChange"><view class="select-control">{{ selectedRoomStatus.label }}</view></picker><view class="command-btn" @click="loadRooms(1)">查询</view></view>
+          <view class="toolbar glass"><picker :range="roomStatusOptions" range-key="label" @change="onRoomStatusChange"><view class="select-control">{{ selectedRoomStatus.label }}</view></picker><view class="command-btn touch-active" @click="loadRooms(1)">查询</view></view>
           <view class="data-table glass"><view class="table-head room-row"><text>房间</text><text>游戏</text><text>人数</text><text>状态</text><text>操作</text></view><view v-for="room in rooms" :key="room.id" class="table-row room-row"><view><text class="primary-text">#{{ room.roomNo || room.id }}</text><text class="secondary-text">房主 {{ room.agentName || room.agentId || '-' }}</text></view><text>{{ formatGameType(room.gameType) || '-' }}</text><text>{{ room.playerCount || room.currentPlayers || 0 }}/{{ room.maxSeats || 0 }}</text><text>{{ formatRoomStatus(room.status) }}</text><view class="row-actions"><text @click="showRoomDetail(room)">详情</text><text class="danger-action" @click="forceEnd(room)">强制结束</text></view></view><view v-if="!rooms.length && !loading.rooms" class="empty-state">暂无房间数据</view></view>
           <ListFooter :loading="loadingMore.rooms" :no-more="noMore.rooms" :has-data="rooms.length > 0" />
         </view>
 
         <view v-else-if="activeView === 'agents'" class="data-view">
-          <view class="toolbar glass"><picker :range="agentRoleOptions" range-key="label" @change="onAgentRoleChange"><view class="select-control">{{ selectedAgentRole.label }}</view></picker><view class="command-btn" @click="loadAgents(1)">查询</view></view>
+          <view class="toolbar glass"><picker :range="agentRoleOptions" range-key="label" @change="onAgentRoleChange"><view class="select-control">{{ selectedAgentRole.label }}</view></picker><view class="command-btn touch-active" @click="loadAgents(1)">查询</view></view>
           <view class="data-table glass"><view class="table-head agent-row"><text>代理</text><text>层级</text><text>下线</text><text>返佣</text><text>操作</text></view><view v-for="agent in agents" :key="agent.id || agent.userId" class="table-row agent-row"><view><text class="primary-text">{{ agent.nickname || agent.account }}</text><text class="secondary-text">ID {{ agent.id || agent.userId }}</text></view><text>{{ roleLabel(agent.role) }}</text><text>{{ agent.subAgentCount || agent.subCount || 0 }}</text><text>{{ agent.commissionRate || 0 }}%</text><view class="row-actions"><text @click="openUserEditor(agent)">编辑资料</text><text @click="openAdjust(agent)">调账</text></view></view><view v-if="!agents.length && !loading.agents" class="empty-state">暂无代理数据</view></view>
           <ListFooter :loading="loadingMore.agents" :no-more="noMore.agents" :has-data="agents.length > 0" />
         </view>
 
         <view v-else-if="activeView === 'finance'" class="data-view">
-          <view class="metric-grid compact"><view class="metric-card glass"><text class="metric-value">{{ financeStats.todayFlow || 0 }}</text><text class="metric-label">今日流水</text></view><view class="metric-card glass"><text class="metric-value">{{ financeStats.todayRake || 0 }}</text><text class="metric-label">今日抽水</text></view><view class="metric-card glass"><text class="metric-value">{{ financeStats.totalFlow || 0 }}</text><text class="metric-label">累计流水</text></view><view class="metric-card glass"><text class="metric-value">{{ financeStats.totalRake || 0 }}</text><text class="metric-label">累计抽水</text></view></view>
-          <view class="toolbar glass"><input v-model="ledgerQuery.userId" class="filter-input" type="number" placeholder="用户 ID" /><input v-model="ledgerQuery.type" class="filter-input" placeholder="流水类型" /><view class="command-btn" @click="loadLedger(1)">查询</view></view>
+          <view class="metric-grid compact"><view class="metric-card glass touch-active"><text class="metric-value">{{ financeStats.todayFlow || 0 }}</text><text class="metric-label">今日流水</text></view><view class="metric-card glass touch-active"><text class="metric-value">{{ financeStats.todayRake || 0 }}</text><text class="metric-label">今日抽水</text></view><view class="metric-card glass touch-active"><text class="metric-value">{{ financeStats.totalFlow || 0 }}</text><text class="metric-label">累计流水</text></view><view class="metric-card glass touch-active"><text class="metric-value">{{ financeStats.totalRake || 0 }}</text><text class="metric-label">累计抽水</text></view></view>
+          <view class="toolbar glass"><input v-model="ledgerQuery.userId" class="filter-input" type="number" placeholder="用户 ID" /><input v-model="ledgerQuery.type" class="filter-input" placeholder="流水类型" /><view class="command-btn touch-active" @click="loadLedger(1)">查询</view></view>
           <view class="data-table glass"><view class="table-head ledger-row"><text>类型</text><text>用户</text><text>金额</text><text>时间</text></view><view v-for="item in ledger" :key="item.id" class="table-row ledger-row"><text>{{ item.type || item.action || '-' }}</text><text>{{ item.userId || '-' }}</text><text :class="item.amount >= 0 ? 'status-success' : 'status-danger'">{{ item.amount >= 0 ? '+' : '' }}{{ item.amount || 0 }}</text><text>{{ formatTime(item.createdAt || item.time) }}</text></view><view v-if="!ledger.length && !loading.ledger" class="empty-state">暂无流水数据</view></view>
         </view>
 
         <view v-else-if="activeView === 'service'" class="data-view">
-          <view class="metric-grid compact"><view class="metric-card glass"><text class="metric-value">{{ onlineCsCount }}</text><text class="metric-label">接待中</text></view><view class="metric-card glass"><text class="metric-value">{{ csStaff.length }}</text><text class="metric-label">客服总数</text></view><view class="metric-card glass"><text class="metric-value">{{ csReport.totalSessions || 0 }}</text><text class="metric-label">今日会话</text></view><view class="metric-card glass"><text class="metric-value">{{ csReport.avgResponseTime || 0 }}s</text><text class="metric-label">平均响应</text></view></view>
-          <view class="toolbar glass"><view class="command-btn primary" @click="openCsEditor()">新增客服</view><view class="command-btn" @click="loadService()">刷新</view></view><view class="data-table glass"><view class="table-head cs-row"><text>客服</text><text>当前会话</text><text>今日接待</text><text>状态</text><text>操作</text></view><view v-for="staff in csStaff" :key="staff.id" class="table-row cs-row"><text>{{ staff.nickname || staff.account }}</text><text>{{ staff.activeSessions || 0 }}</text><text>{{ staff.todaySessions || 0 }}</text><text :class="staff.csStatus === 'online' ? 'status-success' : 'secondary-text'">{{ staff.csStatus === 'online' ? '接待中' : '已关闭' }}</text><view class="row-actions"><text @click="openCsEditor(staff)">编辑</text><text @click="toggleCs(staff)">{{ staff.csStatus === 'online' ? '关闭接待' : '开启接待' }}</text><text class="danger-action" @click="removeUserById(staff)">删除</text></view></view><view v-if="!csStaff.length && !loading.service" class="empty-state">暂无客服数据</view></view>
+          <view class="metric-grid compact"><view class="metric-card glass touch-active"><text class="metric-value">{{ onlineCsCount }}</text><text class="metric-label">接待中</text></view><view class="metric-card glass touch-active"><text class="metric-value">{{ csStaff.length }}</text><text class="metric-label">客服总数</text></view><view class="metric-card glass touch-active"><text class="metric-value">{{ csReport.totalSessions || 0 }}</text><text class="metric-label">今日会话</text></view><view class="metric-card glass touch-active"><text class="metric-value">{{ csReport.avgResponseTime || 0 }}s</text><text class="metric-label">平均响应</text></view></view>
+          <view class="toolbar glass"><view class="command-btn primary touch-active" @click="openCsEditor()">新增客服</view><view class="command-btn touch-active" @click="loadService()">刷新</view></view><view class="data-table glass"><view class="table-head cs-row"><text>客服</text><text>当前会话</text><text>今日接待</text><text>状态</text><text>操作</text></view><view v-for="staff in csStaff" :key="staff.id" class="table-row cs-row"><text>{{ staff.nickname || staff.account }}</text><text>{{ staff.activeSessions || 0 }}</text><text>{{ staff.todaySessions || 0 }}</text><text :class="staff.csStatus === 'online' ? 'status-success' : 'secondary-text'">{{ staff.csStatus === 'online' ? '接待中' : '已关闭' }}</text><view class="row-actions"><text @click="openCsEditor(staff)">编辑</text><text @click="toggleCs(staff)">{{ staff.csStatus === 'online' ? '关闭接待' : '开启接待' }}</text><text class="danger-action" @click="removeUserById(staff)">删除</text></view></view><view v-if="!csStaff.length && !loading.service" class="empty-state">暂无客服数据</view></view>
         </view>
 
         <view v-else-if="activeView === 'audit'" class="data-view">
-          <view class="toolbar glass"><input v-model="auditQuery.userId" class="filter-input" type="number" placeholder="操作人 ID" /><input v-model="auditQuery.type" class="filter-input" placeholder="操作类型" /><view class="command-btn" @click="loadAudit">查询</view></view>
+          <view class="toolbar glass"><input v-model="auditQuery.userId" class="filter-input" type="number" placeholder="操作人 ID" /><input v-model="auditQuery.type" class="filter-input" placeholder="操作类型" /><view class="command-btn touch-active" @click="loadAudit">查询</view></view>
           <view class="data-table glass"><view class="table-head audit-row"><text>操作</text><text>对象/说明</text><text>操作人</text><text>时间</text></view><view v-for="log in auditLogs" :key="log.id" class="table-row audit-row"><text>{{ log.action || log.type || '-' }}</text><text>{{ log.detail || log.reason || '-' }}</text><text>{{ log.operator || log.operatorName || '-' }}</text><text>{{ formatTime(log.createdAt || log.time) }}</text></view><view v-if="!auditLogs.length && !loading.audit" class="empty-state">暂无审计日志</view></view>
         </view>
 
@@ -89,7 +89,7 @@
               <text>当前邀请码</text>
               <view class="invite-code-display">
                 <text class="invite-code-text">{{ currentInviteCode || '暂无邀请码' }}</text>
-                <view class="command-btn" @click="copyInviteCode" v-if="currentInviteCode">复制</view>
+                <view class="command-btn touch-active" @click="copyInviteCode" v-if="currentInviteCode">复制</view>
               </view>
             </view>
             <view class="field">
@@ -105,8 +105,8 @@
               <text>{{ inviteCodeInfo.usedCount || inviteCodeInfo.used_count || 0 }} 次</text>
             </view>
             <view class="toolbar-actions">
-              <view class="command-btn primary" @click="loadInviteCode">刷新邀请码</view>
-              <view class="command-btn danger" @click="regenerateInviteCode">重新生成邀请码</view>
+              <view class="command-btn primary touch-active" @click="loadInviteCode">刷新邀请码</view>
+              <view class="command-btn danger touch-active" @click="regenerateInviteCode">重新生成邀请码</view>
             </view>
             <view class="invite-tip">
               <text class="tip-text">提示：重新生成邀请码后，旧邀请码将失效。新用户使用此邀请码注册后将归属当前管理员。</text>
@@ -115,15 +115,15 @@
         </view>
 
         <view v-else-if="activeView === 'config'" class="data-view config-view">
-          <view class="config-card glass"><text class="section-title">应用发布配置</text><view class="field"><text>当前版本</text><input v-model="systemConfig.app_version" class="filter-input" placeholder="例如 1.0.0" /></view><view class="field"><text>下载地址</text><input v-model="systemConfig.app_download_url" class="filter-input" placeholder="https://..." /></view><view class="toolbar-actions"><view class="command-btn primary" @click="saveConfig">保存配置</view><view class="command-btn danger" @click="reloadEconomy">重载经济模型</view></view></view>
+          <view class="config-card glass"><text class="section-title">应用发布配置</text><view class="field"><text>当前版本</text><input v-model="systemConfig.app_version" class="filter-input" placeholder="例如 1.0.0" /></view><view class="field"><text>下载地址</text><input v-model="systemConfig.app_download_url" class="filter-input" placeholder="https://..." /></view><view class="toolbar-actions"><view class="command-btn primary touch-active" @click="saveConfig">保存配置</view><view class="command-btn danger touch-active" @click="reloadEconomy">重载经济模型</view></view></view>
         </view>
       </scroll-view>
     </view>
 
-    <view v-if="editor.visible" class="modal-overlay" @click="closeEditor"><view class="modal-panel glass" @click.stop><view class="modal-head"><text>{{ editor.mode === 'create' ? '新增用户' : '编辑用户' }}</text><VIcon name="close" :size="2.6" color="var(--color-text-muted)" @click="closeEditor" /></view><view class="form-stack"><view class="field"><text>账号</text><input v-model="editor.form.account" class="filter-input" :disabled="editor.mode === 'edit'" placeholder="账号" /></view><view v-if="editor.mode === 'create'" class="field"><text>初始密码</text><input v-model="editor.form.password" class="filter-input" password placeholder="至少 6 位" /></view><view class="field"><text>昵称</text><input v-model="editor.form.nickname" class="filter-input" placeholder="昵称" /></view><view class="field"><text>角色</text><picker :range="editableRoles" range-key="label" @change="onEditorRoleChange"><view class="select-control">{{ editorRole.label }}</view></picker></view></view><view class="modal-actions"><view v-if="editor.mode === 'edit'" class="command-btn danger" @click="removeUser">删除用户</view><view class="command-btn primary" @click="saveUser">保存</view></view></view></view>
-    <view v-if="adjust.visible" class="modal-overlay" @click="adjust.visible = false"><view class="modal-panel glass" @click.stop><view class="modal-head"><text>调整筹码</text><VIcon name="close" :size="2.6" color="var(--color-text-muted)" @click="adjust.visible = false" /></view><text class="adjust-target">{{ adjust.target.nickname || adjust.target.account }} 当前筹码 {{ adjust.target.points || 0 }}</text><view class="form-stack"><view class="field"><text>变动数量</text><input v-model="adjust.amount" class="filter-input" type="number" placeholder="正数增加，负数扣除" /></view><view class="field"><text>调整原因</text><input v-model="adjust.reason" class="filter-input" placeholder="必填，将写入审计日志" /></view></view><view class="modal-actions"><view class="command-btn primary" @click="submitAdjust">确认调整</view></view></view></view>
+    <view v-if="editor.visible" class="modal-overlay" @click="closeEditor"><view class="modal-panel glass" @click.stop><view class="modal-head"><text>{{ editor.mode === 'create' ? '新增用户' : '编辑用户' }}</text><VIcon name="close" :size="2.6" color="var(--color-text-muted)" @click="closeEditor" /></view><view class="form-stack"><view class="field"><text>账号</text><input v-model="editor.form.account" class="filter-input" :disabled="editor.mode === 'edit'" placeholder="账号" /></view><view v-if="editor.mode === 'create'" class="field"><text>初始密码</text><input v-model="editor.form.password" class="filter-input" password placeholder="至少 6 位" /></view><view class="field"><text>昵称</text><input v-model="editor.form.nickname" class="filter-input" placeholder="昵称" /></view><view class="field"><text>角色</text><picker :range="editableRoles" range-key="label" @change="onEditorRoleChange"><view class="select-control">{{ editorRole.label }}</view></picker></view></view><view class="modal-actions"><view v-if="editor.mode === 'edit'" class="command-btn danger touch-active" @click="removeUser">删除用户</view><view class="command-btn primary touch-active" @click="saveUser">保存</view></view></view></view>
+    <view v-if="adjust.visible" class="modal-overlay" @click="adjust.visible = false"><view class="modal-panel glass" @click.stop><view class="modal-head"><text>调整筹码</text><VIcon name="close" :size="2.6" color="var(--color-text-muted)" @click="adjust.visible = false" /></view><text class="adjust-target">{{ adjust.target.nickname || adjust.target.account }} 当前筹码 {{ adjust.target.points || 0 }}</text><view class="form-stack"><view class="field"><text>变动数量</text><input v-model="adjust.amount" class="filter-input" type="number" placeholder="正数增加，负数扣除" /></view><view class="field"><text>调整原因</text><input v-model="adjust.reason" class="filter-input" placeholder="必填，将写入审计日志" /></view></view><view class="modal-actions"><view class="command-btn primary touch-active" @click="submitAdjust">确认调整</view></view></view></view>
 
-    <view v-if="csEditor.visible" class="modal-overlay" @click="closeCsEditor"><view class="modal-panel glass" @click.stop><view class="modal-head"><text>{{ csEditor.mode === 'create' ? '新增客服' : '编辑客服' }}</text><VIcon name="close" :size="2.6" color="var(--color-text-muted)" @click="closeCsEditor" /></view><view class="form-stack"><view class="field"><text>账号</text><input v-model="csEditor.form.account" class="filter-input" :disabled="csEditor.mode === 'edit'" placeholder="客服账号" /></view><view v-if="csEditor.mode === 'create'" class="field"><text>初始密码</text><input v-model="csEditor.form.password" class="filter-input" password placeholder="至少 6 位" /></view><view v-else class="field"><text>重置密码（留空不修改）</text><input v-model="csEditor.form.password" class="filter-input" password placeholder="输入新密码" /></view><view class="field"><text>昵称</text><input v-model="csEditor.form.nickname" class="filter-input" placeholder="客服昵称" /></view></view><view class="modal-actions"><view class="command-btn primary" @click="saveCs">保存</view></view></view></view>
+    <view v-if="csEditor.visible" class="modal-overlay" @click="closeCsEditor"><view class="modal-panel glass" @click.stop><view class="modal-head"><text>{{ csEditor.mode === 'create' ? '新增客服' : '编辑客服' }}</text><VIcon name="close" :size="2.6" color="var(--color-text-muted)" @click="closeCsEditor" /></view><view class="form-stack"><view class="field"><text>账号</text><input v-model="csEditor.form.account" class="filter-input" :disabled="csEditor.mode === 'edit'" placeholder="客服账号" /></view><view v-if="csEditor.mode === 'create'" class="field"><text>初始密码</text><input v-model="csEditor.form.password" class="filter-input" password placeholder="至少 6 位" /></view><view v-else class="field"><text>重置密码（留空不修改）</text><input v-model="csEditor.form.password" class="filter-input" password placeholder="输入新密码" /></view><view class="field"><text>昵称</text><input v-model="csEditor.form.nickname" class="filter-input" placeholder="客服昵称" /></view></view><view class="modal-actions"><view class="command-btn primary touch-active" @click="saveCs">保存</view></view></view></view>
   </view>
 </template>
 

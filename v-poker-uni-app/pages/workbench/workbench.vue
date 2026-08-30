@@ -1,7 +1,7 @@
 ﻿<template>
   <ImmersivePage title="代理工作台" :show-header="true" :scrollable="true" page-class="theme-agent" :page-style="{ '--font-scale': fontScale }">
     <template #header-left>
-      <view class="back-btn" @click="goBack">
+      <view class="back-btn touch-active" @click="goBack">
         <VIcon name="back" :size="3.3" color="var(--color-text)" />
       </view>
     </template>
@@ -53,7 +53,7 @@
             <VIcon name="search" :size="1.6" color="rgba(255,255,255,0.4)" />
             <input class="search-input" v-model="searchKeyword" placeholder="搜索下线" placeholder-class="search-placeholder" @confirm="searchPlayers" />
           </view>
-          <view class="invite-btn" @click="showInviteCode = true">
+          <view class="invite-btn touch-active" @click="showInviteCode = true">
             <text>邀请码</text>
           </view>
         </view>
@@ -74,10 +74,10 @@
             </view>
           </view>
           <view class="player-actions">
-            <view v-if="isAdjustableTarget(player)" class="action-btn action-adjust" @click.stop="adjustPoints(player)">
+            <view v-if="isAdjustableTarget(player)" class="action-btn action-adjust touch-active" @click.stop="adjustPoints(player)">
               <text>调整</text>
             </view>
-            <view v-if="isTopAgent && player.role === 'player'" class="action-btn action-promote" @click.stop="promotePlayer(player)">
+            <view v-if="isTopAgent && player.role === 'player'" class="action-btn action-promote touch-active" @click.stop="promotePlayer(player)">
               <text>升级</text>
             </view>
           </view>
@@ -87,7 +87,6 @@
           <text class="empty-text">暂无玩家</text>
         </view>
       </view>
-      <PaginationBar :pagination="playerPagination" @change="loadPlayers" />
     </view>
 
     <!-- 流水记录 -->
@@ -114,7 +113,6 @@
           <text class="empty-text">暂无流水记录</text>
         </view>
       </view>
-      <PaginationBar :pagination="transactionPagination" @change="loadTransactions" />
     </view>
       </view>
     </view>
@@ -127,16 +125,16 @@
       <view class="modal-content glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">我的邀请码</text>
-          <view class="modal-close-btn" @click="showInviteCode = false">
+          <view class="modal-close-btn touch-active" @click="showInviteCode = false">
             <VIcon name="close" :size="2" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
         <view class="invite-code-display">
           <text class="invite-code">{{ inviteCode || '加载中...' }}</text>
-          <view class="copy-btn" @click="copyInviteCode">
+          <view class="copy-btn touch-active" @click="copyInviteCode">
             <text>复制</text>
           </view>
-          <view v-if="userRole !== 'admin'" class="copy-btn" :class="{ disabled: isRegenerating }" @click="regenerateInviteCode">
+          <view v-if="userRole !== 'admin'" class="copy-btn touch-active" :class="{ disabled: isRegenerating }" @click="regenerateInviteCode">
             <text>{{ isRegenerating ? '生成中...' : '重新生成' }}</text>
           </view>
         </view>
@@ -151,7 +149,7 @@
       <view class="modal-content glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">调整筹码</text>
-          <view class="modal-close-btn" @click="showAdjustModal = false">
+          <view class="modal-close-btn touch-active" @click="showAdjustModal = false">
             <VIcon name="close" :size="2" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
@@ -163,9 +161,9 @@
           <view class="form-group">
             <text class="form-label">调整数量（正数增加，负数扣除）</text>
             <view class="amount-input-group">
-              <view class="amount-btn" @click="adjustAmount -= 10">-10</view>
+              <view class="amount-btn touch-active" @click="adjustAmount -= 10">-10</view>
               <input class="amount-input" type="number" v-model="adjustAmount" placeholder="输入数量" />
-              <view class="amount-btn" @click="adjustAmount += 10">+10</view>
+              <view class="amount-btn touch-active" @click="adjustAmount += 10">+10</view>
             </view>
           </view>
           <view class="form-group">
@@ -174,8 +172,8 @@
           </view>
         </view>
         <view class="modal-footer">
-          <view class="btn-ghost" @click="showAdjustModal = false">取消</view>
-          <view class="btn-primary" :class="{ disabled: isAdjusting }" @click="confirmAdjust">
+          <view class="btn-ghost touch-active" @click="showAdjustModal = false">取消</view>
+          <view class="btn-primary touch-active" :class="{ disabled: isAdjusting }" @click="confirmAdjust">
             {{ isAdjusting ? '提交中...' : '确认调整' }}
           </view>
         </view>
@@ -187,7 +185,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">玩家详情</text>
-          <view class="modal-close-btn" @click="showPlayerDetailModal = false">
+          <view class="modal-close-btn touch-active" @click="showPlayerDetailModal = false">
             <VIcon name="close" :size="2" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
@@ -241,7 +239,7 @@
             </view>
           </view>
           <view class="player-detail-actions">
-            <view class="action-btn" @click="adjustPoints(selectedPlayer)">调整筹码</view>
+            <view class="action-btn touch-active" @click="adjustPoints(selectedPlayer)">调整筹码</view>
           </view>
         </view>
       </view>
@@ -252,7 +250,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">游戏记录 - {{ historyPlayer?.nickname || historyPlayer?.account || '' }}</text>
-          <view class="modal-close-btn" @click="showPlayerHistoryModal = false">
+          <view class="modal-close-btn touch-active" @click="showPlayerHistoryModal = false">
             <VIcon name="close" :size="2" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
@@ -318,11 +316,10 @@ import { getMe } from '../../api/auth.js'
 import { getFontScale } from '../../utils/fontScale.js'
 import ImmersivePage from '../../components/ui/ImmersivePage.vue'
 import VIcon from '../../components/ui/VIcon.vue'
-import PaginationBar from '../../components/ui/PaginationBar.vue'
 
 export default {
   name: 'AgentWorkbench',
-  components: { ImmersivePage, VIcon, PaginationBar },
+  components: { ImmersivePage, VIcon },
   data() {
     return {
       userState,

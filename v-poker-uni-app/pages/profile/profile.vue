@@ -1,12 +1,12 @@
 ﻿<template>
   <ImmersivePage title="个人中心" :show-header="true" :scrollable="true" page-class="profile-page" :page-style="{ '--font-scale': fontScale }">
     <template #header-left>
-      <view class="back-btn" @click="goBack">
+      <view class="back-btn touch-active" @click="goBack">
         <VIcon name="back" :size="2.2" color="var(--color-text)" />
       </view>
     </template>
     <template #header-right>
-      <view class="settings-btn" @click="goToSettings">
+      <view class="settings-btn touch-active" @click="goToSettings">
         <VIcon name="gear" :size="2.2" color="var(--color-text)" />
       </view>
     </template>
@@ -18,7 +18,7 @@
         <!-- 用户信息卡片（深色磨砂背景，突出身份） -->
         <view class="user-card">
           <view class="user-avatar-wrap" @click="openAvatarSelector">
-            <image class="user-avatar-img" :src="currentAvatarImage" mode="aspectFill" @error="onAvatarImageError"></image>
+            <PreviewImage class="user-avatar-img" :src="currentAvatarImage" :urls="[currentAvatarImage]" mode="aspectFill" />
             <view class="avatar-edit-hint">
               <VIcon name="edit" :size="3" color="#fff" />
             </view>
@@ -148,7 +148,7 @@
 
         <!-- 退出登录按钮（放在右侧底部，随内容滚动） -->
         <view class="logout-section">
-          <button class="logout-btn" @click="handleLogout">退出登录</button>
+          <button class="logout-btn touch-active" @click="handleLogout">退出登录</button>
         </view>
         <view class="bottom-spacing"></view>
       </view>
@@ -178,8 +178,8 @@
           </view>
         </view>
         <view class="modal-footer">
-          <button class="btn-cancel" @click="showRecharge = false">取消</button>
-          <button class="btn-confirm" @click="confirmRecharge">联系充值</button>
+          <button class="btn-cancel touch-active" @click="showRecharge = false">取消</button>
+          <button class="btn-confirm touch-active" @click="confirmRecharge">联系充值</button>
         </view>
       </view>
     </view>
@@ -206,8 +206,8 @@
           </view>
         </view>
         <view class="modal-footer">
-          <button class="btn-cancel" @click="showChangePassword = false">取消</button>
-          <button class="btn-confirm" @click="confirmChangePassword">确认修改</button>
+          <button class="btn-cancel touch-active" @click="showChangePassword = false">取消</button>
+          <button class="btn-confirm touch-active" @click="confirmChangePassword">确认修改</button>
         </view>
       </view>
     </view>
@@ -220,7 +220,7 @@
           <view class="modal-close" @click="showAvatarSelector = false"><VIcon name="close" :size="4" color="rgba(255,255,255,0.5)" /></view>
         </view>
         <view class="avatar-preview">
-          <image class="preview-img" :src="getAvatarImage(selectedAvatarId)" mode="aspectFit" @error="onAvatarImageError"></image>
+          <PreviewImage class="preview-img" :src="getAvatarImage(selectedAvatarId)" :urls="[getAvatarImage(selectedAvatarId)]" mode="aspectFit" />
           <text class="preview-name">{{ getAvatarConfig(selectedAvatarId).name }}</text>
         </view>
         <view class="avatar-grid">
@@ -231,15 +231,15 @@
             :class="{ active: selectedAvatarId === avatar.id }"
             @click="selectedAvatarId = avatar.id"
           >
-            <image class="option-img" :src="getAvatarImage(avatar.id)" mode="aspectFill" @error="onAvatarImageError"></image>
+            <PreviewImage class="option-img" :src="getAvatarImage(avatar.id)" :urls="[getAvatarImage(avatar.id)]" mode="aspectFill" />
             <view class="option-check" v-if="selectedAvatarId === avatar.id">
               <text>✓</text>
             </view>
           </view>
         </view>
         <view class="modal-footer">
-          <button class="btn-cancel" @click="showAvatarSelector = false">取消</button>
-          <button class="btn-confirm" :disabled="updatingAvatar" @click="confirmAvatar">
+          <button class="btn-cancel touch-active" @click="showAvatarSelector = false">取消</button>
+          <button class="btn-confirm touch-active" :disabled="updatingAvatar" @click="confirmAvatar">
             {{ updatingAvatar ? '保存中...' : '确认使用' }}
           </button>
         </view>
@@ -257,8 +257,8 @@
           <input class="form-input" v-model="nicknameForm" placeholder="请输入昵称（最多20字）" maxlength="20" />
         </view>
         <view class="modal-footer">
-          <button class="btn-cancel" @click="showNicknameModal = false">取消</button>
-          <button class="btn-confirm" :disabled="updatingNickname" @click="confirmNickname">
+          <button class="btn-cancel touch-active" @click="showNicknameModal = false">取消</button>
+          <button class="btn-confirm touch-active" :disabled="updatingNickname" @click="confirmNickname">
             {{ updatingNickname ? '保存中...' : '确认' }}
           </button>
         </view>
@@ -283,10 +283,10 @@
               <text class="voice-desc">{{ pack.desc }}</text>
             </view>
             <view class="voice-actions">
-              <view class="voice-play-btn" @click="playVoiceSample(pack.id)">
+              <view class="voice-play-btn touch-active" @click="playVoiceSample(pack.id)">
                 <text>{{ playingVoice === pack.id ? '⏸' : '▶' }}</text>
               </view>
-              <view v-if="currentVoicePack !== pack.id" class="voice-use-btn" @click="useVoicePack(pack.id)">
+              <view v-if="currentVoicePack !== pack.id" class="voice-use-btn touch-active" @click="useVoicePack(pack.id)">
                 <text>使用</text>
               </view>
               <view v-else class="voice-used-tag">

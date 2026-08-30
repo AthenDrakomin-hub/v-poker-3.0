@@ -1,9 +1,9 @@
-<template>
+﻿<template>
   <view class="dynamic-actions">
     <view
       v-for="(opt, idx) in options"
       :key="idx"
-      class="dyn-btn"
+      class="dyn-btn touch-active"
       :class="[getBtnClass(opt.action), { disabled: disabled, pressed: pressedIndex === idx }]"
       @click="handleClick(opt, idx, $event)"
       @touchstart="onTouchStart(idx, $event)"
@@ -13,7 +13,7 @@
       <text class="dyn-label">{{ opt.label }}</text>
       <text v-if="opt.amount" class="dyn-amount">{{ formatAmount(opt.amount) }}</text>
       <!-- 点击波纹效果 -->
-      <view v-for="(ripple, rIdx) in (ripples[idx] || [])" :key="rIdx" class="btn-ripple" :style="{ left: ripple.x + 'px', top: ripple.y + 'px' }"></view>
+      <view v-for="(ripple, rIdx) in (ripples[idx] || [])" :key="rIdx" class="btn-ripple touch-active" :style="{ left: ripple.x + 'px', top: ripple.y + 'px' }"></view>
     </view>
 
     <!-- 加注滑块组件 -->

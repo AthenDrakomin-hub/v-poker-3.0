@@ -8,7 +8,7 @@
       <view class="compare-body">
         <view class="compare-player" :class="{ winner: winnerId === challenger?.userId, loser: winnerId && winnerId !== challenger?.userId }">
           <view class="player-avatar">
-            <image :src="challengerAvatar" mode="aspectFill" class="avatar-img" />
+            <PreviewImage :src="challengerAvatar" :urls="[challengerAvatar]" mode="aspectFill" class="avatar-img" />
             <view v-if="winnerId === challenger?.userId" class="winner-crown">👑</view>
           </view>
           <text class="player-name">{{ challenger?.nickname || challenger?.account || '玩家' }}</text>
@@ -27,7 +27,7 @@
         </view>
         <view class="compare-player" :class="{ winner: winnerId === defender?.userId, loser: winnerId && winnerId !== defender?.userId }">
           <view class="player-avatar">
-            <image :src="defenderAvatar" mode="aspectFill" class="avatar-img" />
+            <PreviewImage :src="defenderAvatar" :urls="[defenderAvatar]" mode="aspectFill" class="avatar-img" />
             <view v-if="winnerId === defender?.userId" class="winner-crown">👑</view>
           </view>
           <text class="player-name">{{ defender?.nickname || defender?.account || '玩家' }}</text>
@@ -45,7 +45,7 @@
           <text class="result-winner">{{ winnerName }} 获胜</text>
           <text class="result-amount" :class="winnerId === currentUserId ? 'win' : 'lose'">{{ winnerId === currentUserId ? '+' : '-' }}{{ winAmount }} 筹码</text>
         </view>
-        <view class="result-btn" @click="$emit('close')"><text>确认</text></view>
+        <view class="result-btn touch-active" @click="$emit('close')"><text>确认</text></view>
       </view>
       <view v-else class="compare-loading"><text class="loading-text">比牌中...</text></view>
     </view>

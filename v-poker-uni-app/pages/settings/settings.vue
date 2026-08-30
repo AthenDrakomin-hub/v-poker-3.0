@@ -1,7 +1,7 @@
 ﻿<template>
   <ImmersivePage title="设置" :show-header="true" :scrollable="true" :page-style="{ '--font-scale': fontScale }">
     <template #header-left>
-      <view class="back-btn" @click="goBack">
+      <view class="back-btn touch-active" @click="goBack">
         <VIcon name="back" :size="2.2" color="var(--color-text)" />
       </view>
     </template>
@@ -98,7 +98,7 @@
                 <text class="setting-name">画质</text>
               </view>
               <view class="quality-options">
-                <view v-for="q in qualityOptions" :key="q.value" class="quality-btn" :class="{ active: settings.quality === q.value }" @click="setQuality(q.value)">
+                <view v-for="q in qualityOptions" :key="q.value" class="quality-btn touch-active" :class="{ active: settings.quality === q.value }" @click="setQuality(q.value)">
                   <text>{{ q.label }}</text>
                 </view>
               </view>
@@ -121,7 +121,7 @@
                 <view
                   v-for="opt in fontScaleOptions"
                   :key="opt.value"
-                  class="font-btn"
+                  class="font-btn touch-active"
                   :class="{ active: Math.abs(fontScale - opt.value) < 0.01 }"
                   :style="{ fontSize: (1.6 * opt.value) + 'vh' }"
                   @click="setFontScaleOption(opt.value)"
@@ -180,7 +180,7 @@
       <view class="modal-content" @click.stop>
         <view class="modal-header">
           <text class="modal-title">选择游戏主题</text>
-          <view class="modal-close-btn" @click="showThemeSelector = false">
+          <view class="modal-close-btn touch-active" @click="showThemeSelector = false">
             <VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" />
           </view>
         </view>

@@ -2,7 +2,7 @@
   <view class="my-rooms-panel">
     <view class="rooms-header">
       <view><text class="rooms-title">我的房间</text><text class="rooms-subtitle">已加入的房间可直接继续，无需再次输入密码</text></view>
-      <view v-if="isAgent" class="create-room-btn" @click="$emit('create')"><VIcon name="plus" :size="2" color="var(--color-bg-card)" /><text>创建房间</text></view>
+      <view v-if="isAgent" class="create-room-btn touch-active" @click="$emit('create')"><VIcon name="plus" :size="2" color="var(--color-bg-card)" /><text>创建房间</text></view>
     </view>
     <view class="rooms-tabs">
       <view class="rooms-tab" :class="{ active: activeTab === 'joined' }" @click="activeTab = 'joined'">继续游戏 {{ joinedRooms.length }}</view>

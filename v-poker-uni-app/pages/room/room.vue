@@ -3,7 +3,7 @@
     <view v-if="!isLandscapeReady" class="orientation-blocker">
       <VIcon name="warning" :size="4" color="var(--color-gold)" />
       <text>正在切换至横屏</text>
-      <view class="orientation-back-btn" @click="goLobby">
+      <view class="orientation-back-btn touch-active" @click="goLobby">
         <VIcon name="back" :size="2.5" color="var(--color-bg-card)" />
         <text>返回大厅</text>
       </view>
@@ -50,7 +50,7 @@
     <!-- 顶部 HUD（沉浸式模式，点击顶部区域呼出，3秒后自动隐藏） -->
     <view class="room-hud" :class="{ 'hud-hidden': !showHud }" v-show="showHud">
       <view class="hud-left">
-        <view class="back-btn" @click="goBack">
+        <view class="back-btn touch-active" @click="goBack">
           <VIcon name="back" :size="2.5" />
         </view>
         <view class="room-info">
@@ -68,10 +68,10 @@
           <VIcon name="coin" :size="2.2" />
           <text class="points-value">{{ formatPoints(userState.points) }}</text>
         </view>
-        <view class="settings-btn" @click="openGameHistory">
+        <view class="settings-btn touch-active" @click="openGameHistory">
           <VIcon name="list" :size="2.5" />
         </view>
-        <view class="settings-btn" @click="showSettings = true">
+        <view class="settings-btn touch-active" @click="showSettings = true">
           <VIcon name="gear" :size="2.5" />
         </view>
       </view>
@@ -87,7 +87,7 @@
     <view class="hud-trigger-area" @click="toggleHud" v-if="!showHud"></view>
 
     <view v-if="isHost" class="host-control-bar" :class="{ 'host-collapsed': hostPanelCollapsed }">
-      <view class="host-collapse-btn" @click="hostPanelCollapsed = !hostPanelCollapsed">
+      <view class="host-collapse-btn touch-active" @click="hostPanelCollapsed = !hostPanelCollapsed">
         <text class="host-collapse-icon">{{ hostPanelCollapsed ? '⚙' : '—' }}</text>
       </view>
       <text v-if="!hostPanelCollapsed" class="host-label">房主管理</text>
@@ -101,7 +101,7 @@
 
     <!-- 玩家准备按钮 -->
     <view v-if="(isWaitingState || roomStatus === 'waiting_continue') && !isHost" class="player-ready-bar">
-      <view class="player-ready-btn" :class="{ ready: amIReady }" @click="toggleReady">
+      <view class="player-ready-btn touch-active" :class="{ ready: amIReady }" @click="toggleReady">
         <text>{{ amIReady ? '已准备（点击取消）' : (roomStatus === 'waiting_continue' ? '准备下一局' : '准备') }}</text>
       </view>
     </view>
@@ -191,7 +191,7 @@
 
     <!-- 聊天框（沉浸式模式，默认收起，点击聊天按钮展开） -->
     <view class="chat-wrapper" :class="{ 'chat-expanded': showChat }">
-      <view class="chat-toggle-btn" @click="showChat = !showChat">
+      <view class="chat-toggle-btn touch-active" @click="showChat = !showChat">
         <VIcon name="chat" :size="2.2" color="#fff" />
         <view v-if="chatMessages.length > 0" class="chat-badge">{{ chatMessages.length }}</view>
       </view>
@@ -319,7 +319,7 @@
               <text class="kick-player-name">{{ player.nickname || player.account }}</text>
               <text class="kick-player-points">{{ formatPoints(player.points) }} 筹码</text>
             </view>
-            <view class="kick-btn" :class="{ disabled: kickingUserId === player.id }" @click="confirmKickPlayer(player.id)">
+            <view class="kick-btn touch-active" :class="{ disabled: kickingUserId === player.id }" @click="confirmKickPlayer(player.id)">
               <text>{{ kickingUserId === player.id ? '踢出中...' : '踢出' }}</text>
             </view>
           </view>

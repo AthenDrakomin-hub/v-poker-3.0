@@ -1,20 +1,20 @@
 ﻿<template>
   <view class="right-float-group">
     <!-- 快捷加入 -->
-    <view v-if="isVisible('join')" class="float-btn join-btn" @click="$emit('click', 'join')">
+    <view v-if="isVisible('join')" class="float-btn join-btn touch-active" @click="$emit('click', 'join')">
       <VIcon name="search" :size="5.5" color="var(--color-gold)" />
       <text class="float-label join-label">加入</text>
     </view>
-    <view v-if="isVisible('service')" class="float-btn" @click="$emit('click', 'service')">
+    <view v-if="isVisible('service')" class="float-btn touch-active" @click="$emit('click', 'service')">
       <VIcon name="headset" :size="5.5" color="var(--color-text)" />
       <view v-if="csUnreadCount > 0" class="service-dot">{{ csUnreadCount > 99 ? '99+' : csUnreadCount }}</view>
       <text class="float-label">客服</text>
     </view>
-    <view v-if="isVisible('help')" class="float-btn" @click="$emit('click', 'help')">
+    <view v-if="isVisible('help')" class="float-btn touch-active" @click="$emit('click', 'help')">
       <VIcon name="help" :size="5.5" color="var(--color-text)" />
       <text class="float-label">帮助</text>
     </view>
-    <view v-if="isVisible('notify')" class="float-btn" @click="$emit('click', 'notify')">
+    <view v-if="isVisible('notify')" class="float-btn touch-active" @click="$emit('click', 'notify')">
       <VIcon name="warning" :size="5.5" color="var(--color-text)" />
       <view v-if="hasNotify" class="notify-dot"></view>
       <text class="float-label">消息</text>

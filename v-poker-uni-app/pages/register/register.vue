@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <ImmersivePage :show-header="false" page-class="register-page">
     <template #background>
       <view class="bg-decoration">
@@ -138,9 +138,9 @@
         </view>
 
         <view class="form-footer">
-          <view class="btn-primary" :class="{ loading: isLoading }" @click="handleRegister">
-            <view v-if="isLoading" class="btn-spinner"></view>
-            <text v-else class="btn-text">注 册</text>
+          <view class="btn-primary touch-active" :class="{ loading: isLoading }" @click="handleRegister">
+            <view v-if="isLoading" class="btn-spinner touch-active"></view>
+            <text v-else class="btn-text touch-active">注 册</text>
           </view>
           <view class="form-link-row">
             <text class="form-link-hint">已有账号？</text>

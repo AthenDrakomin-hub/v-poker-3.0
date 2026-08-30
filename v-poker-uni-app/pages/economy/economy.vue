@@ -1,12 +1,12 @@
 ﻿<template>
   <ImmersivePage title="经济配置" :show-header="true" :scrollable="true" page-class="theme-economy" :page-style="{ '--font-scale': fontScale }">
     <template #header-left>
-      <view class="back-btn" @click="goBack">
+      <view class="back-btn touch-active" @click="goBack">
         <VIcon name="back" :size="3.3" color="var(--color-text)" />
       </view>
     </template>
     <template #header-right>
-      <view class="reload-btn glass" @click="reloadConfig">
+      <view class="reload-btn glass touch-active" @click="reloadConfig">
         <VIcon name="more" :size="2.5" color="var(--color-gold)" />
         <text class="reload-text">刷新缓存</text>
       </view>
@@ -148,7 +148,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">编辑 - {{ editingGame?.gameName }}</text>
-          <view class="modal-close-btn" @click="closeGameEdit">
+          <view class="modal-close-btn touch-active" @click="closeGameEdit">
             <VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
@@ -229,8 +229,8 @@
           </view>
         </scroll-view>
         <view class="modal-footer">
-          <view class="btn btn-ghost" @click="closeGameEdit">取消</view>
-          <view class="btn btn-primary" :class="{ disabled: savingGame }" @click="saveGameConfig">
+          <view class="btn btn-ghost touch-active" @click="closeGameEdit">取消</view>
+          <view class="btn btn-primary touch-active" :class="{ disabled: savingGame }" @click="saveGameConfig">
             {{ savingGame ? '保存中...' : '保存修改' }}
           </view>
         </view>
@@ -242,7 +242,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">编辑 - {{ editingTemplate?.templateName }}</text>
-          <view class="modal-close-btn" @click="closeTemplateEdit">
+          <view class="modal-close-btn touch-active" @click="closeTemplateEdit">
             <VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
@@ -299,8 +299,8 @@
           </view>
         </scroll-view>
         <view class="modal-footer">
-          <view class="btn btn-ghost" @click="closeTemplateEdit">取消</view>
-          <view class="btn btn-primary" :class="{ disabled: savingTpl }" @click="saveTemplateConfig">
+          <view class="btn btn-ghost touch-active" @click="closeTemplateEdit">取消</view>
+          <view class="btn btn-primary touch-active" :class="{ disabled: savingTpl }" @click="saveTemplateConfig">
             {{ savingTpl ? '保存中...' : '保存修改' }}
           </view>
         </view>

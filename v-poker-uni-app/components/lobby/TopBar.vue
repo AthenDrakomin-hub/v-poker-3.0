@@ -19,13 +19,13 @@
       </view>
 
       <!-- 设置按钮 -->
-      <view class="top-btn" @click="$emit('setting')">
+      <view class="top-btn touch-active" @click="$emit('setting')">
         <VIcon name="gear" :size="8.4" color="var(--color-text)" />
       </view>
 
       <!-- 用户头像 -->
       <view class="top-avatar" @click="$emit('avatar')">
-        <image class="avatar-image" :src="avatarImage" mode="aspectFill" />
+        <PreviewImage class="avatar-image" :src="avatarImage" :urls="[avatarImage]" mode="aspectFill" />
         <view class="avatar-ring"></view>
       </view>
     </view>

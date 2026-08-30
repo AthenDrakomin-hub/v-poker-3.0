@@ -37,11 +37,11 @@
 
     <!-- 底部加入按钮 -->
     <view class="card-bottom">
-      <view class="rules-btn" @click.stop="$emit('rules', info.id)">
+      <view class="rules-btn touch-active" @click.stop="$emit('rules', info.id)">
         <VIcon name="help" :size="2.4" color="rgba(255,255,255,0.8)" />
         <text class="rules-text">规则</text>
       </view>
-      <view class="enter-btn" @click.stop="$emit('enter', info.id)">
+      <view class="enter-btn touch-active" @click.stop="$emit('enter', info.id)">
         <text class="enter-text">加入房间</text>
         <VIcon name="arrow-right" :size="2.4" color="var(--color-bg-card)" />
       </view>

@@ -1,7 +1,7 @@
 ﻿<template>
   <ImmersivePage title="管理后台" :show-header="true" :scrollable="true" page-class="theme-admin" :page-style="{ '--font-scale': fontScale }">
     <template #header-left>
-      <view class="back-btn" @click="goBack">
+      <view class="back-btn touch-active" @click="goBack">
         <VIcon name="back" :size="3.3" color="var(--color-text)" />
       </view>
     </template>
@@ -80,7 +80,7 @@
             </view>
           </view>
           <view class="room-actions">
-            <view class="action-btn action-danger" @click="dissolveRoom(room)">
+            <view class="action-btn action-danger touch-active" @click="dissolveRoom(room)">
               <text>解散</text>
             </view>
           </view>
@@ -101,15 +101,15 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">用户管理</text>
-          <view class="modal-close-btn" @click="closeModal('user')">
+          <view class="modal-close-btn touch-active" @click="closeModal('user')">
             <VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
         <view class="modal-body">
           <view class="search-bar">
             <input class="search-input" v-model="userSearch" placeholder="搜索用户ID/账号" @confirm="searchUsers" />
-            <view class="search-btn" @click="searchUsers">搜索</view>
-            <view class="search-btn btn-primary" @click="openUserEditor()">新增用户</view>
+            <view class="search-btn touch-active" @click="searchUsers">搜索</view>
+            <view class="search-btn btn-primary touch-active" @click="openUserEditor()">新增用户</view>
           </view>
           <view class="data-list">
             <view v-for="user in userList" :key="user.id || user.userId" class="data-item">
@@ -121,19 +121,18 @@
                 <text class="data-sub">ID: {{ user.id || user.userId }} | 筹码: {{ user.points || 0 }} | 角色: {{ user.role || '玩家' }} | 邀请码: {{ user.inviteCode || user.invite_code || '-' }}</text>
               </view>
               <view class="data-actions">
-                <view class="mini-btn" @click="openUserEditor(user)">编辑</view>
-                <view class="mini-btn" @click="adjustUserPoints(user)">调整</view>
-                <view class="mini-btn" :class="user.frozen ? 'btn-warn' : 'btn-success'" @click="toggleUserStatus(user)">
+                <view class="mini-btn touch-active" @click="openUserEditor(user)">编辑</view>
+                <view class="mini-btn touch-active" @click="adjustUserPoints(user)">调整</view>
+                <view class="mini-btn touch-active" :class="user.frozen ? 'btn-warn' : 'btn-success' touch-active" @click="toggleUserStatus(user)">
                   {{ user.frozen ? '解冻' : '冻结' }}
                 </view>
-                <view class="mini-btn btn-danger" @click="removeUser(user)">删除</view>
+                <view class="mini-btn btn-danger touch-active" @click="removeUser(user)">删除</view>
               </view>
             </view>
             <view v-if="userList.length === 0 && !modalLoading" class="empty-list">
               <text class="empty-text">暂无用户</text>
             </view>
           </view>
-          <PaginationBar :pagination="userPagination" @change="loadUsers" />
         </view>
       </view>
     </view>
@@ -143,7 +142,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">房间管理</text>
-          <view class="modal-close-btn" @click="closeModal('room')">
+          <view class="modal-close-btn touch-active" @click="closeModal('room')">
             <VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
@@ -158,15 +157,14 @@
                 <text class="data-sub">{{ formatGameType(room.gameType) }} | {{ room.level || '-' }}级 | {{ room.maxSeats || 0 }}人桌 | 代理: {{ room.agentName || room.agentId || '-' }}</text>
               </view>
               <view class="data-actions">
-                <view class="mini-btn" @click="viewRoomDetail(room)">详情</view>
-                <view class="mini-btn btn-danger" @click="dissolveRoom(room)">解散</view>
+                <view class="mini-btn touch-active" @click="viewRoomDetail(room)">详情</view>
+                <view class="mini-btn btn-danger touch-active" @click="dissolveRoom(room)">解散</view>
               </view>
             </view>
             <view v-if="allRooms.length === 0 && !modalLoading" class="empty-list">
               <text class="empty-text">暂无房间</text>
             </view>
           </view>
-          <PaginationBar :pagination="roomPagination" @change="loadRooms" />
         </view>
       </view>
     </view>
@@ -176,7 +174,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">房间详情 #{{ roomDetail.roomNo || roomDetail.id }}</text>
-          <view class="modal-close-btn" @click="closeModal('roomDetail')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
+          <view class="modal-close-btn touch-active" @click="closeModal('roomDetail')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
         </view>
         <view class="modal-body">
           <view class="detail-grid">
@@ -198,7 +196,7 @@
             </view>
             <view v-if="roomDetailPlayers.length === 0" class="empty-list"><text class="empty-text">暂无玩家</text></view>
           </view>
-          <view class="detail-actions"><view class="action-btn action-danger" @click="dissolveRoom(roomDetail)">强制结束房间</view></view>
+          <view class="detail-actions"><view class="action-btn action-danger touch-active" @click="dissolveRoom(roomDetail)">强制结束房间</view></view>
         </view>
       </view>
     </view>
@@ -208,13 +206,13 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">代理管理</text>
-          <view class="modal-close-btn" @click="closeModal('agent')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
+          <view class="modal-close-btn touch-active" @click="closeModal('agent')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
         </view>
         <view class="modal-body">
           <view class="search-bar">
             <input class="search-input" v-model="agentSearch" placeholder="搜索代理账号/邀请码" @confirm="searchAgents" />
-            <view class="search-btn" @click="searchAgents">搜索</view>
-            <view class="search-btn btn-primary" @click="openAgentEditor()">新增代理</view>
+            <view class="search-btn touch-active" @click="searchAgents">搜索</view>
+            <view class="search-btn btn-primary touch-active" @click="openAgentEditor()">新增代理</view>
           </view>
           <view class="data-list">
             <view v-for="agent in agentList" :key="agent.id || agent.userId" class="data-item">
@@ -224,17 +222,16 @@
                 <text class="data-sub">ID: {{ agent.id }} | 角色: {{ agent.role === 'top_agent' ? '总代理' : '代理' }} | 邀请码: {{ agent.inviteCode || '-' }} | 筹码: {{ agent.points || 0 }}</text>
               </view>
               <view class="data-actions">
-                <view class="mini-btn" @click="openAgentEditor(agent)">编辑</view>
-                <view class="mini-btn" @click="adjustAgentPoints(agent)">调筹码</view>
-                <view class="mini-btn" :class="agent.frozen ? 'btn-warn' : 'btn-success'" @click="toggleAgentStatus(agent)">
+                <view class="mini-btn touch-active" @click="openAgentEditor(agent)">编辑</view>
+                <view class="mini-btn touch-active" @click="adjustAgentPoints(agent)">调筹码</view>
+                <view class="mini-btn touch-active" :class="agent.frozen ? 'btn-warn' : 'btn-success' touch-active" @click="toggleAgentStatus(agent)">
                   {{ agent.frozen ? '解冻' : '冻结' }}
                 </view>
-                <view class="mini-btn btn-danger" @click="removeAgent(agent)">删除</view>
+                <view class="mini-btn btn-danger touch-active" @click="removeAgent(agent)">删除</view>
               </view>
             </view>
             <view v-if="agentList.length === 0 && !modalLoading" class="empty-list"><text class="empty-text">暂无代理数据</text></view>
           </view>
-          <PaginationBar :pagination="agentPagination" @change="loadAgents" />
         </view>
       </view>
     </view>
@@ -245,7 +242,7 @@
       <view class="modal-content glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">{{ editingAgent ? '编辑代理' : '新增代理' }}</text>
-          <view class="modal-close-btn" @click="closeModal('agentEditor')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
+          <view class="modal-close-btn touch-active" @click="closeModal('agentEditor')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
         </view>
         <view class="modal-body">
           <view class="form-group">
@@ -272,8 +269,8 @@
             <input class="input-field" v-model="agentForm.points" type="number" placeholder="请输入初始筹码" />
           </view>
           <view class="form-actions">
-            <view class="action-btn" @click="closeModal('agentEditor')"><text>取消</text></view>
-            <view class="action-btn action-primary" @click="saveAgent"><text>保存</text></view>
+            <view class="action-btn touch-active" @click="closeModal('agentEditor')"><text>取消</text></view>
+            <view class="action-btn action-primary touch-active" @click="saveAgent"><text>保存</text></view>
           </view>
         </view>
       </view>
@@ -283,7 +280,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">财务中心</text>
-          <view class="modal-close-btn" @click="closeModal('finance')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
+          <view class="modal-close-btn touch-active" @click="closeModal('finance')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
         </view>
         <view class="modal-body">
           <view class="finance-stats">
@@ -313,7 +310,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">审计日志</text>
-          <view class="modal-close-btn" @click="closeModal('audit')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
+          <view class="modal-close-btn touch-active" @click="closeModal('audit')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
         </view>
         <view class="modal-body">
           <view class="log-list">
@@ -342,7 +339,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">系统配置</text>
-          <view class="modal-close-btn" @click="closeModal('config')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
+          <view class="modal-close-btn touch-active" @click="closeModal('config')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
         </view>
         <view class="modal-body">
           <view class="config-group">
@@ -351,8 +348,8 @@
             <view class="config-item"><text class="config-label">下载地址</text><input class="config-input" v-model="systemConfig.app_download_url" /></view>
           </view>
           <view class="config-actions">
-            <view class="config-btn config-btn-primary" @click="saveSystemConfig">保存配置</view>
-            <view class="config-btn" @click="reloadEconomyConfig">重载经济模型</view>
+            <view class="config-btn config-btn-primary touch-active" @click="saveSystemConfig">保存配置</view>
+            <view class="config-btn touch-active" @click="reloadEconomyConfig">重载经济模型</view>
           </view>
         </view>
       </view>
@@ -363,7 +360,7 @@
       <view class="modal-content glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">调整用户筹码</text>
-          <view class="modal-close-btn" @click="showAdjustModal = false"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
+          <view class="modal-close-btn touch-active" @click="showAdjustModal = false"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
         </view>
         <view class="modal-body">
           <view class="adjust-user-info">
@@ -379,8 +376,8 @@
             <input class="form-input" v-model="adjustReason" placeholder="请输入原因" />
           </view>
           <view class="modal-footer">
-            <view class="btn-cancel" @click="showAdjustModal = false">取消</view>
-            <view class="btn-confirm" @click="confirmAdjustPoints">确认调整</view>
+            <view class="btn-cancel touch-active" @click="showAdjustModal = false">取消</view>
+            <view class="btn-confirm touch-active" @click="confirmAdjustPoints">确认调整</view>
           </view>
         </view>
       </view>
@@ -391,7 +388,7 @@
       <view class="modal-content modal-xlarge glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">权限管理</text>
-          <view class="modal-close-btn" @click="closeModal('permission')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
+          <view class="modal-close-btn touch-active" @click="closeModal('permission')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
         </view>
         <view class="modal-body permission-body">
           <view class="permission-role-tabs">
@@ -403,8 +400,8 @@
           <view class="permission-toolbar">
             <text class="permission-hint">勾选 = 该角色可见/可用，取消勾选 = 隐藏</text>
             <view class="permission-actions">
-              <view class="mini-btn btn-ghost" @click="resetCurrentRolePermissions">重置默认</view>
-              <view class="mini-btn btn-primary" :class="{ disabled: !permissionDirty }" @click="savePermissions">{{ permissionDirty ? '保存修改' : '已保存' }}</view>
+              <view class="mini-btn btn-ghost touch-active" @click="resetCurrentRolePermissions">重置默认</view>
+              <view class="mini-btn btn-primary touch-active" :class="{ disabled: !permissionDirty }" @click="savePermissions">{{ permissionDirty ? '保存修改' : '已保存' }}</view>
             </view>
           </view>
           <scroll-view class="permission-matrix-scroll" scroll-y>
@@ -435,7 +432,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">客服管理</text>
-          <view class="modal-close-btn" @click="closeModal('cs')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
+          <view class="modal-close-btn touch-active" @click="closeModal('cs')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
         </view>
         <view class="modal-body">
           <view class="cs-tabs">
@@ -447,7 +444,7 @@
               <view class="cs-stat-item"><text class="cs-stat-value">{{ csStaffList.filter(s => s.csStatus === 'online').length }}</text><text class="cs-stat-label">接待中</text></view>
               <view class="cs-stat-item"><text class="cs-stat-value">{{ csStaffList.filter(s => s.csStatus === 'offline').length }}</text><text class="cs-stat-label">已关闭</text></view>
               <view class="cs-stat-item"><text class="cs-stat-value">{{ csStaffList.length }}</text><text class="cs-stat-label">总客服</text></view>
-              <view class="cs-stat-item"><view class="mini-btn btn-primary" @click="openUserEditor(null, 'customer_service')">新增客服</view></view>
+              <view class="cs-stat-item"><view class="mini-btn btn-primary touch-active" @click="openUserEditor(null, 'customer_service')">新增客服</view></view>
             </view>
             <view v-if="csStaffLoading" class="cs-loading"><text>加载中...</text></view>
             <view v-else class="cs-staff-list">
@@ -459,9 +456,9 @@
                 </view>
                 <view class="cs-staff-status" :class="staff.csStatus === 'online' ? 'online' : 'offline'"><text>{{ staff.csStatus === 'online' ? '接待中' : '已关闭' }}</text></view>
                 <view class="cs-staff-action">
-                  <view class="mini-btn" @click="openUserEditor(staff)">编辑</view>
-                  <view class="cs-toggle-btn" :class="staff.csStatus === 'online' ? 'btn-off' : 'btn-on'" @click="toggleCsStatus(staff)"><text>{{ staff.csStatus === 'online' ? '关闭接待' : '开启接待' }}</text></view>
-                  <view class="mini-btn btn-danger" @click="removeUser(staff)">删除</view>
+                  <view class="mini-btn touch-active" @click="openUserEditor(staff)">编辑</view>
+                  <view class="cs-toggle-btn touch-active" :class="staff.csStatus === 'online' ? 'btn-off' : 'btn-on' touch-active" @click="toggleCsStatus(staff)"><text>{{ staff.csStatus === 'online' ? '关闭接待' : '开启接待' }}</text></view>
+                  <view class="mini-btn btn-danger touch-active" @click="removeUser(staff)">删除</view>
                 </view>
               </view>
               <view v-if="csStaffList.length === 0" class="cs-empty"><text>暂无客服人员</text></view>
@@ -474,7 +471,7 @@
               <view class="cs-stat-card"><text class="cs-stat-card-value">{{ csStats.avgResponseTime || 0 }}s</text><text class="cs-stat-card-label">平均响应</text></view>
               <view class="cs-stat-card"><text class="cs-stat-card-value">{{ csStats.satisfactionRate || 0 }}%</text><text class="cs-stat-card-label">满意度</text></view>
             </view>
-            <view class="cs-stats-refresh"><view class="mini-btn btn-primary" @click="loadCsStats">刷新统计</view></view>
+            <view class="cs-stats-refresh"><view class="mini-btn btn-primary touch-active" @click="loadCsStats">刷新统计</view></view>
           </view>
         </view>
       </view>
@@ -485,7 +482,7 @@
       <view class="modal-content glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">{{ userEditor.mode === 'create' ? (userEditor.defaultRole === 'customer_service' ? '新增客服' : '新增用户') : '编辑用户' }}</text>
-          <view class="modal-close-btn" @click="closeUserEditor"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
+          <view class="modal-close-btn touch-active" @click="closeUserEditor"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
         </view>
         <view class="modal-body">
           <view class="form-group">
@@ -512,9 +509,9 @@
           </view>
         </view>
         <view class="modal-footer">
-          <view v-if="userEditor.mode === 'edit'" class="modal-btn btn-danger" @click="removeUser(userEditor.target)">删除用户</view>
-          <view class="modal-btn btn-primary" @click="saveUserEditor">保存</view>
-          <view class="modal-btn" @click="closeUserEditor">取消</view>
+          <view v-if="userEditor.mode === 'edit'" class="modal-btn btn-danger touch-active" @click="removeUser(userEditor.target)">删除用户</view>
+          <view class="modal-btn btn-primary touch-active" @click="saveUserEditor">保存</view>
+          <view class="modal-btn touch-active" @click="closeUserEditor">取消</view>
         </view>
       </view>
     </view>
@@ -524,7 +521,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">经济配置</text>
-          <view class="modal-close-btn" @click="closeModal('economy')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
+          <view class="modal-close-btn touch-active" @click="closeModal('economy')"><VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" /></view>
         </view>
         <view class="modal-body">
           <view class="economy-tabs">
@@ -536,7 +533,7 @@
             <view v-for="cfg in economyGameConfigs" :key="cfg.gameType" class="economy-game-card">
               <view class="economy-game-header">
                 <text class="economy-game-name">{{ cfg.gameName || formatGameType(cfg.gameType) }}</text>
-                <view class="mini-btn btn-primary" @click="editEconomyGame(cfg)">编辑</view>
+                <view class="mini-btn btn-primary touch-active" @click="editEconomyGame(cfg)">编辑</view>
               </view>
               <view class="economy-game-meta">
                 <text>抽水: {{ cfg.rakeRate || 0 }}%</text>
@@ -600,14 +597,13 @@ import { get } from '../../api/request.js'
 import { getFontScale } from '../../utils/fontScale.js'
 import ImmersivePage from '../../components/ui/ImmersivePage.vue'
 import VIcon from '../../components/ui/VIcon.vue'
-import PaginationBar from '../../components/ui/PaginationBar.vue'
 import AdminOperationsDesk from '../../components/admin/AdminOperationsDesk.vue'
 import { getFeaturesByCategory } from '../../utils/featurePermissions.js'
 import { getAllPermissions, updateRolePermissions, resetRolePermissions } from '../../api/permissions.js'
 
 export default {
   name: 'AdminDashboard',
-  components: { ImmersivePage, VIcon, PaginationBar, AdminOperationsDesk },
+  components: { ImmersivePage, VIcon, AdminOperationsDesk },
 
   data() {
     return {

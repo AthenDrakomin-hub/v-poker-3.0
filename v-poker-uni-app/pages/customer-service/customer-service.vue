@@ -1,13 +1,13 @@
 ﻿<template>
   <ImmersivePage title="客服工作台" :show-header="true" :scrollable="false" page-class="theme-cs" :page-style="{ '--font-scale': fontScale }">
     <template #header-left>
-      <view class="back-btn" @click="goBack">
+      <view class="back-btn touch-active" @click="goBack">
         <VIcon name="back" :size="3.3" color="var(--color-text)" />
       </view>
     </template>
     <template #header-right>
       <view class="header-right-actions">
-        <view class="msg-btn" @click="openMsgCenter">
+        <view class="msg-btn touch-active" @click="openMsgCenter">
           <VIcon name="warning" :size="3" color="var(--color-text)" />
           <view v-if="msgUnreadCount > 0" class="msg-dot">{{ msgUnreadCount > 99 ? '99+' : msgUnreadCount }}</view>
         </view>
@@ -61,7 +61,7 @@
           <view class="search-box">
             <VIcon name="search" :size="1.5" color="rgba(255,255,255,0.4)" />
             <input class="search-input" v-model="searchKeyword" placeholder="搜索账号/昵称" placeholder-class="search-placeholder" @confirm="onSearch" />
-            <view class="search-btn" @click="onSearch">
+            <view class="search-btn touch-active" @click="onSearch">
               <text>{{ isSearching ? '...' : '搜索' }}</text>
             </view>
           </view>
@@ -86,7 +86,6 @@
               <text class="empty-text">暂无玩家</text>
             </view>
           </scroll-view>
-          <PaginationBar :pagination="playerPagination" @change="loadPlayers" />
       </view>
 
       <!-- 右侧：玩家详情+操作流水 -->
@@ -159,7 +158,6 @@
               <text class="empty-text">暂无操作记录</text>
             </view>
           </scroll-view>
-          <PaginationBar :pagination="timelinePagination" @change="loadTimeline" />
         </view>
       </view>
     </view>
@@ -173,7 +171,7 @@
         <view v-for="cs in auditStats" :key="cs.id" class="audit-stat-card glass">
           <view class="audit-stat-header">
             <view class="audit-stat-avatar">
-              <image class="audit-stat-avatar-img" src="https://static.yefeng.us.cc/static/images/cs-avatar.png" mode="aspectFill" />
+              <PreviewImage class="audit-stat-avatar-img" src="https://static.yefeng.us.cc/static/images/cs-avatar.png" :urls="['https://static.yefeng.us.cc/static/images/cs-avatar.png']" mode="aspectFill" />
             </view>
             <text class="audit-stat-name">{{ cs.nickname || cs.account }}</text>
             <view class="audit-stat-online" :class="{ online: cs.lastActive }">
@@ -217,10 +215,10 @@
           <input class="audit-filter-input" v-model="auditFilter.endDate" placeholder="结束日期 YYYY-MM-DD" />
         </view>
         <view class="audit-filter-row">
-          <view class="audit-filter-btn" @click="loadAuditMessages">
+          <view class="audit-filter-btn touch-active" @click="loadAuditMessages">
             <text>查询</text>
           </view>
-          <view class="audit-filter-btn reset" @click="resetAuditFilter">
+          <view class="audit-filter-btn reset touch-active" @click="resetAuditFilter">
             <text>重置</text>
           </view>
         </view>
@@ -262,7 +260,7 @@
       <view class="modal-content glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">调整玩家筹码</text>
-          <view class="modal-close-btn" @click="showAdjustModal = false">
+          <view class="modal-close-btn touch-active" @click="showAdjustModal = false">
             <VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
@@ -274,10 +272,10 @@
           <view class="form-group">
             <text class="form-label">调整类型</text>
             <view class="type-group">
-              <view class="type-btn" :class="{ active: adjustType === 'add' }" @click="adjustType = 'add'">
+              <view class="type-btn touch-active" :class="{ active: adjustType === 'add' }" @click="adjustType = 'add'">
                 <text>增加</text>
               </view>
-              <view class="type-btn" :class="{ active: adjustType === 'deduct' }" @click="adjustType = 'deduct'">
+              <view class="type-btn touch-active" :class="{ active: adjustType === 'deduct' }" @click="adjustType = 'deduct'">
                 <text>扣除</text>
               </view>
             </view>
@@ -292,8 +290,8 @@
           </view>
         </view>
         <view class="modal-footer">
-          <view class="btn-cancel" @click="showAdjustModal = false">取消</view>
-          <view class="btn-confirm" :class="{ disabled: isAdjusting }" @click="confirmAdjust">
+          <view class="btn-cancel touch-active" @click="showAdjustModal = false">取消</view>
+          <view class="btn-confirm touch-active" :class="{ disabled: isAdjusting }" @click="confirmAdjust">
             {{ isAdjusting ? '提交中...' : '确认调整' }}
           </view>
         </view>
@@ -305,7 +303,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">游戏记录 - {{ selectedPlayer?.nickname || selectedPlayer?.account || '' }}</text>
-          <view class="modal-close-btn" @click="showGameHistoryModal = false">
+          <view class="modal-close-btn touch-active" @click="showGameHistoryModal = false">
             <VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
@@ -356,7 +354,7 @@
       <view class="modal-content glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">登录记录 - {{ selectedPlayer?.nickname || selectedPlayer?.account || '' }}</text>
-          <view class="modal-close-btn" @click="showLoginHistoryModal = false">
+          <view class="modal-close-btn touch-active" @click="showLoginHistoryModal = false">
             <VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
@@ -446,11 +444,10 @@ import { getAdminMessages, getAdminMessageStats } from '../../api/messages.js'
 import ImmersivePage from '../../components/ui/ImmersivePage.vue'
 import VIcon from '../../components/ui/VIcon.vue'
 import ChatPanel from '../../components/ui/ChatPanel.vue'
-import PaginationBar from '../../components/ui/PaginationBar.vue'
 
 export default {
   name: 'CustomerService',
-  components: { ImmersivePage, VIcon, ChatPanel, PaginationBar },
+  components: { ImmersivePage, VIcon, ChatPanel },
   data() {
     return {
       searchKeyword: '',

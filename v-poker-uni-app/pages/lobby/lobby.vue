@@ -90,7 +90,7 @@
       <view class="modal-content glass create-room-modal" @click.stop>
         <view class="modal-header">
           <text class="modal-title">创建房间</text>
-          <view class="modal-close-btn" @click="showCreateModal = false">
+          <view class="modal-close-btn touch-active" @click="showCreateModal = false">
             <VIcon name="close" :size="2.2" color="var(--color-text-muted)" />
           </view>
         </view>
@@ -124,7 +124,7 @@
               <text>{{ createError }}</text>
               <view
                 v-if="createError.includes('失败') || createError.includes('超时')"
-                class="retry-btn"
+                class="retry-btn touch-active"
                 @click="loadRoomTemplates"
               >
                 <text>重新加载</text>
@@ -205,9 +205,9 @@
           </template>
         </view>
         <view class="modal-footer">
-          <view class="btn btn-ghost" @click="showCreateModal = false">取消</view>
+          <view class="btn btn-ghost touch-active" @click="showCreateModal = false">取消</view>
           <view
-            class="btn btn-primary"
+            class="btn btn-primary touch-active"
             :class="{ disabled: isCreating || createLoading || availableTemplates.length === 0 }"
             @click="confirmCreateRoom"
           >
@@ -222,7 +222,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">我的战绩</text>
-          <view class="modal-close-btn" @click="showRecordsModal = false">
+          <view class="modal-close-btn touch-active" @click="showRecordsModal = false">
             <VIcon name="close" :size="2.2" color="var(--color-text-muted)" />
           </view>
         </view>
@@ -278,7 +278,7 @@
       <view class="modal-content glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">{{ safeAction === 'deposit' ? '存入保险柜' : '取出保险柜' }}</text>
-          <view class="modal-close-btn" @click="showSafeForm = false">
+          <view class="modal-close-btn touch-active" @click="showSafeForm = false">
             <VIcon name="close" :size="2.2" color="var(--color-text-muted)" />
           </view>
         </view>
@@ -291,8 +291,8 @@
             <text>{{ safeAction === 'deposit' ? '当前钱包余额: ' + (userState.points || 0) : '保险柜余额: ' + (safeBalance || 0) }}</text>
           </view>
           <view class="modal-footer">
-            <view class="btn btn-ghost" @click="showSafeForm = false">取消</view>
-            <view class="btn btn-primary" :class="{ disabled: isTransferring }" @click="confirmSafeAction">
+            <view class="btn btn-ghost touch-active" @click="showSafeForm = false">取消</view>
+            <view class="btn btn-primary touch-active" :class="{ disabled: isTransferring }" @click="confirmSafeAction">
               {{ isTransferring ? '处理中...' : '确认' + (safeAction === 'deposit' ? '存入' : '取出') }}
             </view>
           </view>
@@ -324,7 +324,7 @@
       <view class="rules-modal glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">{{ rulesData?.gameName || '游戏规则' }}</text>
-          <view class="modal-close-btn" @click="showRulesModal = false">
+          <view class="modal-close-btn touch-active" @click="showRulesModal = false">
             <VIcon name="close" :size="2.2" color="var(--color-text-muted)" />
           </view>
         </view>
@@ -380,7 +380,7 @@
     <!-- 快捷面板 -->
     <view v-if="quickPanel" class="modal-overlay" @click="quickPanel = ''">
       <view class="quick-panel glass" @click.stop>
-        <view class="modal-header"><text class="modal-title">{{ quickPanel === 'message' ? '消息中心' : '帮助中心' }}</text><view class="modal-close-btn" @click="quickPanel = ''"><VIcon name="close" :size="2.2" color="var(--color-text-muted)" /></view></view>
+        <view class="modal-header"><text class="modal-title">{{ quickPanel === 'message' ? '消息中心' : '帮助中心' }}</text><view class="modal-close-btn touch-active" @click="quickPanel = ''"><VIcon name="close" :size="2.2" color="var(--color-text-muted)" /></view></view>
         <view class="quick-panel-body">
           <view v-if="quickPanel === 'message'" class="quick-empty"><text>暂无未读消息</text><text>房间状态、筹码变动和平台通知将显示在这里</text></view>
           <view v-else class="help-list"><view class="help-item"><text>继续游戏</text><text>从“我的房间”直接进入已加入房间，无需重复输入密码。</text></view><view class="help-item"><text>代理主持</text><text>代理创建房间后可复制邀请信息，并以房主身份管理房间状态。</text></view><view class="help-item"><text>安全提醒</text><text>不要向他人提供账号、密码或验证码，筹码仅限平台虚拟用途。</text></view></view>

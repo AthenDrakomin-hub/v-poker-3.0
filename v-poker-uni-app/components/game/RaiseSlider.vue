@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <view v-if="visible" class="raise-slider-panel glass">
     <view class="slider-header">
       <text class="slider-title">加注金额</text>
@@ -16,14 +16,14 @@
       <text class="mark-text" @click="setQuick(max)">{{ formatAmount(max) }}</text>
     </view>
     <view class="slider-quick-btns">
-      <view class="quick-btn" @click="setQuick(callAmount)"><text>跟注</text></view>
-      <view class="quick-btn" @click="setQuick(Math.floor(pot * 0.5))"><text>1/2池</text></view>
-      <view class="quick-btn" @click="setQuick(pot)"><text>满池</text></view>
-      <view class="quick-btn allin" @click="setQuick(max)"><text>全下</text></view>
+      <view class="quick-btn touch-active" @click="setQuick(callAmount)"><text>跟注</text></view>
+      <view class="quick-btn touch-active" @click="setQuick(Math.floor(pot * 0.5))"><text>1/2池</text></view>
+      <view class="quick-btn touch-active" @click="setQuick(pot)"><text>满池</text></view>
+      <view class="quick-btn allin touch-active" @click="setQuick(max)"><text>全下</text></view>
     </view>
     <view class="slider-actions">
-      <view class="action-btn cancel" @click="$emit('cancel')"><text>取消</text></view>
-      <view class="action-btn confirm" @click="confirmRaise"><text>确认加注</text></view>
+      <view class="action-btn cancel touch-active" @click="$emit('cancel')"><text>取消</text></view>
+      <view class="action-btn confirm touch-active" @click="confirmRaise"><text>确认加注</text></view>
     </view>
   </view>
 </template>

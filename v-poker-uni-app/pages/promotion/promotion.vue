@@ -2,7 +2,7 @@
   <ImmersivePage title="总代理工作台" :show-header="true" :scrollable="true" page-class="theme-promotion" :page-style="{ '--font-scale': fontScale }">
     <!-- 自定义头部：返回按钮 + 标题 + 总代理徽章 -->
     <template #header-left>
-      <view class="back-btn" @click="goBack">
+      <view class="back-btn touch-active" @click="goBack">
         <VIcon name="back" :size="3.3" color="var(--color-text)" />
       </view>
     </template>
@@ -125,7 +125,7 @@
             </view>
           </view>
           <view class="room-actions">
-            <view class="action-btn action-danger" @click="dissolveSubRoom(room)">
+            <view class="action-btn action-danger touch-active" @click="dissolveSubRoom(room)">
               <text>解散</text>
             </view>
           </view>
@@ -143,7 +143,7 @@
       <view class="section-header">
         <text class="section-title">代理管理</text>
         <view class="header-actions">
-          <view class="invite-btn" @click="showInviteModal = true">
+          <view class="invite-btn touch-active" @click="showInviteModal = true">
             <VIcon name="plus" :size="2.7" color="#fff" />
             <text>生成邀请码</text>
           </view>
@@ -174,7 +174,6 @@
           <text class="empty-text">暂无代理</text>
         </view>
       </view>
-      <PaginationBar :pagination="agentPagination" @change="loadAgents" />
     </view>
       </view>
     </view>
@@ -187,7 +186,7 @@
       <view class="modal-content glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">生成邀请码</text>
-          <view class="modal-close-btn" @click="showInviteModal = false">
+          <view class="modal-close-btn touch-active" @click="showInviteModal = false">
             <VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
@@ -195,7 +194,7 @@
           <view class="form-group">
             <text class="form-label">邀请层级</text>
             <view class="level-group">
-              <view v-for="level in inviteLevels" :key="level.value" class="level-btn" :class="{ active: inviteLevel === level.value }" @click="inviteLevel = level.value"><text>{{ level.label }}</text></view>
+              <view v-for="level in inviteLevels" :key="level.value" class="level-btn touch-active" :class="{ active: inviteLevel === level.value }" @click="inviteLevel = level.value"><text>{{ level.label }}</text></view>
             </view>
           </view>
           <view class="form-group">
@@ -206,11 +205,11 @@
         <view class="invite-result" v-if="generatedCode">
           <text class="result-label">邀请码</text>
           <text class="result-code">{{ generatedCode }}</text>
-          <view class="copy-btn" @click="copyCode"><text>复制</text></view>
+          <view class="copy-btn touch-active" @click="copyCode"><text>复制</text></view>
         </view>
         <view class="modal-footer">
-          <view class="btn-cancel" @click="showInviteModal = false">取消</view>
-          <view class="btn-confirm" :class="{ disabled: isGenerating }" @click="generateCode">{{ isGenerating ? '生成中...' : '生成' }}</view>
+          <view class="btn-cancel touch-active" @click="showInviteModal = false">取消</view>
+          <view class="btn-confirm touch-active" :class="{ disabled: isGenerating }" @click="generateCode">{{ isGenerating ? '生成中...' : '生成' }}</view>
         </view>
       </view>
     </view>
@@ -220,7 +219,7 @@
       <view class="modal-content modal-large glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">收益分配详情</text>
-          <view class="modal-close-btn" @click="showDistributionDetail = false">
+          <view class="modal-close-btn touch-active" @click="showDistributionDetail = false">
             <VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
@@ -286,7 +285,7 @@
       <view class="modal-content glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">代理详情</text>
-          <view class="modal-close-btn" @click="showAgentDetailModal = false">
+          <view class="modal-close-btn touch-active" @click="showAgentDetailModal = false">
             <VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
@@ -334,12 +333,12 @@
             </view>
           </view>
           <view class="agent-detail-actions">
-            <view class="action-btn action-primary" @click="openAdjustPoints(selectedAgent)">
+            <view class="action-btn action-primary touch-active" @click="openAdjustPoints(selectedAgent)">
               <VIcon name="coin" :size="2.7" color="#fff" />
               <text>调整筹码</text>
             </view>
             <view
-              class="action-btn"
+              class="action-btn touch-active"
               :class="selectedAgent?.status === 'frozen' || selectedAgent?.frozen ? 'action-success' : 'action-danger'"
               @click="toggleFreezeAgent(selectedAgent)"
             >
@@ -360,7 +359,7 @@
       <view class="modal-content glass" @click.stop>
         <view class="modal-header">
           <text class="modal-title">调整代理筹码</text>
-          <view class="modal-close-btn" @click="showAdjustModal = false">
+          <view class="modal-close-btn touch-active" @click="showAdjustModal = false">
             <VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
@@ -396,8 +395,8 @@
           </view>
         </view>
         <view class="modal-footer">
-          <view class="btn-cancel" @click="showAdjustModal = false">取消</view>
-          <view class="btn-confirm" :class="{ disabled: isAdjusting }" @click="confirmAdjustPoints">
+          <view class="btn-cancel touch-active" @click="showAdjustModal = false">取消</view>
+          <view class="btn-confirm touch-active" :class="{ disabled: isAdjusting }" @click="confirmAdjustPoints">
             {{ isAdjusting ? '调整中...' : '确认调整' }}
           </view>
         </view>
@@ -423,11 +422,10 @@ import { getMe } from '../../api/auth.js'
 import { getFontScale } from '../../utils/fontScale.js'
 import ImmersivePage from '../../components/ui/ImmersivePage.vue'
 import VIcon from '../../components/ui/VIcon.vue'
-import PaginationBar from '../../components/ui/PaginationBar.vue'
 
 export default {
   name: 'PromotionCenter',
-  components: { ImmersivePage, VIcon, PaginationBar },
+  components: { ImmersivePage, VIcon },
   data() {
     return {
       userState,
