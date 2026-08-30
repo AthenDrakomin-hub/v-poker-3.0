@@ -17,8 +17,6 @@ import gamesRoutes from "./routes/games.routes";
 import economyV2Routes from "./routes/economyV2.routes";
 import walletRoutes from "./routes/wallet.routes";
 import messagesRoutes from "./routes/messages.routes";
-import botRoutes from "./routes/bot.routes";
-import { initBotService } from "./services/botService";
 import { loadGameEconomyConfig } from "./lib/gameEconomy";
 import { appRouter } from "./routes/app.routes";
 import { setupRoomSockets } from "./socket/roomSocket";
@@ -116,7 +114,6 @@ app.use("/api/admin/economy-v2", economyV2Routes);
 app.use("/api/agent", agentRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/rooms", roomsRoutes);
-app.use("/api/bot", botRoutes);
 app.use("/api/assets", assetsRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/messages", messagesRoutes);
@@ -157,11 +154,6 @@ server.listen(PORT, () => {
 
   startTimeoutChecker();
   startRoomRecycler();
-
-  // 初始化机器人陪玩服务
-  initBotService().catch((e) => {
-    console.error("[BotService] 初始化失败:", e.message);
-  });
 });
 
 export { io };

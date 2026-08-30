@@ -90,26 +90,6 @@ export function kickPlayer(roomId, userId) {
   return post(`/api/rooms/${roomId}/kick`, { targetUserId: userId })
 }
 
-// 添加机器人到房间（房主）
-export function addBotToRoom(roomId) {
-  return post(`/api/bot/rooms/${roomId}/add`, {})
-}
-
-// 移除房间内机器人（房主）
-export function removeBotFromRoom(roomId, botUserId) {
-  return post(`/api/bot/rooms/${roomId}/remove`, { botUserId })
-}
-
-// 获取房间内机器人列表
-export function getRoomBots(roomId) {
-  return get(`/api/bot/rooms/${roomId}/list`)
-}
-
-// 获取可用机器人数量
-export function getAvailableBots() {
-  return get('/api/bot/available')
-}
-
 // 获取房间模板配置
 export function getRoomTemplates(gameType) {
   return get(`/api/rooms/templates/${gameType}`)

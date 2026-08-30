@@ -96,9 +96,6 @@
       <view v-if="!hostPanelCollapsed" class="host-action" @click="runHostAction(roomInfo?.status === 'paused' ? 'resume' : 'pause')">{{ roomInfo?.status === 'paused' ? '恢复房间' : '暂停房间' }}</view>
       <view v-if="!hostPanelCollapsed" class="host-action" @click="showChipAdjust = true">筹码调整</view>
       <view v-if="!hostPanelCollapsed" class="host-action" @click="showKickModal = true">踢出玩家</view>
-      <view v-if="!hostPanelCollapsed" class="host-action bot-action" @click="handleAddBot" :class="{ disabled: addingBot }">
-        <text>{{ addingBot ? '添加中...' : '添加机器人' }}</text>
-      </view>
       <view v-if="!hostPanelCollapsed" class="host-action danger" @click="confirmEarlySettle"><VIcon name="warning" :size="1.8" color="#fca5a5" /><text>提前结算</text></view>
     </view>
 
@@ -1320,7 +1317,7 @@ import ComparePanel from '../../components/game/ComparePanel.vue'
 import HandTypeHint from '../../components/game/HandTypeHint.vue'
 import { userState, fetchUserInfo, updatePoints } from '../../store/user.js'
 import { formatPoints, formatGameType } from '../../utils/format.js'
-import { getRoom, getRoomHand, getRoomHandSnapshot, startHand, readyRoom, readyNext, performAction, sendRoomChat, continueRoom, pauseRoom, resumeRoom, earlySettle, adjustRoomPoints, kickPlayer, addBotToRoom } from '../../api/rooms.js'
+import { getRoom, getRoomHand, getRoomHandSnapshot, startHand, readyRoom, readyNext, performAction, sendRoomChat, continueRoom, pauseRoom, resumeRoom, earlySettle, adjustRoomPoints, kickPlayer } from '../../api/rooms.js'
 import { getMyRoomRounds } from '../../api/profile.js'
 import { getThemeByGameType } from '../../themes/themeConfig.js'
 import { getSoundManager, getVoiceManager } from '../../utils/sound.js'
@@ -1475,8 +1472,6 @@ export default {
       // 踢出玩家
       showKickModal: false,
       kickingUserId: null,
-      // 机器人
-      addingBot: false,
       // 游戏记录
       showGameHistoryModal: false,
       gameHistoryList: [],
@@ -2230,30 +2225,6 @@ export default {
           }
         }
       })
-    },
-
-    // 添加机器人到房间
-    async handleAddBot() {
-      if (this.addingBot) return
-      if (!this.isWaitingState) {
-        uni.showToast({ title: '仅等待状态可添加机器人', icon: 'none' })
-        return
-      }
-      this.addingBot = true
-      try {
-        const res = await addBotToRoom(this.roomId)
-        if (res.ok) {
-          uni.showToast({ title: '机器人 ' + (res.bot?.nickname || res.bot?.account) + ' 已加入', icon: 'success' })
-          await this.loadRoom()
-          await this.loadHand()
-        } else {
-          uni.showToast({ title: res.error || '添加失败', icon: 'none' })
-        }
-      } catch (e) {
-        uni.showToast({ title: e.error || '添加机器人失败', icon: 'none' })
-      } finally {
-        this.addingBot = false
-      }
     },
 
     // 打开游戏记录
@@ -3540,8 +3511,6 @@ export default {
 
 .host-action.danger { color: #fca5a5; background: rgba(248,113,113,0.14); border: 1px solid rgba(248,113,113,0.4); gap: 0.5vh; }
 .host-action.primary { background: var(--color-gold); color: #1a1a1a; font-weight: 700; }
-.host-action.bot-action { color: #93c5fd; background: rgba(59,130,246,0.14); border: 1px solid rgba(59,130,246,0.4); }
-.host-action.bot-action.disabled { opacity: 0.5; pointer-events: none; }
 
 /* 房主面板折叠 */
 .host-collapsed {

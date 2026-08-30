@@ -25,6 +25,8 @@ export default {
       })
     } catch (e) {}
 
+    // 初始化主体（全局兜底：任何初始化失败不影响页面渲染）
+    try {
     // 初始化网络状态监听（离线提示/恢复自动刷新）
     initNetworkMonitor()
 
@@ -108,6 +110,9 @@ export default {
         }
       })
     })
+    } catch (e) {
+      console.error('[App] onLaunch 初始化异常（已兜底）:', e)
+    }
   },
   onShow: function() {
   },
@@ -123,7 +128,7 @@ export default {
 /* ===== 自定义字体声明（子集化版本，体积减少87%） ===== */
 @font-face {
   font-family: 'ZCOOLXiaoWei';
-  src: url('~@/static/fonts/subset/ZCOOLXiaoWei-Regular-subset.ttf') format('truetype');
+  src: url('/static/fonts/subset/ZCOOLXiaoWei-Regular-subset.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -131,7 +136,7 @@ export default {
 
 @font-face {
   font-family: 'MaShanZheng';
-  src: url('~@/static/fonts/subset/MaShanZheng-Regular-subset.ttf') format('truetype');
+  src: url('/static/fonts/subset/MaShanZheng-Regular-subset.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -139,7 +144,7 @@ export default {
 
 @font-face {
   font-family: 'ShareTechMono';
-  src: url('~@/static/fonts/subset/ShareTechMono-Regular-subset.ttf') format('truetype');
+  src: url('/static/fonts/subset/ShareTechMono-Regular-subset.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -147,7 +152,7 @@ export default {
 
 @font-face {
   font-family: 'JetBrainsMono';
-  src: url('~@/static/fonts/subset/JetBrainsMono-Regular-subset.ttf') format('truetype');
+  src: url('/static/fonts/subset/JetBrainsMono-Regular-subset.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -155,7 +160,7 @@ export default {
 
 @font-face {
   font-family: 'JetBrainsMono';
-  src: url('~@/static/fonts/subset/JetBrainsMono-Bold-subset.ttf') format('truetype');
+  src: url('/static/fonts/subset/JetBrainsMono-Bold-subset.ttf') format('truetype');
   font-weight: bold;
   font-style: normal;
   font-display: swap;
@@ -163,7 +168,7 @@ export default {
 
 @font-face {
   font-family: 'PlayfairDisplay';
-  src: url('~@/static/fonts/subset/PlayfairDisplay-Regular-subset.ttf') format('truetype');
+  src: url('/static/fonts/subset/PlayfairDisplay-Regular-subset.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
