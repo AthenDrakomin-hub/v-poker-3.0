@@ -433,7 +433,7 @@
 </template>
 
 <script>
-import { formatPoints } from '../../utils/format.js'
+import { formatPoints, formatGameType } from '../../utils/format.js'
 import {
   getUserList,
   adjustUserPoints,
