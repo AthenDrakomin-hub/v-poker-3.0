@@ -236,7 +236,7 @@ cd /path/to/api-server
 
 # 拉取代码（或上传）
 git clone https://github.com/AthenDrakomin-hub/v-poker-3.0.git /tmp/repo
-cp -r /tmp/repo/api-server/* /opt/texas-platform/api-server/
+cp -r /tmp/repo/api-server/* /path/to/api-server/
 
 # 配置环境变量
 cp .env.example .env
@@ -508,7 +508,7 @@ cd v-poker-uni-app
 
 ```bash
 # SSH 登录
-ssh root@45.77.31.155
+ssh root@[YOUR_SERVER_IP]
 
 # PM2 服务管理
 pm2 status                     # 查看服务状态
