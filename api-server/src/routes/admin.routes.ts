@@ -5,6 +5,7 @@ import { desc, eq, ilike, or, inArray, and, gte, lte, sql } from "drizzle-orm";
 import { getCurrentUser, hashPassword, genInviteCode } from "@/lib/auth";
 import { audit, getRequestIp, getRequestDevice, getRequestId } from "@/lib/audit";
 import { getConfig, setConfig } from "@/lib/config";
+import { broadcastStateChanged } from "@/socket/roomSocket";
 import { cashOutAll, settleRoom } from "@/lib/settle";
 import { archiveRoom } from "@/lib/roomHistory";
 
@@ -546,6 +547,10 @@ router.post("/rooms/:id/force-end", async (req: Request, res: Response) => {
     account: u.account,
     detail: `强制结束房间 ${room.roomNo}(ID:${roomId}), 流水=${room.totalFlow}, 抽水=${room.totalRake}`,
   });
+
+  // 广播状态变更，通知前端刷新
+  broadcastStateChanged(roomId);
+
   res.json({ ok: true, settlement });
 });
 
