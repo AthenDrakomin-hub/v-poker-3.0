@@ -265,9 +265,7 @@
                 <text>{{ record.result === 'win' ? '+' : '' }}{{ record.profit || record.amount || 0 }}</text>
               </view>
             </view>
-            <view v-if="gameRecords.length === 0" class="empty-list">
-              <text class="empty-text">暂无游戏记录</text>
-            </view>
+            <ListEmpty v-if="gameRecords.length === 0" text="暂无游戏记录" />
           </view>
         </view>
       </view>

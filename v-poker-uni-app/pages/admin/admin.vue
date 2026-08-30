@@ -85,9 +85,7 @@
             </view>
           </view>
         </view>
-        <view v-if="onlineRooms.length === 0 && !isLoading" class="empty-list">
-          <text class="empty-text">暂无在线房间</text>
-        </view>
+        <ListEmpty v-if="onlineRooms.length === 0 && !isLoading" text="暂无在线房间" />
       </view>
     </view>
       </view>
@@ -129,9 +127,7 @@
                 <view class="mini-btn btn-danger touch-active" @click="removeUser(user)">删除</view>
               </view>
             </view>
-            <view v-if="userList.length === 0 && !modalLoading" class="empty-list">
-              <text class="empty-text">暂无用户</text>
-            </view>
+            <ListEmpty v-if="userList.length === 0 && !modalLoading" text="暂无用户" />
           </view>
         </view>
       </view>
@@ -161,9 +157,7 @@
                 <view class="mini-btn btn-danger touch-active" @click="dissolveRoom(room)">解散</view>
               </view>
             </view>
-            <view v-if="allRooms.length === 0 && !modalLoading" class="empty-list">
-              <text class="empty-text">暂无房间</text>
-            </view>
+            <ListEmpty v-if="allRooms.length === 0 && !modalLoading" text="暂无房间" />
           </view>
         </view>
       </view>
@@ -194,7 +188,7 @@
                 <text class="data-sub">座位: {{ p.seat }} | 筹码: {{ p.points || 0 }} | 准备: {{ p.ready ? '是' : '否' }}</text>
               </view>
             </view>
-            <view v-if="roomDetailPlayers.length === 0" class="empty-list"><text class="empty-text">暂无玩家</text></view>
+            <ListEmpty v-if="roomDetailPlayers.length === 0" text="暂无玩家" />
           </view>
           <view class="detail-actions"><view class="action-btn action-danger touch-active" @click="dissolveRoom(roomDetail)">强制结束房间</view></view>
         </view>
@@ -230,7 +224,7 @@
                 <view class="mini-btn btn-danger touch-active" @click="removeAgent(agent)">删除</view>
               </view>
             </view>
-            <view v-if="agentList.length === 0 && !modalLoading" class="empty-list"><text class="empty-text">暂无代理数据</text></view>
+            <ListEmpty v-if="agentList.length === 0 && !modalLoading" text="暂无代理数据" />
           </view>
         </view>
       </view>
@@ -299,7 +293,7 @@
               </view>
               <view class="data-amount" :class="record.amount > 0 ? 'amount-positive' : 'amount-negative'">{{ record.amount > 0 ? '+' : '' }}{{ record.amount || 0 }}</view>
             </view>
-            <view v-if="ledgerList.length === 0 && !modalLoading" class="empty-list"><text class="empty-text">暂无流水记录</text></view>
+            <ListEmpty v-if="ledgerList.length === 0 && !modalLoading" text="暂无流水记录" />
           </view>
         </view>
       </view>
@@ -328,7 +322,7 @@
                 </view>
               </view>
             </view>
-            <view v-if="auditLogs.length === 0 && !modalLoading" class="empty-list"><text class="empty-text">暂无审计日志</text></view>
+            <ListEmpty v-if="auditLogs.length === 0 && !modalLoading" text="暂无审计日志" />
           </view>
         </view>
       </view>
@@ -542,14 +536,14 @@
                 <text>总代返佣: {{ cfg.topAgentCommission || 0 }}%</text>
               </view>
             </view>
-            <view v-if="economyGameConfigs.length === 0" class="empty-list"><text class="empty-text">暂无游戏配置</text></view>
+            <ListEmpty v-if="economyGameConfigs.length === 0" text="暂无游戏配置" />
           </view>
           <view v-else-if="economyTab === 'templates'" class="economy-templates-list">
             <view v-for="tpl in economyTemplates" :key="tpl.id" class="economy-template-card">
               <text class="tpl-name">{{ tpl.name || tpl.level + '级' }}</text>
               <text class="tpl-meta">底注: {{ tpl.ante || 0 }} | 上限: {{ tpl.maxBet || 0 }} | 人数: {{ tpl.maxSeats || 0 }}</text>
             </view>
-            <view v-if="economyTemplates.length === 0" class="empty-list"><text class="empty-text">暂无房间模板</text></view>
+            <ListEmpty v-if="economyTemplates.length === 0" text="暂无房间模板" />
           </view>
           <view v-else class="economy-history-list">
             <view v-for="h in economyHistory" :key="h.id" class="economy-history-item">
@@ -557,7 +551,7 @@
               <text class="history-time">{{ h.time || h.createdAt }}</text>
               <text class="history-operator">{{ h.operator || '-' }}</text>
             </view>
-            <view v-if="economyHistory.length === 0" class="empty-list"><text class="empty-text">暂无修改历史</text></view>
+            <ListEmpty v-if="economyHistory.length === 0" text="暂无修改历史" />
           </view>
         </view>
       </view>

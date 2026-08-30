@@ -288,9 +288,7 @@
                 <text>{{ record.result === 'win' ? '+' : '' }}{{ record.profit || record.amount || 0 }}</text>
               </view>
             </view>
-            <view v-if="playerGameHistory.length === 0" class="empty-list">
-              <text class="empty-text">{{ gameHistoryUnavailable ? '后端暂未提供该玩家的房间历史接口' : '暂无游戏记录' }}</text>
-            </view>
+            <ListEmpty v-if="playerGameHistory.length === 0" text="{{ gameHistoryUnavailable ? '后端暂未提供该玩家的房间历史接口' : '暂无游戏记录' }}" />
           </view>
         </view>
       </view>
@@ -350,7 +348,7 @@ export default {
       players: [],
       transactions: [],
       playerPagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 },
-      transactionPagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 },
+      transactionPagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 }, loadingMore: { players: false, transactions: false }, noMore: { players: false, transactions: false },
       // 玩家详情
       showPlayerDetailModal: false,
       selectedPlayer: null,
@@ -387,6 +385,10 @@ export default {
   },
   onPullDownRefresh() {
     this.loadAllData().finally(() => uni.stopPullDownRefresh())
+  },
+  onReachBottom() {
+    if (!this.noMore.players && !this.loadingMore.players) { this.loadingMore.players = true; this.loadPlayers((this.playerPagination?.page || 1) + 1).finally(() => { this.loadingMore.players = false }) }
+    if (!this.noMore.transactions && !this.loadingMore.transactions) { this.loadingMore.transactions = true; this.loadTransactions((this.transactionPagination?.page || 1) + 1).finally(() => { this.loadingMore.transactions = false }) }
   },
   methods: {
     formatPoints,
@@ -462,7 +464,7 @@ export default {
         const params = { page, pageSize: this.playerPagination.pageSize }
         if (this.searchKeyword.trim()) params.q = this.searchKeyword.trim()
         const data = await getAgentPlayers(params)
-        this.players = Array.isArray(data.data) ? data.data : (data.players || data.list || [])
+        const _pList = Array.isArray(data.data) ? data.data : (data.players || data.list || []); this.players = page > 1 ? [...this.players, ..._pList] : _pList; if (_pList.length < this.playerPagination.pageSize) this.noMore.players = true
         this.playerPagination = data.pagination || { ...this.playerPagination, page }
         if (data.inviteCode) {
           this.inviteCode = data.inviteCode
@@ -476,7 +478,7 @@ export default {
     async loadTransactions(page = 1) {
       try {
         const data = await getAgentChipTransactions({ page, pageSize: this.transactionPagination.pageSize })
-        this.transactions = Array.isArray(data.data) ? data.data : (data.items || data.list || [])
+        const _tList = Array.isArray(data.data) ? data.data : (data.items || data.list || []); this.transactions = page > 1 ? [...this.transactions, ..._tList] : _tList; if (_tList.length < this.transactionPagination.pageSize) this.noMore.transactions = true
         this.transactionPagination = data.pagination || { ...this.transactionPagination, page }
       } catch (e) {
         console.warn('[Workbench] 流水记录加载失败', e)

@@ -66,7 +66,7 @@
             </view>
           </view>
         </view>
-          <scroll-view class="player-list" scroll-y>
+          <scroll-view class="player-list" scroll-y @scrolltolower="onPlayerListLoadMore">
           <view v-for="player in filteredPlayers" :key="player.id" class="player-item" :class="{ active: selectedPlayer?.id === player.id }" @click="selectPlayer(player)">
             <view class="player-avatar" :style="{ background: getAvatarColor(player.nickname) }">
               <text class="avatar-text">{{ (player.nickname || player.account || '?').charAt(0) }}</text>
@@ -82,9 +82,7 @@
               <text class="points-num">{{ formatPoints(player.points || 0) }}</text>
             </view>
           </view>
-            <view v-if="filteredPlayers.length === 0 && !isLoading" class="empty-list">
-              <text class="empty-text">暂无玩家</text>
-            </view>
+            <ListEmpty v-if="filteredPlayers.length === 0 && !isLoading" text="暂无玩家" />
           </scroll-view>
       </view>
 
@@ -136,7 +134,7 @@
               <text v-for="filter in timelineFilters" :key="filter.value" class="filter-item" :class="{ active: activeFilter === filter.value }" @click="setTimelineFilter(filter.value)">{{ filter.label }}</text>
             </view>
           </view>
-          <scroll-view class="timeline-list" scroll-y>
+          <scroll-view class="timeline-list" scroll-y @scrolltolower="onTimelineLoadMore">
             <view v-for="(record, index) in filteredTimeline" :key="record.id || index" class="timeline-item">
               <view class="timeline-dot" :class="record.type"></view>
               <view class="timeline-line" v-if="index < filteredTimeline.length - 1"></view>
@@ -341,9 +339,7 @@
                 <text>{{ record.result === 'win' ? '+' : '' }}{{ record.profit || record.amount || 0 }}</text>
               </view>
             </view>
-            <view v-if="playerGameHistory.length === 0" class="empty-list">
-              <text class="empty-text">{{ gameHistoryUnavailable ? '后端暂未提供该玩家的房间历史接口' : '暂无游戏记录' }}</text>
-            </view>
+            <ListEmpty v-if="playerGameHistory.length === 0" text="{{ gameHistoryUnavailable ? '后端暂未提供该玩家的房间历史接口' : '暂无游戏记录' }}" />
           </view>
         </view>
       </view>
@@ -372,9 +368,7 @@
                 <text>{{ log.time || log.createdAt || '-' }}</text>
               </view>
             </view>
-            <view v-if="playerLoginHistory.length === 0" class="empty-list">
-              <text class="empty-text">暂无登录记录</text>
-            </view>
+            <ListEmpty v-if="playerLoginHistory.length === 0" text="暂无登录记录" />
           </view>
         </view>
       </view>
@@ -470,7 +464,7 @@ export default {
       players: [],
       timeline: [],
       playerPagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 },
-      timelinePagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 },
+      timelinePagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 }, loadingMore: { players: false, timeline: false }, noMore: { players: false, timeline: false },
       // 今日统计
       todayStats: {
         totalOps: 0,
@@ -575,6 +569,18 @@ export default {
     },
 
     // 加载代理列表（仅 agent / top_agent）
+    async onPlayerListLoadMore() {
+      if (this.loadingMore.players || this.noMore.players) return;
+      this.loadingMore.players = true;
+      await this.loadPlayers((this.playerPagination?.page || 1) + 1);
+      this.loadingMore.players = false;
+    },
+    async onTimelineLoadMore() {
+      if (this.loadingMore.timeline || this.noMore.timeline) return;
+      this.loadingMore.timeline = true;
+      await this.loadTimeline((this.timelinePagination?.page || 1) + 1);
+      this.loadingMore.timeline = false;
+    },
     async loadPlayers(page = 1) {
       try {
         const params = { page, pageSize: this.playerPagination.pageSize }
@@ -586,11 +592,13 @@ export default {
         const agentList = Array.isArray(agentData.data) ? agentData.data : (agentData.users || agentData.list || [])
         const topAgentList = Array.isArray(topAgentData.data) ? topAgentData.data : (topAgentData.users || topAgentData.list || [])
         const list = [...agentList, ...topAgentList]
-        this.players = list.map(p => ({
+        const _mapped = list.map(p => ({
           ...p,
           isOnline: p.isOnline || false,
           isFrozen: p.frozen || false,
         }))
+        this.players = page > 1 ? [...this.players, ..._mapped] : _mapped
+        if (list.length < this.playerPagination.pageSize) this.noMore.players = true
         const agentPagination = agentData.pagination || { page, pageSize: this.playerPagination.pageSize, total: agentList.length, totalPages: 1 }
         const topAgentPagination = topAgentData.pagination || { total: topAgentList.length, totalPages: 1 }
         this.playerPagination = {
@@ -621,7 +629,8 @@ export default {
         if (this.activeFilter !== 'all') params.type = this.activeFilter
         const data = await getCsOperations(params)
         const list = Array.isArray(data.data) ? data.data : (data.list || data.operations || [])
-        this.timeline = list
+        this.timeline = page > 1 ? [...this.timeline, ...list] : list
+        if (list.length < this.timelinePagination.pageSize) this.noMore.timeline = true
         this.timelinePagination = data.pagination || { ...this.timelinePagination, page }
         // 计算今日统计
         this.calcTodayStats(list)

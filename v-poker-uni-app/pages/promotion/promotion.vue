@@ -78,9 +78,7 @@
                 </view>
               </view>
             </view>
-            <view v-if="firstLevelAgents.length === 0 && !isLoading" class="empty-list">
-              <text class="empty-text">暂无下级代理</text>
-            </view>
+            <ListEmpty v-if="firstLevelAgents.length === 0 && !isLoading" text="暂无下级代理" />
           </view>
         </view>
         <view v-else class="force-view">
@@ -130,12 +128,8 @@
             </view>
           </view>
         </view>
-        <view v-if="subRooms.length === 0 && !roomsLoading" class="empty-list">
-          <text class="empty-text">暂无活跃房间</text>
-        </view>
-        <view v-if="roomsLoading" class="empty-list">
-          <text class="empty-text">加载中...</text>
-        </view>
+        <ListEmpty v-if="subRooms.length === 0 && !roomsLoading" text="暂无活跃房间" />
+        <ListEmpty v-if="roomsLoading" text="加载中..." />
       </view>
     </view>
 
@@ -170,9 +164,7 @@
             <text class="stat-value">{{ formatPoints(agent.contribution || 0) }}</text>
           </view>
         </view>
-        <view v-if="allAgents.length === 0 && !isLoading" class="empty-list">
-          <text class="empty-text">暂无代理</text>
-        </view>
+        <ListEmpty v-if="allAgents.length === 0 && !isLoading" text="暂无代理" />
       </view>
     </view>
       </view>
@@ -272,9 +264,7 @@
                 <text>+{{ record.amount || 0 }}</text>
               </view>
             </view>
-            <view v-if="distributionRecords.length === 0" class="empty-list">
-              <text class="empty-text">暂无分配记录</text>
-            </view>
+            <ListEmpty v-if="distributionRecords.length === 0" text="暂无分配记录" />
           </view>
         </view>
       </view>
@@ -458,7 +448,7 @@ export default {
       totalProfit: 0,
       firstLevelAgents: [],
       allAgents: [],
-      agentPagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 },
+      agentPagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 }, loadingMore: false, noMore: false,
       // 下属房间管理
       subRooms: [],
       roomsLoading: false,
@@ -491,6 +481,12 @@ export default {
   },
   onPullDownRefresh() {
     this.loadAllData().finally(() => uni.stopPullDownRefresh())
+  },
+  onReachBottom() {
+    if (this.loadingMore || this.noMore) return;
+    this.loadingMore = true;
+    const next = (this.agentPagination?.page || 1) + 1;
+    this.loadAgents(next).finally(() => { this.loadingMore = false });
   },
   methods: {
     formatRole,
@@ -605,7 +601,8 @@ export default {
       try {
         const data = await getAgentPlayers({ page, pageSize: this.agentPagination.pageSize })
         const list = Array.isArray(data.data) ? data.data : (data.players || data.list || [])
-        this.allAgents = list
+        this.allAgents = page > 1 ? [...this.allAgents, ...list] : list;
+        if (list.length < this.agentPagination.pageSize) this.noMore = true
         this.agentPagination = data.pagination || { ...this.agentPagination, page }
         if (this.firstLevelAgents.length === 0) {
           this.firstLevelAgents = list.filter(a => a.level === 1 || a.role === 'agent').slice(0, 5)

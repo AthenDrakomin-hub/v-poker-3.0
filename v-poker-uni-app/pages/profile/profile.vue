@@ -212,13 +212,8 @@
       </view>
     </view>
 
-    <!-- 头像选择弹窗 -->
-    <view v-if="showAvatarSelector" class="modal-overlay" @click="showAvatarSelector = false">
-      <view class="modal-content avatar-modal" @click.stop>
-        <view class="modal-header">
-          <text class="modal-title">选择头像</text>
-          <view class="modal-close" @click="showAvatarSelector = false"><VIcon name="close" :size="4" color="rgba(255,255,255,0.5)" /></view>
-        </view>
+    <!-- 头像选择底部面板 -->
+    <BottomSheet :visible="showAvatarSelector" title="选择头像" @update:visible="showAvatarSelector = $event">
         <view class="avatar-preview">
           <PreviewImage class="preview-img" :src="getAvatarImage(selectedAvatarId)" :urls="[getAvatarImage(selectedAvatarId)]" mode="aspectFit" />
           <text class="preview-name">{{ getAvatarConfig(selectedAvatarId).name }}</text>
@@ -237,14 +232,15 @@
             </view>
           </view>
         </view>
+      <template #footer>
         <view class="modal-footer">
           <button class="btn-cancel touch-active" @click="showAvatarSelector = false">取消</button>
           <button class="btn-confirm touch-active" :disabled="updatingAvatar" @click="confirmAvatar">
             {{ updatingAvatar ? '保存中...' : '确认使用' }}
           </button>
         </view>
-      </view>
-    </view>
+      </template>
+    </BottomSheet>
 
     <!-- 昵称修改弹窗 -->
     <view v-if="showNicknameModal" class="modal-overlay" @click="showNicknameModal = false">
