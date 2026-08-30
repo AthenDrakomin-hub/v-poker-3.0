@@ -815,14 +815,6 @@ export default {
     onChatNewMessage() {
       // 刷新联系人列表（更新最后消息和排序）
       this.loadMsgContacts()
-      // 播放提示音
-      try {
-        const audio = uni.createInnerAudioContext()
-        audio.src = 'https://static.yefeng.us.cc/static/sounds/notify.mp3'
-        audio.volume = 0.5
-        audio.play()
-        audio.onEnded(() => audio.destroy())
-      } catch (e) { /* 静默 */ }
     },
     // 聊天窗口消息已读
     onChatMessagesRead() {

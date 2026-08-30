@@ -564,7 +564,7 @@
 </template>
 
 <script>
-import { formatGameType, formatRoomStatus } from '../../utils/format.js'
+// formatGameType 和 formatRoomStatus 均内联到 methods，避免 uni-app/Vite 构建中偶发的导入解析失败
 import {
   getAdminStats,
   getAdminRoomList,
@@ -587,7 +587,7 @@ import {
   setCsStatus,
 } from '../../api/admin.js'
 import { getMe } from '../../api/auth.js'
-import { get } from '../../api/request.js'
+import { getRoom } from '../../api/rooms.js'
 import { getFontScale } from '../../utils/fontScale.js'
 import ImmersivePage from '../../components/ui/ImmersivePage.vue'
 import VIcon from '../../components/ui/VIcon.vue'
@@ -710,6 +710,29 @@ export default {
     }
   },
   methods: {
+    // 内联formatGameType，避免导入解析失败
+    formatGameType(gameType) {
+      const map = {
+        niuniu: '抢庄牛牛',
+        sangong: '抢庄三公',
+        tbnn: '通比牛牛',
+        jinhua: '炸金花',
+        texas: '德州扑克',
+      }
+      return map[gameType] || gameType
+    },
+    // 内联formatRoomStatus，避免uni-app/Vite构建中偶发的导入解析失败导致运行时undefined
+    formatRoomStatus(status) {
+      const map = {
+        waiting: '等待中',
+        playing: '游戏中',
+        paused: '已暂停',
+        ended: '已结束',
+        active: '进行中',
+        inactive: '未开始',
+      }
+      return map[status] || status || '-'
+    },
     onFontScaleChange(scale) {
       this.fontScale = scale
     },
@@ -1038,10 +1061,11 @@ export default {
       this.roomDetailPlayers = []
       this.showRoomDetailModal = true
       try {
-        const res = await get('/api/rooms/' + room.id + '/players')
-        if (res && res.players) {
-          this.roomDetailPlayers = res.players
-        }
+        const res = await getRoom(room.id)
+        const roomData = res?.room || res || {}
+        this.roomDetail = { ...room, ...roomData }
+        // 修复：players 在响应顶层 res.players，不在 res.room.players 内
+        this.roomDetailPlayers = res?.players || roomData.players || []
       } catch (e) {
         console.warn('[Admin] 加载房间玩家失败', e)
       }

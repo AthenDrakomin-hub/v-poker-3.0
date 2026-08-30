@@ -273,6 +273,7 @@ export default {
       uni.navigateBack()
     },
     toggleSound(e) {
+      this.soundManager?.markUserInteraction()
       this.settings.soundEnabled = e.detail.value
       this.saveSettings()
       if (this.soundManager) {
@@ -281,6 +282,7 @@ export default {
       }
     },
     toggleMusic(e) {
+      this.soundManager?.markUserInteraction()
       this.settings.musicEnabled = e.detail.value
       this.saveSettings()
       if (this.soundManager) {
@@ -338,6 +340,7 @@ export default {
       return found ? found.name : '经典黑金'
     },
     selectTheme(theme) {
+      this.soundManager?.markUserInteraction()
       this.settings.theme = theme
       this.saveSettings()
       if (this.soundManager) {

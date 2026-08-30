@@ -398,6 +398,7 @@ import { getWallet, vaultTransfer, getWalletTransactions } from '../../api/walle
 import { getGameRule } from '../../api/games.js'
 import { getFontScale } from '../../utils/fontScale.js'
 import { cdnUrl } from '../../utils/cdn.js'
+import { getSoundManager, getVoiceManager } from '../../utils/sound.js'
 import { hasFeature } from '../../utils/featurePermissions.js'
 import VIcon from '../../components/ui/VIcon.vue'
 import ImmersivePage from '../../components/ui/ImmersivePage.vue'
@@ -693,7 +694,13 @@ export default {
       }
     },
 
+    enableAudioFromUserInteraction() {
+      getSoundManager().markUserInteraction()
+      getVoiceManager().markUserInteraction()
+    },
+
     openJoinModal() {
+      this.enableAudioFromUserInteraction()
       this.showJoinModal = true
     },
 
@@ -779,13 +786,6 @@ export default {
     },
 
     onChatNewMessage() {
-      try {
-        const audio = uni.createInnerAudioContext()
-        audio.src = 'https://static.yefeng.us.cc/static/sounds/notify.mp3'
-        audio.volume = 0.4
-        audio.play()
-        audio.onEnded(() => audio.destroy())
-      } catch (e) {}
     },
 
     onChatMessagesRead() {
@@ -818,6 +818,7 @@ export default {
     },
 
     enterRoom(room) {
+      this.enableAudioFromUserInteraction()
       console.log('[enterRoom] room=', JSON.stringify(room))
       const roomId = room.id || room.roomId || room.roomNo || room.roomCode
       console.log('[enterRoom] roomId=', roomId)

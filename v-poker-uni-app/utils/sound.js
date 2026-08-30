@@ -1,40 +1,13 @@
-﻿/**
+/**
  * V-Poker 音效管理系统
  * 支持主题音效、发牌声、筹码声、开牌声、背景音乐
  */
 import { cdnUrl } from './cdn.js'
-
 // 音频格式配置：WAV 原始 PCM，所有原生播放器 100% 兼容（App端优先）
 const AUDIO_FORMAT = 'wav'
-
 // 音频资源版本号（CDN缓存刷新用，更新音频文件后递增）
 const AUDIO_VERSION = '1.0.4'
-const SOUND_POOL_SIZES = {
-  deal: 3,
-  chip: 3,
-  openCard: 2,
-}
-
-// 游戏类型 �?主�?�?��名映射（sound �?��用主题名，不�?gameType�?
-const GAME_TYPE_TO_THEME = {
-  niuniu: 'forbidden_city',
-  sangong: 'jiangnan',
-  tbnn: 'steampunk',
-  jinhua: 'noir',
-  texas: 'wallstreet',
-}
-
-// �?gameType 或主题名统一解析为主题目录名
-function resolveThemeName(themeOrGameType) {
-  if (!themeOrGameType) return 'forbidden_city'
-  // 如果已经�?��题目录名，直接返�?
-  if (THEME_SOUND_MAP[themeOrGameType]) return themeOrGameType
-  // 如果�?gameType，映射为主�?�?
-  if (GAME_TYPE_TO_THEME[themeOrGameType]) return GAME_TYPE_TO_THEME[themeOrGameType]
-  return 'forbidden_city'
-}
-
-// 主�?音效文件名映射（各主题的�?�?赢牌/背景音文件名不同�?
+// 主题音效文件名映射（各主题的出牌/赢牌/背景音文件名不同）
 const THEME_SOUND_MAP = {
   forbidden_city: {
     deal: 'deal.mp3',
@@ -87,6 +60,26 @@ const THEME_SOUND_MAP = {
   },
 }
 
+// 游戏类型 ↔ 主题名映射（sound 使用主题名，不使用gameType）
+const GAME_TYPE_TO_THEME = {
+  niuniu: 'forbidden_city',
+  sangong: 'jiangnan',
+  tbnn: 'steampunk',
+  jinhua: 'noir',
+  texas: 'wallstreet',
+}
+
+// gameType 或主题名统一解析为主题目录名
+function resolveThemeName(themeOrGameType) {
+  if (!themeOrGameType) return 'forbidden_city'
+  // 如果已经是主题目录名，直接返回
+  if (THEME_SOUND_MAP[themeOrGameType]) return themeOrGameType
+  // 如果是gameType，映射为主题目录
+  if (GAME_TYPE_TO_THEME[themeOrGameType]) return GAME_TYPE_TO_THEME[themeOrGameType]
+  return 'forbidden_city'
+}
+
+
 class SoundManager {
   constructor() {
     this.audioContexts = {}
@@ -94,77 +87,78 @@ class SoundManager {
     this.vibrateEnabled = true
     this.volume = 0.5
     this.backgroundVolume = 0.15
-    this.currentTheme = null
+    this.currentTheme = 'forbidden_city'
     this.backgroundAudio = null
     this.soundCache = {}
     this.soundPools = {}
     this.poolIndexes = {}
+    this.hasUserInteraction = false
   }
-
   /**
-   * 初�?�?
+   * 初始化
    */
   init(theme = 'forbidden_city') {
     this.currentTheme = resolveThemeName(theme)
-    // 预加载常用音�?
-    this.preloadSounds()
+  }
+
+  markUserInteraction() {
+    this.hasUserInteraction = true
   }
 
   /**
-   * 设置主�?
+   * 设置主题
    */
   setTheme(theme) {
     this.currentTheme = resolveThemeName(theme)
     this.stopBackground()
     this.destroySoundPools()
-    // 预加载新主�?音效
-    this.preloadSounds()
   }
 
   /**
-   * 预加载音�?
+   * 预加载音效【仅在用户交互发生后调用】
    */
   preloadSounds() {
-    const sounds = ['deal', 'chip', 'openCard', 'win']
-    sounds.forEach(type => {
-      this.getPlaybackAudio(type)
-    })
+    if (!this.hasUserInteraction) return
+    console.debug('[Sound] 已获得用户交互授权，音效将在首次播放时创建')
   }
 
   /**
-   * 获取音效文件�?��
+   * 获取音效文件路径
    */
   getSoundPath(type) {
-    const themeMap = THEME_SOUND_MAP[this.currentTheme] || THEME_SOUND_MAP.forbidden_city
+    const safeTheme = this.currentTheme || 'forbidden_city'
+    const themeMap = THEME_SOUND_MAP[safeTheme] || THEME_SOUND_MAP.forbidden_city
     let fileName = themeMap[type] || themeMap[type.toLowerCase()] || `${type}.mp3`
-    // 切换音�?格式（wav �?m4a�?
-    if (AUDIO_FORMAT !== 'wav') {
+    // 切换音频格式（wav / m4a）
+    if (AUDIO_FORMAT !== 'mp3') {
       fileName = fileName.replace(/\.mp3$/i, `.${AUDIO_FORMAT}`)
     }
-    return cdnUrl(`/static/sounds/${this.currentTheme}/${fileName}?v=${AUDIO_VERSION}`)
+    const finalUrl = cdnUrl(`/static/sounds/${safeTheme}/${fileName}?v=${AUDIO_VERSION}`)
+    console.debug('[SoundPath] type=', type, 'theme=', safeTheme, 'url=', finalUrl)
+    return finalUrl
   }
 
   /**
-   * 获取音�?实例
+   * 获取音频实例
    */
   getAudio(type) {
     const key = this.currentTheme + '_' + type
     if (this.soundCache[key]) {
       return this.soundCache[key]
     }
-
+    if (!this.hasUserInteraction) {
+      console.warn('[Sound] skip create audio: no user interaction yet', type)
+      return null
+    }
+    const src = this.getSoundPath(type)
+    if (!src) return null
     try {
       const audio = uni.createInnerAudioContext()
+      audio.cache = false // 关闭uni内置download缓存，修复Android _doc/uniapp_temp 解码器BUG
       audio.volume = this.volume
-      audio.src = this.getSoundPath(type)
-      // 忽略非致命的缓存错误（如 ERR_CACHE_OPERATION_NOT_SUPPORTED），不影响播放
+      audio.src = src
       audio.onError((err) => {
-        const errMsg = err?.errMsg || err?.message || ''
-        if (errMsg.includes('CACHE_OPERATION_NOT_SUPPORTED') || errMsg.includes('cache')) {
-          console.warn('[Sound] 缓存错误（可忽略）:', type, errMsg)
-        } else {
-          console.error('[Sound] 音频错误:', type, err)
-        }
+        this.handleAudioError(audio, type, err)
       })
       this.soundCache[key] = audio
       return audio
@@ -174,160 +168,136 @@ class SoundManager {
     }
   }
 
-  getPlaybackAudio(type) {
-    const poolSize = SOUND_POOL_SIZES[type]
-    if (!poolSize) return this.getAudio(type)
-
-    if (!this.soundPools[type]) {
-      try {
-        this.soundPools[type] = Array.from({ length: poolSize }, () => {
-          const audio = uni.createInnerAudioContext()
-          audio.volume = this.volume
-          audio.src = this.getSoundPath(type)
-          // 忽略非致命的缓存错误
-          audio.onError((err) => {
-            const errMsg = err?.errMsg || err?.message || ''
-            if (!errMsg.includes('CACHE_OPERATION_NOT_SUPPORTED') && !errMsg.includes('cache')) {
-              console.error('[Sound] 音频池错误:', type, err)
-            }
-          })
-          return audio
-        })
-        this.poolIndexes[type] = 0
-      } catch (e) {
-        console.error('[Sound] 创建音效池失败', e)
-        return null
-      }
+  /**
+   * 统一音频加载错误处理
+   */
+  handleAudioError(audio, type, err) {
+    const errCode = err && (err.errCode !== undefined ? err.errCode : (err.code !== undefined ? err.code : ''))
+    const errMsg = err?.errMsg || err?.message || ''
+    if (errCode === -5 && !this.hasUserInteraction) {
+      console.debug('[Sound iOS] 尚未用户交互，忽略初始化音频错误', type)
+      return
     }
+    if (errCode === -5) {
+      console.warn('[Sound iOS] 音频会话失效，销毁实例', type)
+      const key = this.currentTheme + '_' + type
+      delete this.soundCache[key]
+      try {
+        audio.stop()
+        audio.destroy()
+      } catch (e) {}
+      return
+    }
+    if (errMsg.includes('CACHE_OPERATION_NOT_SUPPORTED') || errMsg.includes('cache')) {
+      console.warn('[Sound] 缓存错误（可忽略）:', type, errMsg)
+      return
+    }
+    if (!audio.__retried) {
+      audio.__retried = true
+      setTimeout(() => {
+        try {
+          audio.stop()
+          let baseSrc = audio.src || ''
+          baseSrc = baseSrc.replace(/(&r=\d+|\?r=\d+)/g, '')
+          const sep = baseSrc.includes('?') ? '&' : '?'
+          audio.src = baseSrc + sep + 'r=' + Date.now()
+        } catch (e) {}
+      }, 1200)
+      console.warn('[Sound] 音频加载失败，延迟重试:', type, 'errCode:', errCode, errMsg)
+    } else {
+      console.warn('[Sound] 音频加载最终失败:', type, 'errCode:', errCode, errMsg)
+    }
+  }
 
-    const pool = this.soundPools[type]
-    const index = this.poolIndexes[type]
-    this.poolIndexes[type] = (index + 1) % pool.length
-    return pool[index]
+  getPlaybackAudio(type) {
+    return this.getAudio(type)
   }
 
   /**
-   * �?��音效
+   * 播放音效
    */
   play(type, options = {}) {
     if (!this.enabled) return
-
+    if (!this.hasUserInteraction) return
     const audio = this.getPlaybackAudio(type)
     if (!audio) return
-
     try {
       if (options.volume !== undefined) {
         audio.volume = options.volume
       } else {
         audio.volume = this.volume
       }
-
       audio.seek(0)
       audio.play()
-
-      // 震动反�?
       if (this.vibrateEnabled && options.vibrate) {
         uni.vibrateShort({ type: 'light' })
       }
     } catch (e) {
-      console.error('[Sound] �?��失败', type, e)
+      console.error('[Sound] 播放失败', type, e)
     }
   }
 
-  /**
-   * 发牌�?
-   */
   playDeal() {
     this.play('deal', { vibrate: false })
   }
-
-  /**
-   * 筹码�?
-   */
   playChip() {
     this.play('chip', { vibrate: true })
   }
-
-  /**
-   * �?牌声
-   */
   playOpenCard() {
     this.play('openCard', { vibrate: true, volume: 0.8 })
   }
-
-  /**
-   * 赢牌�?
-   */
   playWin() {
     this.play('win', { vibrate: true, volume: 0.7 })
   }
-
-  /**
-   * 看牌声（炸金花专属）
-   */
   playLookCard() {
     this.play('lookCard', { vibrate: false, volume: 0.4 })
   }
-
-  /**
-   * 弃牌�?
-   */
   playFold() {
     this.play('fold', { vibrate: false, volume: 0.3 })
   }
-
-  /**
-   * 按钮点击�?
-   */
   playButton() {
     this.play('button', { vibrate: false, volume: 0.3 })
   }
 
-  /**
-   * �?��背景音乐
-   */
   playBackground() {
     if (!this.enabled) return
+    if (!this.hasUserInteraction) return
     if (this.backgroundAudio) {
       this.backgroundAudio.volume = this.backgroundVolume
       this.backgroundAudio.play()
       return
     }
-
     try {
       this.backgroundAudio = uni.createInnerAudioContext()
+      this.backgroundAudio.cache = false // 关闭内置缓存
       this.backgroundAudio.loop = true
       this.backgroundAudio.volume = this.backgroundVolume
       this.backgroundAudio.src = this.getSoundPath('background')
+      this.backgroundAudio.onError((err) => {
+        this.handleAudioError(this.backgroundAudio, 'background', err)
+      })
       this.backgroundAudio.play()
     } catch (e) {
-      console.error('[Sound] 背景音乐�?��失败', e)
+      console.error('[Sound] 背景音乐播放失败', e)
     }
   }
 
-  /**
-   * 暂停背景音乐
-   */
   pauseBackground() {
     if (this.backgroundAudio) {
       this.backgroundAudio.pause()
     }
   }
 
-  /**
-   * 停�?背景音乐
-   */
   stopBackground() {
     if (this.backgroundAudio) {
-      this.backgroundAudio.stop()
-      this.backgroundAudio.destroy()
+      try {
+        this.backgroundAudio.stop()
+        this.backgroundAudio.destroy()
+      } catch (e) {}
       this.backgroundAudio = null
     }
   }
 
-  /**
-   * 设置音效音量
-   */
   setVolume(volume) {
     this.volume = Math.max(0, Math.min(1, volume))
     Object.values(this.soundCache).forEach(audio => {
@@ -338,9 +308,6 @@ class SoundManager {
     })
   }
 
-  /**
-   * 设置背景音乐音量（独立于音效音量�?
-   */
   setBackgroundVolume(volume) {
     this.backgroundVolume = Math.max(0, Math.min(1, volume))
     if (this.backgroundAudio) {
@@ -348,9 +315,6 @@ class SoundManager {
     }
   }
 
-  /**
-   * �?��/禁用音效
-   */
   setEnabled(enabled) {
     this.enabled = enabled
     if (!enabled) {
@@ -358,9 +322,6 @@ class SoundManager {
     }
   }
 
-  /**
-   * �?��/禁用震动
-   */
   setVibrateEnabled(enabled) {
     this.vibrateEnabled = enabled
   }
@@ -368,17 +329,16 @@ class SoundManager {
   destroySoundPools() {
     Object.values(this.soundPools).forEach(pool => {
       pool.forEach(audio => {
-        audio.stop()
-        audio.destroy()
+        try {
+          audio.stop()
+          audio.destroy()
+        } catch (e) {}
       })
     })
     this.soundPools = {}
     this.poolIndexes = {}
   }
 
-  /**
-   * 震动反�?
-   */
   vibrate(type = 'light') {
     if (!this.vibrateEnabled) return
     try {
@@ -387,37 +347,32 @@ class SoundManager {
       } else {
         uni.vibrateShort({ type })
       }
-    } catch (e) {
-      // 忽略
-    }
+    } catch (e) {}
   }
 
-  /**
-   * �?毁所有音�?
-   */
   destroy() {
     this.stopBackground()
     Object.values(this.soundCache).forEach(audio => {
       if (audio) {
-        audio.stop()
-        audio.destroy()
+        try {
+          audio.stop()
+          audio.destroy()
+        } catch (e) {}
       }
     })
     this.soundCache = {}
     this.destroySoundPools()
+    this.hasUserInteraction = false
   }
 }
 
-// 单例
 let soundManagerInstance = null
-
 export function getSoundManager() {
   if (!soundManagerInstance) {
     soundManagerInstance = new SoundManager()
   }
   return soundManagerInstance
 }
-
 export function destroySoundManager() {
   if (soundManagerInstance) {
     soundManagerInstance.destroy()
@@ -426,10 +381,8 @@ export function destroySoundManager() {
 }
 
 // ============================================
-// 玩�?�?��管理�?��方言�?��包）
+// 玩家语音管理器（支持方言语音包）
 // ============================================
-
-// �?��的�?音动作映�?
 const VOICE_ACTIONS = {
   enter: 'enter',
   deal: 'deal',
@@ -446,170 +399,119 @@ const VOICE_ACTIONS = {
   chat2: 'chat2',
   chat3: 'chat3',
 }
-
 class VoiceManager {
   constructor() {
     this.enabled = true
     this.volume = 0.8
     this.voiceCache = {}
     this.currentPlaying = null
+    this.hasUserInteraction = false
   }
-
-  /**
-   * 初�?�?
-   */
+  markUserInteraction() {
+    this.hasUserInteraction = true
+  }
   init() {
-    // 预加载常用�?�?
-    this.preloadVoices()
   }
-
-  /**
-   * 预加载常用�?音（每个头像的入�?胜利/失败�?
-   */
   preloadVoices() {
-    const commonActions = ['enter', 'win', 'lose']
-    for (let i = 1; i <= 5; i++) {
-      commonActions.forEach(action => {
-        this.getVoiceAudio(`vip-${i}`, action)
-      })
-    }
+    if (!this.hasUserInteraction) return
+    console.debug('[Voice] 已获得用户交互授权，语音将在首次播放时创建')
   }
-
-  /**
-   * 获取�?��文件�?��
-   */
   getVoicePath(avatarId, action) {
     const validAction = VOICE_ACTIONS[action] || action
     return cdnUrl(`/static/voices/${avatarId}/${validAction}.mp3?v=${AUDIO_VERSION}`)
   }
-
-  /**
-   * 获取�?��音�?实例
-   */
   getVoiceAudio(avatarId, action) {
+    if (!this.hasUserInteraction) return null
     const key = `${avatarId}_${action}`
     if (this.voiceCache[key]) {
       return this.voiceCache[key]
     }
-
     try {
       const audio = uni.createInnerAudioContext()
+      audio.cache = false // 关闭内置download缓存
       audio.volume = this.volume
       audio.src = this.getVoicePath(avatarId, action)
       this.voiceCache[key] = audio
       return audio
     } catch (e) {
-      console.error('[Voice] 创建音�?失败', avatarId, action, e)
+      console.error('[Voice] 创建音频失败', avatarId, action, e)
       return null
     }
   }
-
-  /**
-   * �?��玩�?�?��
-   * @param {string} avatarId - 头像ID (vip-1 ~ vip-5)
-   * @param {string} action - 动作 (enter/deal/look/call/raise/fold/compare/allin/win/lose/wait/chat1/chat2/chat3)
-   * @param {object} options - 选项 { volume, interrupt }
-   */
   play(avatarId, action, options = {}) {
     if (!this.enabled) return
     if (!avatarId || !action) return
-
-    // 如果设置�?interrupt，停止当前播放的�?��
+    if (!this.hasUserInteraction) return
     if (options.interrupt && this.currentPlaying) {
       try {
         this.currentPlaying.stop()
-      } catch (e) {
-        // 忽略
-      }
+      } catch (e) {}
       this.currentPlaying = null
     }
-
     const audio = this.getVoiceAudio(avatarId, action)
     if (!audio) return
-
     try {
       audio.volume = options.volume !== undefined ? options.volume : this.volume
       audio.seek(0)
       audio.play()
       this.currentPlaying = audio
-
-      // �?��结束后清除引�?
       audio.onEnded(() => {
         if (this.currentPlaying === audio) {
           this.currentPlaying = null
         }
       })
     } catch (e) {
-      console.error('[Voice] �?��失败', avatarId, action, e)
+      console.error('[Voice] 播放失败', avatarId, action, e)
     }
   }
-
-  /**
-   * 停�?当前�?��的�?�?
-   */
   stop() {
     if (this.currentPlaying) {
       try {
         this.currentPlaying.stop()
-      } catch (e) {
-        // 忽略
-      }
+      } catch (e) {}
       this.currentPlaying = null
     }
   }
-
-  /**
-   * 设置音量
-   */
   setVolume(volume) {
     this.volume = Math.max(0, Math.min(1, volume))
     Object.values(this.voiceCache).forEach(audio => {
       if (audio) audio.volume = this.volume
     })
   }
-
-  /**
-   * �?��/禁用�?��
-   */
   setEnabled(enabled) {
     this.enabled = enabled
     if (!enabled) {
       this.stop()
     }
   }
-
-  /**
-   * �?毁所有�?�?
-   */
   destroy() {
     this.stop()
     Object.values(this.voiceCache).forEach(audio => {
       if (audio) {
-        audio.stop()
-        audio.destroy()
+        try {
+          audio.stop()
+          audio.destroy()
+        } catch (e) {}
       }
     })
     this.voiceCache = {}
+    this.hasUserInteraction = false
   }
 }
 
-// �?��管理器单�?
 let voiceManagerInstance = null
-
 export function getVoiceManager() {
   if (!voiceManagerInstance) {
     voiceManagerInstance = new VoiceManager()
   }
   return voiceManagerInstance
 }
-
 export function destroyVoiceManager() {
   if (voiceManagerInstance) {
     voiceManagerInstance.destroy()
     voiceManagerInstance = null
   }
 }
-
 export default {
   getSoundManager,
   destroySoundManager,

@@ -72,13 +72,12 @@ export default {
     try {
       const theme = appSettings.theme
       const soundEnabled = appSettings.soundEnabled
-      const musicEnabled = appSettings.musicEnabled
       const soundVolume = appSettings.soundVolume / 100
       const sm = getSoundManager()
       sm.init(theme)
       sm.setEnabled(soundEnabled)
       sm.setVolume(soundVolume)
-      if (musicEnabled) sm.playBackground()
+      // 背景音乐仅能由真实点击事件触发，启动阶段不创建音频实例。
 
       // 语音包管理器初始化（预加载5套VIP头像语音）
       const vm = getVoiceManager()
