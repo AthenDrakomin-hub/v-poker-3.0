@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 多级代理层级追溯模块
  *
  * 层级定义（通过 invitedById 向上追溯，无需额外字段）：
@@ -163,9 +163,23 @@ export async function getAgentHierarchy(
  * @param hierarchy 层级链
  * @returns 各方分配金额
  */
+/** 分润费率配置（以抽水总额为基数） */
+export interface RebateRates {
+  agentRebateRate: number;
+  level1RebateRate: number;
+  topAgentRebateRate: number;
+}
+
+/** 默认费率（与硬编码旧逻辑等价：1/3, 0.5/3, 0.5/3） */
+export const DEFAULT_REBATE_RATES: RebateRates = {
+  agentRebateRate: 1 / 3,
+  level1RebateRate: 0.5 / 3,
+  topAgentRebateRate: 0.5 / 3,
+};
 export function calcMultiLevelRebate(
   totalRake: number,
-  hierarchy: AgentHierarchy
+  hierarchy: AgentHierarchy,
+  rates?: RebateRates
 ): {
   roomAgentRebate: number;   // 开房代理（最底层）
   level1Rebate: number;      // 一级代理
@@ -184,9 +198,10 @@ export function calcMultiLevelRebate(
   }
 
   // 基础比例（以抽水为基数，A保守型）
-  const BASE_AGENT_RATIO = 1 / 3;    // 最底层代理 1/3 ≈ 流水1%
-  const LEVEL1_RATIO = 0.5 / 3;       // 一级代理 0.5/3 ≈ 流水0.5%
-  const TOP_AGENT_RATIO = 0.5 / 3;    // 总代理 0.5/3 ≈ 流水0.5%
+  const r = rates ?? DEFAULT_REBATE_RATES;
+  const BASE_AGENT_RATIO = r.agentRebateRate;    // 最底层代理 1/3 ≈ 流水1%
+  const LEVEL1_RATIO = r.level1RebateRate;       // 一级代理 0.5/3 ≈ 流水0.5%
+  const TOP_AGENT_RATIO = r.topAgentRebateRate;    // 总代理 0.5/3 ≈ 流水0.5%
 
   let roomAgentRatio = BASE_AGENT_RATIO;
   let level1Ratio = 0;

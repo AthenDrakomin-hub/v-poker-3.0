@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 经济模型配置 V2 路由
  * 两层配置体系：游戏经济配置 + 房间模板配置
  *
@@ -109,10 +109,11 @@ router.put("/games/:gameType", async (req: Request, res: Response) => {
     const newRakeCap = safeNum(body.rakeCap, oldConfig.rakeCap);
     const newMinRakePot = safeNum(body.minRakePot, oldConfig.minRakePot);
     const newAgentRebateRate = safeNum(body.agentRebateRate, oldConfig.agentRebateRate);
+    const newLevel1RebateRate = safeNum(body.level1RebateRate, (oldConfig as any).level1RebateRate ?? 0.1667);
     const newTopAgentRebateRate = safeNum(body.topAgentRebateRate, oldConfig.topAgentRebateRate);
     const newRebateCap = safeNum(body.rebateCap, oldConfig.rebateCap);
     // platformRate 为展示字段（实际平台收益=房费-代理返佣-总代返佣），自动计算
-    const newPlatformRate = Math.max(0, round2(oldConfig.rakeRate - newAgentRebateRate - newTopAgentRebateRate));
+    const newPlatformRate = Math.max(0, round2(1 - newAgentRebateRate - newLevel1RebateRate - newTopAgentRebateRate));
 
     // 校验：抽水比例不能为负；为0时记录警告（可能是误操作）
     if (newRakeRate < 0) {
@@ -124,10 +125,10 @@ router.put("/games/:gameType", async (req: Request, res: Response) => {
     }
 
     // 硬约束：分润比例之和不能超过房费比例（3%固定）
-    const totalRebate = newAgentRebateRate + newTopAgentRebateRate;
-    if (totalRebate > 0.03 + 0.0001) {
+    const totalRebate = newAgentRebateRate + newLevel1RebateRate + newTopAgentRebateRate;
+    if (totalRebate > 1 + 0.0001) {
       res.status(400).json({
-        error: `分润比例之和(${pct(totalRebate)})超过房费比例(3%)，平台将亏损！请降低返佣比例。`,
+        error: `分润比例之和(${pct(totalRebate)})超过100%(抽水总额)，平台将亏损！请降低返佣比例。`,
       });
       return;
     }
@@ -149,6 +150,7 @@ router.put("/games/:gameType", async (req: Request, res: Response) => {
       rakeBaseDesc: body.rakeBaseDesc ?? oldConfig.rakeBaseDesc,
       minRakePot: newMinRakePot,
       agentRebateRate: newAgentRebateRate,
+      level1RebateRate: newLevel1RebateRate,
       topAgentRebateRate: newTopAgentRebateRate,
       platformRate: newPlatformRate,
       rebateCapEnabled: body.rebateCapEnabled ?? oldConfig.rebateCapEnabled,

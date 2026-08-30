@@ -1,4 +1,4 @@
-import {
+﻿import {
   pgTable,
   serial,
   text,
@@ -245,9 +245,10 @@ export const gameEconomyConfig = pgTable("game_economy_config", {
   rakeBaseDesc: text("rake_base_desc").notNull().default(""), // 抽水基数描述
   minRakePot: amount("min_rake_pot").notNull().default(0), // 起抽门槛，底池低于此值不抽水�?=不限�?
   // 房费分润比例（抽出来的房费怎么分，三者之和应=1�?
-  agentRebateRate: amount("agent_rebate_rate").notNull().default(0.01), // 代理分润比例
-  topAgentRebateRate: amount("top_agent_rebate_rate").notNull().default(0.01), // 总代理分润比�?
-  platformRate: amount("platform_rate").notNull().default(0.01), // 平台留存比例
+  agentRebateRate: amount("agent_rebate_rate").notNull().default(0.3333), // 开房代理分润比例(1/3)
+  level1RebateRate: amount("level1_rebate_rate").notNull().default(0.1667), // 一级代理分润比例(0.5/3)
+  topAgentRebateRate: amount("top_agent_rebate_rate").notNull().default(0.1667), // 总代理分润比例(0.5/3)
+  platformRate: amount("platform_rate").notNull().default(0.3333), // 平台留存比例(倒挤参考值)
   // 返佣上限
   rebateCapEnabled: boolean("rebate_cap_enabled").notNull().default(false), // 是否启用单局代理返佣上限
   rebateCap: amount("rebate_cap").notNull().default(0), // 单局代理返佣上限�?=不限�?

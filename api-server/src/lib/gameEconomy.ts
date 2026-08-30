@@ -48,8 +48,9 @@ export interface GameEconomy {
   rakeBaseType: string; // 抽水基数类型：pot | flow
   rakeBaseDesc: string; // 抽水基数描述
   minRakePot: number; // 起抽门槛，0=不限制
-  agentRebateRate: number; // 代理分润比例
-  topAgentRebateRate: number; // 总代理分润比例
+  agentRebateRate: number; // 开房代理分润比例(以抽水为基数)
+  level1RebateRate: number; // 一级代理分润比例(以抽水为基数)
+  topAgentRebateRate: number; // 总代理分润比例(以抽水为基数)
   platformRate: number; // 平台留存比例
   rebateCapEnabled: boolean; // 是否启用返佣上限
   rebateCap: number; // 单局代理返佣上限
@@ -100,6 +101,7 @@ export async function loadGameEconomyConfig() {
       rakeBaseDesc: (row as any).rakeBaseDesc || "",
       minRakePot: Number((row as any).minRakePot || 0),
       agentRebateRate: Number(row.agentRebateRate),
+      level1RebateRate: Number((row as any).level1RebateRate ?? 0.1667),
       topAgentRebateRate: Number(row.topAgentRebateRate),
       platformRate: Number(row.platformRate),
       rebateCapEnabled: row.rebateCapEnabled,
@@ -153,8 +155,9 @@ export function getGameEconomy(gameType: string): GameEconomy {
     rakeBaseType: "pot",
     rakeBaseDesc: "",
     minRakePot: 0,
-    agentRebateRate: 0.01, // 默认1%代理返佣
-    topAgentRebateRate: 0.01, // 默认1%总代返佣
+    agentRebateRate: 1/3, // 开房代理分润比例(默认1/3)
+    level1RebateRate: 0.5/3, // 一级代理分润比例(默认0.5/3)
+    topAgentRebateRate: 0.5/3, // 总代理分润比例(默认0.5/3)
     platformRate: 0.01, // 默认1%平台
     rebateCapEnabled: false,
     rebateCap: 0,

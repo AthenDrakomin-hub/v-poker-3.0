@@ -13,7 +13,7 @@
  */
 
 import { getGameEconomy } from "./gameEconomy";
-import { AgentHierarchy, calcMultiLevelRebate } from "./agentHierarchy";
+import { AgentHierarchy, calcMultiLevelRebate, RebateRates } from "./agentHierarchy";
 
 /** 保留2位小数 */
 export function round2(n: number): number {
@@ -122,7 +122,14 @@ export function calcRoomSettlement(
   }
 
   // 调用多级返佣计算（核心逻辑在 agentHierarchy.ts）
-  const rebate = calcMultiLevelRebate(totalRake, hierarchy);
+  // 从V2配置读取分润费率（按游戏类型动态配置）
+  const econ = getGameEconomy(gameType);
+  const rates: RebateRates = {
+    agentRebateRate: econ.agentRebateRate,
+    level1RebateRate: econ.level1RebateRate,
+    topAgentRebateRate: econ.topAgentRebateRate,
+  };
+  const rebate = calcMultiLevelRebate(totalRake, hierarchy, rates);
 
   return {
     fee: 0, // V3不再扣房费
