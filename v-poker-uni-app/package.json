@@ -2,6 +2,7 @@
   "name": "v-poker-uni-app",
   "private": true,
   "dependencies": {
+    "socket.io-client": "^4.8.3",
     "vu-icons": "1.5.4"
   }
 }
