@@ -106,8 +106,9 @@ export function getRoomRounds(roomId) {
 }
 
 // 准备游戏
-export function readyRoom(roomId) {
-  return post(`/api/rooms/${roomId}/ready`)
+export function readyRoom(roomId, ready) {
+  const data = typeof ready === 'boolean' ? { ready } : {}
+  return post(`/api/rooms/${roomId}/ready`, data)
 }
 
 // 准备下一局

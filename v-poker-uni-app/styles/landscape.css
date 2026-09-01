@@ -423,7 +423,8 @@ button::after {
 }
 .btn-primary:active {
   transform: scale(0.96);
-  opacity: 0.9;
+  opacity: 1;
+  filter: brightness(1.08);
 }
 .btn-ghost {
   background: rgba(255, 255, 255, 0.08);
@@ -461,9 +462,8 @@ button::after {
   padding: var(--card-padding);
 }
 .card-glass {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
   border-radius: var(--card-radius);
 }
 
@@ -609,12 +609,10 @@ button::after {
   scrollbar-width: none;
 }
 
-/* ===== 毛玻璃效果 ===== */
+/* ===== 实色面板效果 ===== */
 .glass {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
 }
 
 /* ===== 金色渐变文字 ===== */

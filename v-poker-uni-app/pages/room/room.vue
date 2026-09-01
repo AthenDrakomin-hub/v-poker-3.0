@@ -91,7 +91,7 @@
         <text class="host-collapse-icon">{{ hostPanelCollapsed ? '⚙' : '—' }}</text>
       </view>
       <text v-if="!hostPanelCollapsed" class="host-label">房主管理</text>
-      <view v-if="!hostPanelCollapsed && isWaitingState" class="host-action primary" @click="hostStartGame">开始游戏</view>
+      <view v-if="!hostPanelCollapsed && isWaitingState" class="host-action primary" @click="hostStartGame">开始游戏{{ playablePlayerCount < 2 ? `（${playablePlayerCount}/2）` : '' }}</view>
       <view v-else-if="!hostPanelCollapsed && roomStatus === 'waiting_continue'" class="host-action primary" @click="runHostAction('continue')">续开房间</view>
       <view v-if="!hostPanelCollapsed" class="host-action" @click="runHostAction(roomInfo?.status === 'paused' ? 'resume' : 'pause')">{{ roomInfo?.status === 'paused' ? '恢复房间' : '暂停房间' }}</view>
       <view v-if="!hostPanelCollapsed" class="host-action" @click="showChipAdjust = true">筹码调整</view>
@@ -100,7 +100,7 @@
     </view>
 
     <!-- 玩家准备按钮 -->
-    <view v-if="(isWaitingState || roomStatus === 'waiting_continue') && !isHost" class="player-ready-bar">
+    <view v-if="(isWaitingState || roomStatus === 'waiting_continue') && !isHost && !isMySpectator" class="player-ready-bar">
       <view class="player-ready-btn touch-active" :class="{ ready: amIReady }" @click="toggleReady">
         <text>{{ amIReady ? '已准备（点击取消）' : (roomStatus === 'waiting_continue' ? '准备下一局' : '准备') }}</text>
       </view>
@@ -291,7 +291,7 @@
       <view class="chip-adjust-modal glass" @click.stop>
         <view class="modal-header"><text class="modal-title">玩家筹码调整</text><text class="modal-close" @click="showChipAdjust = false">✕</text></view>
         <scroll-view class="chip-player-list" scroll-y>
-          <view v-for="seat in occupiedSeats" :key="seat.player.id" class="chip-player" :class="{ active: adjustTargetId === seat.player.id }" @click="adjustTargetId = seat.player.id"><text>{{ seat.player.nickname || seat.player.account }}</text><text>{{ formatPoints(seat.player.points) }} 筹码</text></view>
+          <view v-for="player in manageablePlayers" :key="player.id" class="chip-player" :class="{ active: adjustTargetId === player.id }" @click="adjustTargetId = player.id"><text>{{ player.nickname || player.account }}</text><text>{{ formatPoints(player.points) }} 筹码</text></view>
         </scroll-view>
         <view class="chip-adjust-form"><input class="chip-amount-input" type="number" v-model="adjustAmount" placeholder="输入调整数量" /><view class="chip-adjust-actions"><view class="host-action" @click="adjustPlayerPoints(1)">上分</view><view class="host-action danger" @click="adjustPlayerPoints(-1)">下分</view></view></view>
       </view>
@@ -1317,7 +1317,7 @@ import ComparePanel from '../../components/game/ComparePanel.vue'
 import HandTypeHint from '../../components/game/HandTypeHint.vue'
 import { userState, fetchUserInfo, updatePoints } from '../../store/user.js'
 import { formatPoints, formatGameType } from '../../utils/format.js'
-import { getRoom, getRoomHand, getRoomHandSnapshot, startHand, readyRoom, readyNext, performAction, sendRoomChat, continueRoom, pauseRoom, resumeRoom, earlySettle, adjustRoomPoints, kickPlayer } from '../../api/rooms.js'
+import { getRoom, getRoomHand, getRoomHandSnapshot, startHand, readyRoom, readyNext, performAction, sendRoomChat, continueRoom, pauseRoom, resumeRoom, earlySettle, adjustRoomPoints, kickPlayer, leaveRoom } from '../../api/rooms.js'
 import { getMyRoomRounds } from '../../api/profile.js'
 import { getThemeByGameType } from '../../themes/themeConfig.js'
 import { getSoundManager, getVoiceManager } from '../../utils/sound.js'
@@ -1401,6 +1401,7 @@ export default {
       loadHandDebounceTimer: null, // onStateChanged防抖定时器
       roomInfoCacheTime: 0, // 房间信息缓存时间戳
       roomInfoCache: null, // 房间信息缓存数据
+      isLeavingRoom: false,
       // 操作金额
       callAmount: '',
       raiseAmount: '',
@@ -1578,16 +1579,37 @@ export default {
       const me = this.occupiedSeats.find(s => String(s.player?.id) === String(userState.id))
       return !!(me?.player?.ready || me?.ready)
     },
+    isMySpectator() {
+      return !!this.roomInfo?.me?.isSpectator
+    },
     occupiedSeats() {
       return this.seats.filter(seat => seat.player && seat.player.id)
     },
+    // 房主操作使用房间成员列表，而非仅使用已开局的 hand.seats。
+    manageablePlayers() {
+      const room = this.roomInfo?.room || this.roomInfo || {}
+      const ownerId = room.ownerId || room.hostId || room.creatorId || room.createdBy || room.agentId
+      const players = this.roomInfo?.players || room.players || []
+      return players
+        .map(player => ({
+          ...player,
+          id: player.id || player.userId,
+          nickname: player.nickname || player.account,
+        }))
+        .filter(player => player.id && String(player.id) !== String(ownerId) && String(player.id) !== String(userState.id))
+    },
+    playablePlayers() {
+      return this.manageablePlayers.filter(player => !player.isSpectator && Number(player.points) > 0)
+    },
+    playablePlayerCount() {
+      return this.playablePlayers.length
+    },
+    unreadyPlayablePlayers() {
+      return this.playablePlayers.filter(player => !player.ready)
+    },
     // 可踢出的玩家（排除房主自己）
     kickablePlayers() {
-      const room = this.roomInfo?.room || this.roomInfo
-      const ownerId = room?.ownerId || room?.hostId || room?.creatorId || room?.createdBy || room?.agentId
-      return this.occupiedSeats
-        .map(s => s.player)
-        .filter(p => String(p.id) !== String(ownerId) && String(p.id) !== String(userState.id))
+      return this.manageablePlayers
     },
   },
   onLoad(options) {
@@ -2135,6 +2157,20 @@ export default {
 
     async hostStartGame() {
       try {
+        await this.loadHand(true)
+        if (this.playablePlayerCount < 2) {
+          const missing = 2 - this.playablePlayerCount
+          uni.showToast({ title: `还需 ${missing} 名已上分玩家才能开始`, icon: 'none' })
+          return
+        }
+        if (this.unreadyPlayablePlayers.length) {
+          const names = this.unreadyPlayablePlayers
+            .slice(0, 2)
+            .map(player => player.nickname || player.account)
+            .join('、')
+          uni.showToast({ title: `${names} 尚未准备`, icon: 'none' })
+          return
+        }
         await startHand(this.roomId)
         await this.loadHand()
         uni.showToast({ title: '游戏已开始', icon: 'success' })
@@ -2144,13 +2180,14 @@ export default {
     },
     async toggleReady() {
       try {
+        const nextReady = !this.amIReady
         if (this.roomStatus === 'waiting_continue') {
           await readyNext(this.roomId)
         } else {
-          await readyRoom(this.roomId)
+          await readyRoom(this.roomId, nextReady)
         }
         await this.loadHand()
-        uni.showToast({ title: this.amIReady ? '已取消准备' : '已准备', icon: 'success' })
+        uni.showToast({ title: nextReady ? '已准备' : '已取消准备', icon: 'success' })
       } catch (e) {
         uni.showToast({ title: e.error || '操作失败', icon: 'none' })
       }
@@ -2396,7 +2433,7 @@ export default {
           if (data && data.roomId) {
         // 防抖：200ms内多次状态变更合并为一次loadHand，避免频繁请求
         if (this.loadHandDebounceTimer) clearTimeout(this.loadHandDebounceTimer)
-        this.loadHandDebounceTimer = setTimeout(() => { this.loadHand() }, 200)
+        this.loadHandDebounceTimer = setTimeout(() => { this.loadHand(true) }, 200)
           }
         })
 
@@ -2419,13 +2456,13 @@ export default {
     },
 
     // 加载牌局状态
-    async loadHand() {
+    async loadHand(forceRoomRefresh = false) {
       try {
         // 同步刷新房间信息（currentRound/status/totalRounds 可能已变化）
         try {
         // 房间信息缓存：5秒内不重复拉取，减少API请求
         const now = Date.now()
-        if (this.roomInfoCache && now - this.roomInfoCacheTime < 5000) {
+        if (!forceRoomRefresh && this.roomInfoCache && now - this.roomInfoCacheTime < 5000) {
           this.roomInfo = { ...this.roomInfo, ...this.roomInfoCache }
         } else {
           const room = await getRoom(this.roomId)
@@ -2436,6 +2473,9 @@ export default {
         const resp = await getRoomHand(this.roomId)
         // 后端返回 { hand: {...}, options: [...] }
         this.applyAuthoritativeHand(resp, resp.sequence)
+        if (!resp?.hand || resp.hand.finished || this.isWaitingState) {
+          this.syncWaitingRoomPlayers()
+        }
         // 保存代理层级链（总结算抽水分配用）
         if (resp.hierarchy) this.hierarchy = resp.hierarchy
 
@@ -2448,6 +2488,46 @@ export default {
       } catch (e) {
         console.error('[Room] 加载牌局失败', e)
       }
+    },
+
+    // 等待开局时服务端没有 hand.seats，成员要从 room.players 同步到牌桌。
+    syncWaitingRoomPlayers() {
+      const room = this.roomInfo?.room || this.roomInfo || {}
+      const players = this.roomInfo?.players || room.players || []
+      const activePlayers = players.filter(player => !player.isSpectator && player.userId)
+      const nextSeats = this.seats.map(() => ({
+        player: null,
+        isActive: false,
+        isMe: false,
+        cards: [],
+        isFolded: false,
+        isWinner: false,
+        isDealer: false,
+        autoPlay: false,
+      }))
+
+      activePlayers.forEach((player, fallbackIndex) => {
+        const seatIndex = Number.isInteger(Number(player.seat)) && Number(player.seat) > 0
+          ? Number(player.seat) - 1
+          : fallbackIndex
+        if (!nextSeats[seatIndex]) return
+        nextSeats[seatIndex] = {
+          ...nextSeats[seatIndex],
+          player: {
+            id: player.userId,
+            account: player.account,
+            nickname: player.nickname || player.account,
+            points: Number(player.points) || 0,
+            avatar: player.avatar || '1',
+            ready: !!player.ready,
+          },
+          isActive: true,
+          isMe: String(player.userId) === String(userState.id),
+          autoPlay: !!player.autoPlay,
+        }
+        if (String(player.userId) === String(userState.id)) this.mySeatIndex = seatIndex
+      })
+      this.seats = nextSeats
     },
 
     applyAuthoritativeHand(payload, sequence) {
@@ -3224,18 +3304,9 @@ export default {
       }
     },
 
-    // 退出房间
+    // 结算页退出房间
     exitRoom() {
-      this.showSettlement = false
-      uni.showModal({
-        title: '退出房间',
-        content: '确定要退出房间吗？',
-        success: (res) => {
-          if (res.confirm) {
-            this.goLobby()
-          }
-        }
-      })
+      this.confirmLeaveRoom()
     },
 
     // 关闭比牌面板
@@ -3277,17 +3348,32 @@ export default {
       }, 1000)
     },
 
-    // 返回
-    goBack() {
+    confirmLeaveRoom() {
+      if (this.isLeavingRoom) return
       uni.showModal({
         title: '确认离开',
-        content: '确定要离开房间吗？',
-        success: (res) => {
-          if (res.confirm) {
-            uni.navigateBack()
+        content: '离开后将退出房间并退回桌上筹码，确定继续吗？',
+        success: async (res) => {
+          if (!res.confirm || this.isLeavingRoom) return
+          this.isLeavingRoom = true
+          try {
+            await leaveRoom(this.roomId)
+            try {
+              getRoomSocket().leaveRoom(this.roomId)
+            } catch (e) {}
+            uni.reLaunch({ url: '/pages/lobby/lobby' })
+          } catch (e) {
+            uni.showToast({ title: e.error || '退出房间失败，请重试', icon: 'none' })
+          } finally {
+            this.isLeavingRoom = false
           }
         }
       })
+    },
+
+    // 返回
+    goBack() {
+      this.confirmLeaveRoom()
     }
   }
 }

@@ -137,9 +137,13 @@
       <view class="section-header">
         <text class="section-title">代理管理</text>
         <view class="header-actions">
-          <view class="invite-btn touch-active" @click="showInviteModal = true">
+          <view v-if="userRole === 'top_agent'" class="invite-btn touch-active" @click="openCreateAccount('agent')">
             <VIcon name="plus" :size="2.7" color="#fff" />
-            <text>生成邀请码</text>
+            <text>新增一级代理</text>
+          </view>
+          <view v-if="userRole === 'top_agent'" class="invite-btn touch-active" @click="openCreateAccount('player')">
+            <VIcon name="plus" :size="2.7" color="#fff" />
+            <text>新增玩家</text>
           </view>
         </view>
       </view>
@@ -173,35 +177,32 @@
     <view class="bottom-spacing"></view>
 
     <template #modal>
-    <!-- 生成邀请码弹窗 -->
-    <view v-if="showInviteModal" class="modal-overlay" @click="showInviteModal = false">
+    <!-- 创建下级账号弹窗 -->
+    <view v-if="showCreateAccountModal" class="modal-overlay" @click="showCreateAccountModal = false">
       <view class="modal-content glass" @click.stop>
         <view class="modal-header">
-          <text class="modal-title">生成邀请码</text>
-          <view class="modal-close-btn touch-active" @click="showInviteModal = false">
+          <text class="modal-title">{{ createAccountType === 'agent' ? '新增一级代理' : '新增玩家' }}</text>
+          <view class="modal-close-btn touch-active" @click="showCreateAccountModal = false">
             <VIcon name="close" :size="3" color="rgba(255,255,255,0.5)" />
           </view>
         </view>
-        <view class="invite-form">
+        <view class="modal-body">
           <view class="form-group">
-            <text class="form-label">邀请层级</text>
-            <view class="level-group">
-              <view v-for="level in inviteLevels" :key="level.value" class="level-btn touch-active" :class="{ active: inviteLevel === level.value }" @click="inviteLevel = level.value"><text>{{ level.label }}</text></view>
-            </view>
+            <text class="form-label">账号</text>
+            <input class="form-input" v-model="createForm.account" placeholder="请输入账号" maxlength="32" />
           </view>
           <view class="form-group">
-            <text class="form-label">备注（可选）</text>
-            <input class="form-input" v-model="inviteRemark" placeholder="请输入备注" placeholder-class="input-placeholder" />
+            <text class="form-label">初始密码</text>
+            <input class="form-input" v-model="createForm.password" password placeholder="请输入初始密码" maxlength="64" />
           </view>
-        </view>
-        <view class="invite-result" v-if="generatedCode">
-          <text class="result-label">邀请码</text>
-          <text class="result-code">{{ generatedCode }}</text>
-          <view class="copy-btn touch-active" @click="copyCode"><text>复制</text></view>
+          <view v-if="createAccountType === 'player'" class="form-group">
+            <text class="form-label">初始筹码</text>
+            <input class="form-input" v-model="createForm.points" type="number" placeholder="默认 0" />
+          </view>
         </view>
         <view class="modal-footer">
-          <view class="btn-cancel touch-active" @click="showInviteModal = false">取消</view>
-          <view class="btn-confirm touch-active" :class="{ disabled: isGenerating }" @click="generateCode">{{ isGenerating ? '生成中...' : '生成' }}</view>
+          <view class="btn-cancel touch-active" @click="showCreateAccountModal = false">取消</view>
+          <view class="btn-confirm touch-active" :class="{ disabled: isCreatingAccount }" @click="submitCreateAccount">{{ isCreatingAccount ? '创建中...' : '确认创建' }}</view>
         </view>
       </view>
     </view>
@@ -323,6 +324,10 @@
             </view>
           </view>
           <view class="agent-detail-actions">
+            <view v-if="canGenerateInviteCode(selectedAgent)" class="action-btn action-primary touch-active" @click="generateInviteForAgent(selectedAgent)">
+              <VIcon name="cards" :size="2.7" color="#fff" />
+              <text>生成邀请码</text>
+            </view>
             <view class="action-btn action-primary touch-active" @click="openAdjustPoints(selectedAgent)">
               <VIcon name="coin" :size="2.7" color="#fff" />
               <text>调整筹码</text>
@@ -402,10 +407,12 @@ import { userState } from '../../store/user.js'
 import {
   getPromotionData,
   getAgentPlayers,
-  generateInviteCode,
   getDistributionRecords,
   adjustPlayerPoints,
   freezeAgent,
+  createAgent,
+  createPlayer,
+  generateSubordinateInviteCode,
 } from '../../api/agent.js'
 import { getSubordinateRooms, dissolveRoom } from '../../api/rooms.js'
 import { getMe } from '../../api/auth.js'
@@ -422,20 +429,15 @@ export default {
       fontScale: 1.0,
       activeView: 'tree',
       isLoading: false,
-      isGenerating: false,
+      userRole: '',
+      isCreatingAccount: false,
       viewModes: [
         { label: '树状图', value: 'tree' },
         { label: '力导向图', value: 'force' },
       ],
-      showInviteModal: false,
-      inviteLevel: 1,
-      inviteRemark: '',
-      generatedCode: '',
-      inviteLevels: [
-        { label: '一级代理', value: 1 },
-        { label: '二级代理', value: 2 },
-        { label: '普通玩家', value: 0 },
-      ],
+      showCreateAccountModal: false,
+      createAccountType: 'agent',
+      createForm: { account: '', password: '', points: '' },
       empireStats: [
         { iconName: 'user', label: '总下线', value: '0', trend: 0, bgColor: 'rgba(96,165,250,0.3)' },
         { iconName: 'cards', label: '今日流水', value: '0', trend: 0, bgColor: 'rgba(74,222,128,0.3)' },
@@ -505,6 +507,7 @@ export default {
           setTimeout(() => uni.reLaunch({ url: '/pages/lobby/lobby' }), 800)
           return
         }
+        this.userRole = role
         this.loadAllData()
       } catch (e) {
         console.error('[Promotion] 角色校验失败', e)
@@ -687,6 +690,87 @@ export default {
       this.showAgentDetailModal = true
     },
 
+    openCreateAccount(type) {
+      if (this.userRole !== 'top_agent') {
+        uni.showToast({ title: '无创建权限', icon: 'none' })
+        return
+      }
+      this.createAccountType = type
+      this.createForm = { account: '', password: '', points: '' }
+      this.showCreateAccountModal = true
+    },
+
+    async submitCreateAccount() {
+      if (this.isCreatingAccount || this.userRole !== 'top_agent') return
+      const account = this.createForm.account.trim()
+      const password = this.createForm.password
+      if (!account || !password) {
+        uni.showToast({ title: '请填写账号和初始密码', icon: 'none' })
+        return
+      }
+
+      const isAgent = this.createAccountType === 'agent'
+      const points = this.createForm.points === '' ? 0 : Number(this.createForm.points)
+      if (!Number.isFinite(points) || points < 0 || !Number.isInteger(points)) {
+        uni.showToast({ title: '初始筹码必须为非负整数', icon: 'none' })
+        return
+      }
+
+      this.isCreatingAccount = true
+      try {
+        const data = isAgent
+          ? await createAgent({ account, password, role: 'agent' })
+          : await createPlayer({ account, password, points })
+        const user = data.user || data.data?.user || data.data || data
+        const userId = user.id || user.userId
+        let inviteCode = ''
+        if (isAgent && userId) {
+          try {
+            const invite = await generateSubordinateInviteCode(userId)
+            inviteCode = invite.inviteCode || invite.code || invite.data?.inviteCode || ''
+          } catch (e) {
+            console.warn('[Promotion] 下级代理邀请码生成失败', e)
+          }
+        }
+        this.showCreateAccountModal = false
+        await this.loadAllData()
+        uni.showModal({
+          title: '创建成功',
+          content: inviteCode ? `账号：${account}\n邀请码：${inviteCode}` : `账号 ${account} 已创建`,
+          showCancel: false,
+          confirmText: '知道了',
+        })
+      } catch (e) {
+        uni.showToast({ title: e.error || e.message || '创建失败', icon: 'none' })
+      } finally {
+        this.isCreatingAccount = false
+      }
+    },
+
+    async generateInviteForAgent(agent) {
+      if (!this.canGenerateInviteCode(agent)) return
+      try {
+        const data = await generateSubordinateInviteCode(agent.id)
+        const code = data.inviteCode || data.code || data.data?.inviteCode
+        if (!code) throw new Error('邀请码返回无效')
+        uni.showModal({
+          title: `${agent.nickname || agent.account} 的邀请码`,
+          content: code,
+          confirmText: '复制',
+          success: (res) => {
+            if (res.confirm) uni.setClipboardData({ data: code })
+          },
+        })
+      } catch (e) {
+        uni.showToast({ title: e.error || e.message || '生成失败', icon: 'none' })
+      }
+    },
+
+    canGenerateInviteCode(agent) {
+      const level = Number(agent?.agentLevel ?? agent?.level)
+      return this.userRole === 'top_agent' && agent?.role === 'agent' && !!agent.id && level === 1
+    },
+
     // 打开调整筹码弹窗
     openAdjustPoints(agent) {
       this.adjustTarget = agent
@@ -757,29 +841,6 @@ export default {
       })
     },
 
-    async generateCode() {
-      this.isGenerating = true
-      try {
-        const data = await generateInviteCode()
-        this.generatedCode = data.inviteCode || ''
-        if (!this.generatedCode) throw new Error('返回数据无效')
-        uni.showToast({ title: '生成成功', icon: 'success' })
-      } catch (e) {
-        this.generatedCode = ''
-        uni.showToast({ title: e.error || e.message || '生成失败，请重试', icon: 'none' })
-      } finally {
-        this.isGenerating = false
-      }
-    },
-    copyCode() {
-      if (!this.generatedCode) return
-      uni.setClipboardData({
-        data: this.generatedCode,
-        success: () => {
-          uni.showToast({ title: '已复制', icon: 'success' })
-        }
-      })
-    },
   },
 }
 </script>

@@ -206,8 +206,8 @@ export default {
 
   &:active, &.pressed { 
     transform: scale(0.94); 
-    box-shadow: 0 0.2vh 0.6vh rgba(0,0,0,0.3);
-    filter: brightness(0.9);
+    box-shadow: 0 0 0.8vh rgba(255,215,0,0.42), inset 0 0 0 0.2vh rgba(255,215,0,0.78);
+    filter: brightness(1.08);
   }
   &.disabled { opacity: 0.35; pointer-events: none; }
 }

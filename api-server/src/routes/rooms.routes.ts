@@ -1469,6 +1469,17 @@ router.post("/:id/gift", async (req: Request, res: Response) => {
   }
   const rp = rpRows[0];
   const maxSeat = room.initialPoints;
+  let activationSeat = rp.seat;
+  if (amt > 0 && rp.isSpectator) {
+    const roomMembers = await db.select().from(roomPlayers).where(eq(roomPlayers.roomId, roomId));
+    const takenSeats = new Set(roomMembers.filter((member) => !member.isSpectator).map((member) => member.seat));
+    activationSeat = 1;
+    while (takenSeats.has(activationSeat) && activationSeat <= room.maxSeats) activationSeat++;
+    if (activationSeat > room.maxSeats) {
+      res.status(400).json({ error: `房间已满（最多 ${room.maxSeats} 人）` });
+      return;
+    }
+  }
   
   // 使用事务保证原子性
   try {
@@ -1493,7 +1504,11 @@ router.post("/:id/gift", async (req: Request, res: Response) => {
           throw new Error(`该玩家座位筹码已达上限（${maxSeat}），当前 ${rp.points}，最多可上 ${maxSeat - rp.points}`);
         }
         if (rp.isSpectator) {
-          await tx.update(roomPlayers).set({ isSpectator: false, points: next }).where(eq(roomPlayers.id, rp.id));
+          await tx.update(roomPlayers).set({
+            isSpectator: false,
+            seat: activationSeat,
+            points: next,
+          }).where(eq(roomPlayers.id, rp.id));
         } else {
           await tx.update(roomPlayers).set({ points: next }).where(eq(roomPlayers.id, rp.id));
         }
@@ -1990,11 +2005,6 @@ router.post("/join-by-token", async (req: Request, res: Response) => {
     return;
   }
   
-  // 标记凭据已使用
-  await db.update(roomInviteTokens)
-    .set({ usedByUserId: u.id })
-    .where(eq(roomInviteTokens.id, inviteToken.id));
-  
   // 检查是否已在房间
   const existing = await db
     .select()
@@ -2006,39 +2016,51 @@ router.post("/join-by-token", async (req: Request, res: Response) => {
     return;
   }
   
-  // 加入房间（作为观众，需手动准备）
-  const seated = await db
+  // 邀请加入遵循与普通加入相同的座位和最低带入规则。
+  const members = await db
     .select()
     .from(roomPlayers)
     .where(eq(roomPlayers.roomId, room.id));
+  const seated = members.filter((player) => !player.isSpectator);
+  if (seated.length >= room.maxSeats) {
+    res.status(400).json({ error: `房间已满（最多 ${room.maxSeats} 人）` });
+    return;
+  }
+  const tmpl = getRoomTemplate(room.gameType, room.level);
+  const canBuyIn = u.points >= tmpl.minBuyIn;
   const taken = new Set(seated.map((p) => p.seat));
   let seat = 1;
   while (taken.has(seat) && seat <= room.maxSeats) seat++;
-  
-  // 带入初始筹码
-  const bringIn = Math.min(u.points, room.initialPoints);
+  const bringIn = canBuyIn ? Math.min(u.points, room.initialPoints) : 0;
   const nextBal = u.points - bringIn;
-  if (bringIn > 0) {
-    await db.transaction(async (tx) => {
+  const isSpectator = !canBuyIn;
+  await db.transaction(async (tx) => {
+    if (bringIn > 0) {
       await tx.update(users).set({ points: nextBal }).where(eq(users.id, u.id));
       await tx.insert(chipTransactions).values({
         userId: u.id, amount: -bringIn, balanceAfter: nextBal, type: "buyin",
         note: `房间 ${room.roomNo} 带入筹码（通过邀请）`, roomId: room.id,
       });
+    }
+    await tx.insert(roomPlayers).values({
+      roomId: room.id, userId: u.id, seat: isSpectator ? 0 : seat,
+      points: bringIn, isSpectator, ready: false,
     });
-  }
-  
-  await db.insert(roomPlayers).values({
-    roomId: room.id, userId: u.id, seat, points: bringIn, isSpectator: false, ready: false,
+    await tx.update(roomInviteTokens)
+      .set({ usedByUserId: u.id })
+      .where(eq(roomInviteTokens.id, inviteToken.id));
   });
   
   broadcastStateChanged(room.id);
   res.json({ 
     room, 
-    seat, 
+    seat: isSpectator ? 0 : seat,
     balance: nextBal, 
     broughtIn: bringIn,
-    message: `已通过邀请加入房间 ${room.roomNo}` 
+    seatType: isSpectator ? "spectator" : "player",
+    message: isSpectator
+      ? `筹码不足（最低带入${tmpl.minBuyIn}），已进入观众席，请联系房主上分`
+      : `已通过邀请加入房间 ${room.roomNo}`
   });
 });
 

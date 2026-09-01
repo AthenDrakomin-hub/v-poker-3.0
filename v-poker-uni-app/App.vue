@@ -183,12 +183,12 @@ export default {
   --color-bg: #0A0A0A;
   --color-bg-card: #1A1A2E;
   --color-text: #E8E8E8;
-  --color-text-muted: rgba(255,255,255,0.6);
+  --color-text-muted: rgba(255,255,255,0.7);
   --color-gold-dark: #FFA500;
   --color-danger: #FF6B6B;
   --color-success: #4ADE80;
   --color-info: #60A5FA;
-  --color-border: rgba(255,215,0,0.3);
+  --color-border: rgba(255,215,0,0.48);
   --color-gold: #FFD700;
   --theme-primary: #FFD700;
   --theme-secondary: #FFA500;
@@ -220,7 +220,7 @@ page {
 .text-gold { color: var(--color-gold); }
 .text-amber { color: var(--color-gold); }
 .text-muted { color: rgba(255,255,255,0.5); }
-.bg-glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(10px); }
+.bg-glass { background: var(--color-bg-card); border: 1px solid var(--color-border); }
 .rounded-lg { border-radius: 12rpx; }
 .rounded-full { border-radius: 9999rpx; }
 
@@ -248,10 +248,20 @@ page {
 
 /* 毛玻璃卡片 */
 .glass-card {
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
   border-radius: 16rpx;
+}
+
+/* 高可读性面板：移除黑金主题中的半透明毛玻璃层。 */
+.glass,
+.card-glass,
+.glass-card,
+.bg-glass {
+  background: var(--color-bg-card) !important;
+  border: 1px solid var(--color-border) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* 金色渐变文字 */
@@ -274,13 +284,14 @@ page {
 }
 .btn-primary:active {
   transform: scale(0.96);
-  opacity: 0.9;
+  opacity: 1;
+  filter: brightness(1.08);
 }
 
 .btn-ghost {
   background: rgba(255,255,255,0.08);
   color: var(--color-text);
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid var(--color-border);
   border-radius: 12rpx;
   padding: 0 40rpx;
   transition: all 0.2s ease;
@@ -292,7 +303,7 @@ page {
 /* 输入框样式 */
 .input-field {
   background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.15);
+  border: 1px solid var(--color-border);
   border-radius: 12rpx;
   padding: 20rpx 24rpx;
   color: var(--color-text);
@@ -303,17 +314,27 @@ page {
   background: rgba(255,215,0,0.05);
 }
 
-/* ========== iOS 点击高亮修复（黑金主题黑底上的半透黑叠加块） ========== */
-/* #ifndef APP-NVUE */
-page, view, text, image, scroll-view {
-  -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
+/* ========== iOS 点击高亮：仅在实际命中元素上显示金色反馈 ========== */
+/* #ifdef APP-PLUS */
+* {
+  -webkit-tap-highlight-color: rgba(255, 215, 0, 0.18) !important;
 }
-/* 原生button组件，关闭原生按压暗色蒙层（项目中无button，防御性添加） */
+/* 原生 button 默认使用 button-hover，显式覆盖其暗色按压效果。 */
 button {
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: rgba(255, 215, 0, 0.18) !important;
 }
-button:after {
-  background-color: transparent !important;
+button.button-hover,
+uni-button.button-hover {
+  opacity: 1 !important;
+  color: var(--color-bg) !important;
+  background-color: var(--color-gold) !important;
+  background-image: none !important;
+  border-color: var(--color-gold) !important;
+  filter: brightness(1.08);
+  box-shadow: inset 0 0 0 2px rgba(255, 215, 0, 0.72);
+}
+button::after {
+  border: 0 !important;
 }
 /* #endif */
 </style>

@@ -52,7 +52,7 @@ export function setupRoomSockets(io: Server) {
         const member = await db
           .select()
           .from(roomPlayers)
-          .where(eq(roomPlayers.roomId, roomId))
+          .where(and(eq(roomPlayers.roomId, roomId), eq(roomPlayers.userId, userId!)))
           .limit(1);
         if (member.length === 0) {
           console.warn(`[WS] join_room 拒绝: 用户${userId} 不在房间${roomId}`);

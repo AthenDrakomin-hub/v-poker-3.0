@@ -43,6 +43,21 @@ export function getInviteCode() {
   return get('/api/agent/invite-code')
 }
 
+// 创建下级代理（总代理创建一级代理，一级代理创建二级代理）
+export function createAgent(payload) {
+  return post('/api/agent/create-agent', payload)
+}
+
+// 创建直招玩家
+export function createPlayer(payload) {
+  return post('/api/agent/create-player', payload)
+}
+
+// 为指定下级代理生成邀请码
+export function generateSubordinateInviteCode(userId) {
+  return post(`/api/agent/generate-invite-code/${userId}`)
+}
+
 // 生成新邀请码（重新生成，覆盖旧码）
 export function generateInviteCode() {
   return post('/api/agent/invite-code/regenerate')
@@ -81,6 +96,9 @@ export default {
   adjustPlayerPoints,
   getPlayerDetail,
   getInviteCode,
+  createAgent,
+  createPlayer,
+  generateSubordinateInviteCode,
   generateInviteCode,
   getDistributionRecords,
   getAgentChipTransactions,

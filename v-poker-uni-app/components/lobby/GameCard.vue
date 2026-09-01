@@ -99,7 +99,8 @@ export default {
   }
 
   &:active {
-    opacity: 0.92;
+    opacity: 1;
+    box-shadow: inset 0 0 0 0.2vh rgba(255,215,0,0.72);
   }
 }
 

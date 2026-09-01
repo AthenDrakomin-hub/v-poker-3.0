@@ -17,8 +17,8 @@ export const GAME_THEMES = {
 
     // 颜色系统
     colors: {
-      bgPrimary: '#1A1A1A',
-      bgSecondary: '#0A0A0A',
+      bgPrimary: '#0A0A0A',
+      bgSecondary: '#1B1C20',
       bgGradient: 'radial-gradient(ellipse at center, #2A1A1A 0%, #1A0A0A 50%, #0A0505 100%)',
       tableFelt: '#1a0a0a',
       tableBorder: '#8B0000',
@@ -26,8 +26,8 @@ export const GAME_THEMES = {
       secondary: '#FFA500',
       accent: '#8B0000',
       text: '#E8E8E8',
-      textMuted: 'rgba(255,255,255,0.5)',
-      border: 'rgba(255,215,0,0.3)',
+      textMuted: 'rgba(255,255,255,0.7)',
+      border: 'rgba(255,215,0,0.48)',
       cardBack: '#1A1A1A',
       cardBackBorder: '#FFD700',
     },
